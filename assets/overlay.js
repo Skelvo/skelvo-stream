@@ -70,13 +70,14 @@
     var mm = (h || forceHours) && m < 10 ? '0' + m : String(m);
     return (h || forceHours ? h + ':' : '') + mm + ':' + (s < 10 ? '0' : '') + s;
   };
-  // "5m", "1h30", "90s", "2:30", "10" (minutes) -> secondes
+  // "5m", "1h30", "90s", "2:30" (2 h 30), "10" (minutes) -> secondes
   O.parseDuration = function(str){
     str = String(str || '').trim().toLowerCase();
     if (!str) return NaN;
     if (/^\d+:\d{1,2}(:\d{1,2})?$/.test(str)){
       var parts = str.split(':').map(Number);
-      return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1];
+      // "2:30" = 2 h 30 (le plus naturel pour un minuteur de subathon), "1:02:05" = h:mm:ss
+      return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 3600 + parts[1] * 60;
     }
     if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str) * 60;
     var total = 0, found = false, re = /(\d+(?:\.\d+)?)\s*(h|m|min|s|sec)?/g, m;

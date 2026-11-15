@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alertes Twitch gratuites (subs, bits, raids) — Skelvo Stream</title>
+<meta name="description" content="Alertes d'abonnement, de subs offerts, de bits et de raids pour ton stream, avec sons et animations. Gratuit, sans compte, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/alertes/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 16px; }
+  .sw-card{ background: #17132a; border-bottom: 2px solid #9b5cff; }
+  .sw-neon{ background: #0d0a18; border: 1px solid #9b5cff; box-shadow: 0 0 6px #9b5cff; }
+  .sw-banner{ background: linear-gradient(90deg, #9b5cff, #2a2347); }
+  .sw-clean{ background: transparent; }
+  .tests{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="alertes.title">Alertes de stream</h1>
+    <p data-i18n="alertes.lead">Abonnements, subs offerts, bits et raids : une alerte animée avec un son apparaît sur ton stream. Sans compte et sans connecter ta chaîne.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Quelles alertes ?</legend>
+        <label class="check"><input type="checkbox" name="sub" checked><span>Abonnements et réabonnements</span></label>
+        <label class="check"><input type="checkbox" name="gift" checked><span>Subs offerts</span></label>
+        <label class="check"><input type="checkbox" name="bits" checked><span>Bits</span></label>
+        <label class="check"><input type="checkbox" name="raid" checked><span>Raids</span></label>
+        <div class="row2"><label class="field"><span>Bits minimum</span><input type="text" name="minbits" value="1" placeholder="" maxlength="7" inputmode="numeric"></label><label class="field"><span>Viewers minimum (raid)</span><input type="text" name="minraid" value="1" placeholder="" maxlength="6" inputmode="numeric"></label></div>
+        <p class="hint">Les alertes de follow arriveront avec la connexion Twitch, dans une prochaine version.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Textes</legend>
+        <p class="hint">Mots remplacés : <code>{name}</code> <code>{months}</code> <code>{count}</code> <code>{amount}</code> <code>{recipient}</code></p>
+        <label class="field"><span>Abonnement</span><input type="text" name="tsub" value="{name} s'abonne !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Réabonnement</span><input type="text" name="tresub" value="{name} se réabonne · {months} mois !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Sub offert</span><input type="text" name="tgift" value="{name} offre un abonnement à {recipient} !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Plusieurs subs offerts</span><input type="text" name="tbomb" value="{name} offre {count} abonnements !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Bits</span><input type="text" name="tbits" value="{name} envoie {amount} bits !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Raid</span><input type="text" name="traid" value="Raid de {name} avec {count} viewers !" placeholder="" maxlength="90" ></label>
+        <label class="check"><input type="checkbox" name="showmsg" checked><span>Afficher le message du viewer sous l'alerte</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card">⭐</span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon">⭐</span><span>Néon</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-banner" value="banner"><label for="style-banner"><span class="sw sw-banner">⭐</span><span>Bandeau</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">⭐</span><span>Texte seul</span></label></div>
+        </div>
+        <label class="field"><span>Apparition</span><select name="anim"><option value="pop">Pop</option><option value="bounce">Rebond</option><option value="slide">Glisse</option></select></label>
+        <label class="field"><span><span>Durée de chaque alerte</span><output for="f-dur" data-unit=" s"></output></span><input type="range" id="f-dur" name="dur" min="3" max="20" value="7"></label>
+        <label class="check"><input type="checkbox" name="confetti" checked><span>Confettis</span></label>
+        <label class="field"><span>Image ou GIF à la place de l'icône (lien https)</span><input type="text" name="img" value="" placeholder="https://…/mon-gif.gif" maxlength="300" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Son</legend>
+        <label class="field"><span>Son</span><select name="sound"><option value="chime">Carillon</option><option value="fanfare">Fanfare</option><option value="coin">Pièce</option><option value="arcade">Arcade</option><option value="pop">Pop</option><option value="none">Aucun</option></select></label>
+        <label class="field"><span><span>Volume</span><output for="f-vol" data-unit=" %"></output></span><input type="range" id="f-vol" name="vol" min="0" max="100" value="60"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Apparence</legend>
+        <div class="field colors"><label class="color"><input type="color" name="ac" value="#9b5cff"><span>Accent</span></label><label class="color"><input type="color" name="ac2" value="#4be1c3"><span>Pseudos</span></label></div>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="16" max="70" value="34"></label>
+        <label class="check"><input type="checkbox" name="emotes3" checked><span>Emotes 7TV, BTTV et FFZ</span></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">1000 × 500</b>.</span></li>
+          <li><span>Mets la source au-dessus de ton jeu. Pour entendre les sons, coche <b>Contrôler l'audio via OBS</b> dans les propriétés de la source.</span></li>
+          <li><span>Les alertes passent une par une : si 10 personnes s'abonnent d'un coup, personne n'est oublié.</span></li>
+        </ol>
+        <div class="tests" id="tests"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-alertes-size', def: { w: 1000, h: 500 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-alertes',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){  }
+  });
+  var iframe = document.getElementById('preview');
+  iframe.setAttribute('allow', 'autoplay');
+  var TESTS = [
+    ['Abonnement', { type: 'sub', tier: 1, months: 1, name: 'Lunaa_', text: 'Trop contente <3' }],
+    ['Réabonnement', { type: 'resub', tier: 1, months: 14, name: 'Tonton_Raclette', text: 'Toujours là SeemsGood' }],
+    ['Subs offerts', { type: 'giftbomb', count: 5, name: 'Mamie_Gameuse', text: '' }],
+    ['Bits', { type: 'bits', amount: 500, name: 'KevGaming', text: 'Cheer500 GG !' }],
+    ['Raid', { type: 'raid', count: 42, name: 'Choupette', text: '' }]
+  ];
+  var tests = document.getElementById('tests');
+  TESTS.forEach(function(t){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost small'; b.textContent = '▶ ' + t[0];
+    b.addEventListener('click', function(){ iframe.contentWindow.postMessage({ type: 'sk-test', event: t[1] }, location.origin); });
+    tests.appendChild(b);
+  });
+})();
+</script>
+</body>
+</html>

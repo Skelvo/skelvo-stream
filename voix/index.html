@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lecture vocale du tchat Twitch, gratuite — Skelvo Stream</title>
+<meta name="description" content="Entends ton tchat Twitch pendant que tu joues, même avec un seul écran : les messages sont lus à voix haute. Gratuit, sans compte, dans ton navigateur." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/voix/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<!--
+  Lecture vocale du tchat : page à laisser ouverte dans un onglet pendant le live
+  (pas une source OBS). Utilise la synthèse vocale du navigateur (speechSynthesis),
+  donc aucune donnée envoyée ailleurs qu'à Twitch pour lire le tchat.
+-->
+<style>
+  .player{ padding: 20px; display: grid; gap: 16px; }
+  .big-row{ display: flex; gap: 10px; flex-wrap: wrap; }
+  .big-row input{ flex: 1; min-width: 180px; font-size: 1.05rem; padding: 13px 14px; }
+  .big-row .btn{ padding: 13px 22px; font-size: 1.02rem; }
+  .btn.stop{ background: var(--hot); }
+  .now{ min-height: 74px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; padding: 14px 16px; display: flex; gap: 14px; align-items: center; }
+  .now .wave{ display: flex; gap: 3px; align-items: center; height: 28px; flex: none; }
+  .now .wave i{ width: 4px; height: 6px; border-radius: 2px; background: var(--accent-2); }
+  .speaking .now .wave i{ animation: wv .9s ease-in-out infinite; }
+  .now .wave i:nth-child(2){ animation-delay: .15s !important; } .now .wave i:nth-child(3){ animation-delay: .3s !important; } .now .wave i:nth-child(4){ animation-delay: .45s !important; }
+  @keyframes wv{ 50%{ height: 26px; } }
+  .now .txt{ font-size: 1.02rem; }
+  .now .txt b{ color: var(--accent-2); }
+  .now .txt.idle{ color: var(--muted); }
+  .log{ max-height: 360px; overflow: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+  .log div{ font-size: .9rem; padding: 7px 10px; border-radius: 9px; background: var(--bg-2); display: flex; gap: 8px; align-items: baseline; }
+  .log div b{ flex: none; }
+  .log div.skip{ opacity: .45; }
+  .log div small{ margin-left: auto; color: var(--muted); flex: none; font-size: .76rem; }
+  .queue-info{ color: var(--muted); font-size: .86rem; }
+  .warn-box{ background: rgba(255,176,46,.1); border: 1px solid rgba(255,176,46,.35); color: #ffd59a; border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="voix.title">Lecture vocale du tchat</h1>
+    <p data-i18n="voix.lead">Un seul écran ? Entends ton tchat pendant que tu joues. Laisse cette page ouverte dans un onglet : les messages sont lus à voix haute, avec les filtres que tu veux.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Voix</legend>
+        <label class="field"><span>Voix</span><select name="voice" id="voice"></select><small>Les voix disponibles dépendent de ton navigateur et de ton système. Chrome et Edge en proposent beaucoup.</small></label>
+        <label class="field"><span><span>Vitesse</span><output for="v-rate" data-unit=" ×"></output></span><input type="range" id="v-rate" name="rate" min="0.5" max="2" step="0.1" value="1.1"></label>
+        <label class="field"><span><span>Hauteur</span><output for="v-pitch"></output></span><input type="range" id="v-pitch" name="pitch" min="0.5" max="1.5" step="0.1" value="1"></label>
+        <label class="field"><span><span>Volume</span><output for="v-vol" data-unit=" %"></output></span><input type="range" id="v-vol" name="vol" min="0" max="100" value="80"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Quels messages lire ?</legend>
+        <label class="field"><span>Messages de</span>
+          <select name="who">
+            <option value="all">Tout le monde</option>
+            <option value="subs">Abonnés, VIP et modos</option>
+            <option value="vip">VIP et modos</option>
+            <option value="mods">Modos seulement</option>
+          </select>
+        </label>
+        <label class="field"><span>Lire seulement les messages qui commencent par</span><input type="text" name="prefix" maxlength="20" placeholder="Vide = tous les messages (ex. !tts)" spellcheck="false" autocapitalize="off"></label>
+        <label class="check"><input type="checkbox" name="names" checked><span>Dire le pseudo (« Lunaa dit : … »)</span></label>
+        <label class="check"><input type="checkbox" name="events" checked><span>Annoncer les abonnements, subs offerts, bits et raids</span></label>
+        <label class="check"><input type="checkbox" name="nocmd" checked><span>Ignorer les commandes (messages avec !)</span></label>
+        <label class="check"><input type="checkbox" name="nolinks" checked><span>Remplacer les liens par « un lien »</span></label>
+        <label class="check"><input type="checkbox" name="noemotes" checked><span>Ne pas lire les noms des emotes</span></label>
+        <label class="field"><span><span>Longueur maximum lue</span><output for="v-max" data-unit=" caractères"></output></span><input type="range" id="v-max" name="maxlen" min="30" max="400" step="10" value="200"></label>
+        <label class="field"><span><span>Messages en attente maximum</span><output for="v-queue"></output></span><input type="range" id="v-queue" name="queue" min="1" max="30" value="8"><small>Si le tchat va trop vite, les plus vieux messages sont sautés.</small></label>
+        <label class="field"><span>Comptes à ignorer</span><textarea name="bots" spellcheck="false">nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot</textarea></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel player" id="player">
+        <div class="big-row">
+          <input type="text" id="ch" maxlength="25" placeholder="Nom de ta chaîne Twitch" spellcheck="false" autocapitalize="off" aria-label="Nom de ta chaîne Twitch">
+          <button type="button" class="btn" id="go">▶ Démarrer</button>
+        </div>
+        <div class="now"><div class="wave"><i></i><i></i><i></i><i></i></div><div class="txt idle" id="now">Entre le nom de ta chaîne et clique sur Démarrer.</div></div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="skip">⏭ Passer ce message</button>
+          <button type="button" class="btn ghost small" id="clear">🗑 Vider la file</button>
+          <button type="button" class="btn ghost small" id="test">🔊 Tester la voix</button>
+          <span class="queue-info" id="qinfo"></span>
+        </div>
+        <div class="warn-box" id="nosupport" hidden>Ton navigateur ne sait pas lire du texte à voix haute. Essaie avec Chrome, Edge ou Safari.</div>
+        <div class="log" id="log" aria-live="off"></div>
+      </div>
+      <div class="panel output">
+        <h2>Comment l'utiliser</h2>
+        <ol class="steps">
+          <li><span>Ouvre cette page dans ton navigateur (pas dans OBS) et laisse l'onglet ouvert pendant ton live.</span></li>
+          <li><span>Entre le nom de ta chaîne et clique sur <b>Démarrer</b>. Tes réglages sont mémorisés pour la prochaine fois.</span></li>
+          <li><span>Tu veux que tes viewers entendent aussi le tchat ? Dans OBS, ajoute une source <b>Capture audio d'application</b> sur ton navigateur. Sinon, seul toi l'entends.</span></li>
+        </ol>
+        <div class="tip">Rien n'est envoyé ailleurs : la voix est générée par ton navigateur. Pour couper un viewer qui abuse, ajoute son pseudo dans « Comptes à ignorer ».</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script src="../assets/twitch.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var synth = window.speechSynthesis;
+  var voiceSel = document.getElementById('voice'), nowEl = document.getElementById('now'), logEl = document.getElementById('log');
+  var player = document.getElementById('player'), chInput = document.getElementById('ch'), goBtn = document.getElementById('go');
+  var P = {}, conn = null, queue = [], speaking = false, voices = [];
+
+  if (!synth || !window.SpeechSynthesisUtterance){ document.getElementById('nosupport').hidden = false; }
+
+  /* ---------- Voix : françaises d'abord ---------- */
+  function loadVoices(){
+    if (!synth) return;
+    voices = synth.getVoices();
+    var keep = voiceSel.value || (SK.store.get('sk-voix') || {}).voice || '';
+    voiceSel.textContent = '';
+    var sorted = voices.slice().sort(function(a, b){
+      var fa = /^fr/i.test(a.lang) ? 0 : 1, fb = /^fr/i.test(b.lang) ? 0 : 1;
+      return fa - fb || a.name.localeCompare(b.name);
+    });
+    var def = document.createElement('option'); def.value = ''; def.textContent = 'Voix par défaut'; voiceSel.appendChild(def);
+    sorted.forEach(function(v){ var o = document.createElement('option'); o.value = v.name; o.textContent = v.name + ' (' + v.lang + ')'; voiceSel.appendChild(o); });
+    voiceSel.value = keep;
+    if (voiceSel.value !== keep){
+      var fr = sorted.find(function(v){ return /^fr/i.test(v.lang); });
+      voiceSel.value = fr ? fr.name : '';
+    }
+  }
+  loadVoices();
+  if (synth) synth.addEventListener('voiceschanged', loadVoices);
+
+  /* ---------- Nettoyage du texte avant lecture ---------- */
+  function clean(m){
+    var text = '';
+    SKT.pieces(m.text, m.emotes, true).forEach(function(p){ text += p.emote ? (P.noemotes === '1' ? ' ' : ' ' + p.name + ' ') : p.text; });
+    if (P.nolinks === '1') text = text.replace(/\bhttps?:\/\/\S+|\bwww\.\S+|\b\S+\.(com|fr|net|org|tv|gg|io|be|ch|ca|ly)(\/\S*)?\b/gi, ' un lien ');
+    text = text.replace(/(.)\1{3,}/g, '$1$1$1')     // "aaaaaaa" -> "aaa"
+               .replace(/(\b\w+\b)(\s+\1\b){2,}/gi, '$1 $1') // "LUL LUL LUL LUL" -> "LUL LUL"
+               .replace(/\s+/g, ' ').trim();
+    var max = +P.maxlen || 200;
+    if (text.length > max) text = text.slice(0, max).replace(/\s\S*$/, '') + '…';
+    return text;
+  }
+
+  function addLog(name, text, skipped, why){
+    var d = document.createElement('div'); if (skipped) d.className = 'skip';
+    var b = document.createElement('b'); b.textContent = name; d.appendChild(b);
+    d.appendChild(document.createTextNode(text));
+    if (why){ var s = document.createElement('small'); s.textContent = why; d.appendChild(s); }
+    logEl.prepend(d);
+    while (logEl.children.length > 60) logEl.lastChild.remove();
+  }
+  function updateQ(){ document.getElementById('qinfo').textContent = queue.length ? queue.length + ' en attente' : ''; }
+
+  function enqueue(item){
+    var max = +P.queue || 8;
+    while (queue.length >= max){ var dropped = queue.shift(); addLog(dropped.name, dropped.text, true, 'sauté'); }
+    queue.push(item); updateQ(); next();
+  }
+  function next(){
+    if (speaking || !queue.length || !synth) return;
+    var it = queue.shift(); updateQ();
+    var u = new SpeechSynthesisUtterance(it.say);
+    var v = voices.find(function(x){ return x.name === P.voice; });
+    if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'fr-FR';
+    u.rate = +P.rate || 1; u.pitch = +P.pitch || 1; u.volume = (+P.vol || 0) / 100;
+    speaking = true; player.classList.add('speaking');
+    nowEl.className = 'txt'; nowEl.textContent = '';
+    var b = document.createElement('b'); b.textContent = it.name ? it.name + ' ' : ''; nowEl.appendChild(b); nowEl.appendChild(document.createTextNode(it.text));
+    var done = function(){ if (u._done) return; u._done = true; speaking = false; player.classList.remove('speaking'); setTimeout(next, 250); };
+    u.onend = done; u.onerror = done;
+    // Filet de sécurité : certains navigateurs n'envoient jamais "onend"
+    setTimeout(done, 4000 + it.say.length * 140 / (u.rate || 1));
+    synth.speak(u);
+    addLog(it.name, it.text, false, '');
+  }
+
+  function bots(){ var o = {}; String(P.bots || '').toLowerCase().split(/[\s,;]+/).forEach(function(b){ if (b) o[b.replace(/^@/, '')] = 1; }); return o; }
+
+  function onMessage(m){
+    var who = P.who;
+    if (bots()[m.login]) return;
+    if (who === 'mods' && !m.isMod) return;
+    if (who === 'vip' && !m.isMod && !m.isVip) return;
+    if (who === 'subs' && !m.isMod && !m.isVip && !m.isSub) return;
+    var raw = m.text;
+    if (P.prefix){
+      if (raw.toLowerCase().indexOf(P.prefix.toLowerCase()) !== 0) return;
+      m = Object.assign({}, m, { text: raw.slice(P.prefix.length).trim(), emotes: '' });
+    } else if (P.nocmd === '1' && raw.charAt(0) === '!') return;
+    var text = clean(m);
+    if (!text || !/[\p{L}\p{N}]/u.test(text)) return;
+    enqueue({ name: m.name, text: text, say: (P.names === '1' ? m.name.replace(/_/g, ' ').replace(/\d+$/, '') + (m.action ? ' ' : ' dit : ') : '') + text });
+  }
+  function onEvent(e){
+    if (P.events !== '1') return;
+    var s = e.type === 'sub' ? e.name + ' s\'abonne !'
+      : e.type === 'resub' ? e.name + ' se réabonne, ' + e.months + ' mois !'
+      : e.type === 'giftbomb' ? e.name + ' offre ' + e.count + ' abonnements !'
+      : e.type === 'subgift' && !e.fromBomb ? e.name + ' offre un abonnement à ' + e.recipient + ' !'
+      : e.type === 'bits' ? e.name + ' envoie ' + e.amount + ' bits !'
+      : e.type === 'raid' ? 'Raid de ' + e.name + ' avec ' + e.count + ' viewers !' : '';
+    if (s) enqueue({ name: '🎉', text: s, say: s });
+  }
+
+  /* ---------- Démarrer / arrêter ---------- */
+  function stop(){
+    if (conn){ conn.close(); conn = null; }
+    queue = []; updateQ(); if (synth) synth.cancel();
+    goBtn.textContent = '▶ Démarrer'; goBtn.classList.remove('stop');
+    nowEl.className = 'txt idle'; nowEl.textContent = 'Arrêté.';
+  }
+  goBtn.addEventListener('click', function(){
+    if (conn) return stop();
+    var ch = SKT.cleanChannel(chInput.value);
+    if (!ch){ chInput.focus(); SK.toast('Entre le nom de ta chaîne'); return; }
+    SK.store.set('sk-voix-ch', ch);
+    if (synth){ synth.cancel(); synth.speak(new SpeechSynthesisUtterance('')); } // débloque l'audio après le clic
+    goBtn.textContent = '■ Arrêter'; goBtn.classList.add('stop');
+    conn = SKT.connect(ch, {
+      status: function(s){
+        nowEl.className = 'txt idle';
+        nowEl.textContent = s === 'connected' ? 'Connecté à #' + ch + ', en attente de messages…' : s === 'connecting' ? 'Connexion à #' + ch + '…'
+          : s === 'notfound' ? 'Pas de réponse de #' + ch + ' : vérifie le nom de la chaîne.' : s === 'retry' ? 'Connexion perdue, nouvelle tentative…' : nowEl.textContent;
+      },
+      room: function(id){ SKT.loadChannelEmotes(id); },
+      message: onMessage, event: onEvent
+    });
+    SKT.loadGlobalEmotes();
+  });
+  chInput.value = SK.store.get('sk-voix-ch') || '';
+  chInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') goBtn.click(); });
+
+  document.getElementById('skip').addEventListener('click', function(){ if (synth) synth.cancel(); });
+  document.getElementById('clear').addEventListener('click', function(){ queue = []; updateQ(); if (synth) synth.cancel(); });
+  document.getElementById('test').addEventListener('click', function(){
+    enqueue({ name: 'Test', text: 'Salut ! Voici comment ton tchat va sonner.', say: 'Salut ! Voici comment ton tchat va sonner.' });
+  });
+
+  var ed = SK.editor({ form: document.getElementById('settings'), overlay: 'index.html', storageKey: 'sk-voix',
+    resetBtn: document.getElementById('reset'), onChange: function(p){ P = p; } });
+  P = ed.get();
+})();
+</script>
+</body>
+</html>

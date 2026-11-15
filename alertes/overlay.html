@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Alertes — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  Alertes d'abonnement, de subs offerts, de bits et de raids, sans connexion
+  (lues dans le tchat Twitch). Les alertes passent une par une (file d'attente).
+  Les sons sont synthétisés avec WebAudio : aucun fichier à héberger.
+  Les follows demandent une connexion Twitch : prévus dans une version suivante.
+-->
+<style>
+  :root{ --ac: #9b5cff; --ac2: #4be1c3; --fs: 34px; --font: 'Space Grotesk', system-ui, sans-serif; }
+  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body{ font-family: var(--font); font-size: var(--fs); color: #fff; display: flex; align-items: center; justify-content: center; }
+  #stage{ position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+
+  .alert{ position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 90%; }
+  .icon{ font-size: 2.6em; line-height: 1; margin-bottom: .15em; filter: drop-shadow(0 .05em .2em rgba(0,0,0,.5)); }
+  .icon img{ max-height: 4em; max-width: 8em; display: block; }
+  .title{ font-weight: 800; line-height: 1.1; text-shadow: 0 .05em .3em rgba(0,0,0,.7); }
+  .title b{ color: var(--ac2); }
+  .msg{ margin-top: .45em; font-size: .62em; font-weight: 600; max-width: 26em; opacity: .95; text-shadow: 0 .05em .2em rgba(0,0,0,.8); overflow-wrap: anywhere; }
+  .msg .emote{ height: 1.5em; vertical-align: middle; margin: -.2em .05em; }
+
+  .s-card .alert{ background: rgba(12,10,22,.88); padding: .7em 1.1em .8em; border-radius: .6em; box-shadow: 0 .3em 1.2em rgba(0,0,0,.45), inset 0 0 0 .06em rgba(255,255,255,.08); border-bottom: .12em solid var(--ac); }
+  .s-neon .alert{ background: rgba(5,4,12,.7); padding: .7em 1.1em .8em; border-radius: .4em; border: .07em solid var(--ac); box-shadow: 0 0 .9em var(--ac), inset 0 0 .5em color-mix(in srgb, var(--ac) 45%, transparent); }
+  .s-neon .title b{ text-shadow: 0 0 .4em var(--ac2); }
+  .s-banner #stage{ align-items: flex-start; }
+  .s-banner .alert{ flex-direction: row; gap: .6em; margin-top: .4em; background: linear-gradient(90deg, var(--ac), color-mix(in srgb, var(--ac) 40%, #0c0a16)); padding: .45em 1em .5em .6em; border-radius: .4em; text-align: left; align-items: center; box-shadow: 0 .2em .8em rgba(0,0,0,.4); }
+  .s-banner .icon{ font-size: 1.5em; margin: 0; }
+  .s-banner .msg{ margin-top: .2em; }
+  .s-clean .alert{ text-shadow: 0 0 .1em #000; }
+
+  /* Entrées / sorties */
+  .in-pop{ animation: pop .6s cubic-bezier(.2,1.5,.4,1) both; }
+  .in-slide{ animation: slide .6s cubic-bezier(.2,1,.3,1) both; }
+  .in-bounce{ animation: bounce .9s cubic-bezier(.3,1.6,.5,1) both; }
+  .out{ animation: out .45s ease forwards !important; }
+  @keyframes pop{ from{ opacity: 0; transform: scale(.4) rotate(-6deg); } }
+  @keyframes slide{ from{ opacity: 0; transform: translateY(-1.5em); } }
+  @keyframes bounce{ 0%{ opacity: 0; transform: translateY(2em) scale(.8); } 60%{ opacity: 1; transform: translateY(-.25em) scale(1.04); } }
+  @keyframes out{ to{ opacity: 0; transform: scale(.9) translateY(-.4em); } }
+  .icon{ animation: wiggle 1.4s ease-in-out .5s infinite; }
+  @keyframes wiggle{ 0%,100%{ transform: rotate(0); } 25%{ transform: rotate(-8deg) scale(1.08); } 75%{ transform: rotate(8deg); } }
+
+  .confetti{ position: absolute; left: 50%; top: 50%; width: .28em; height: .45em; border-radius: .06em; animation: conf 1.8s cubic-bezier(.15,.7,.4,1) forwards; pointer-events: none; }
+  @keyframes conf{ from{ transform: translate(-50%,-50%) rotate(0); opacity: 1; } to{ transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/twitch.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = {
+    ch: '', style: 'card', anim: 'pop', dur: '7', sound: 'chime', vol: '60', confetti: '1', showmsg: '1', emotes3: '1',
+    sub: '1', gift: '1', bits: '1', raid: '1', minbits: '1', minraid: '1',
+    tsub: '{name} s\'abonne !', tresub: '{name} se réabonne · {months} mois !', tgift: '{name} offre un abonnement à {recipient} !',
+    tbomb: '{name} offre {count} abonnements !', tbits: '{name} envoie {amount} bits !', traid: 'Raid de {name} avec {count} viewers !',
+    img: '', ac: '9b5cff', ac2: '4be1c3', font: 'grotesk', fs: '34', demo: '0'
+  };
+  var ICONS = { sub: '⭐', resub: '🌟', subgift: '🎁', giftbomb: '🎉', bits: '💎', raid: '🚀' };
+  var num = SKO.num, el = SKO.el;
+  var stage = document.getElementById('stage');
+  var P = {}, queue = [], busy = false, source = null, sourceKey = '';
+
+  /* ---------- Sons synthétisés ---------- */
+  var actx = null;
+  function play(kind){
+    if (kind === 'none') return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      var vol = num(P.vol, 0, 100, 60) / 100, t0 = actx.currentTime + .02;
+      var master = actx.createGain(); master.gain.value = vol * .5; master.connect(actx.destination);
+      function note(freq, at, len, type, g){
+        var o = actx.createOscillator(), e = actx.createGain();
+        o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0 + at);
+        e.gain.setValueAtTime(0, t0 + at); e.gain.linearRampToValueAtTime(g || .6, t0 + at + .015);
+        e.gain.exponentialRampToValueAtTime(.001, t0 + at + len);
+        o.connect(e); e.connect(master); o.start(t0 + at); o.stop(t0 + at + len + .05);
+      }
+      var S = {
+        chime:   function(){ [[880, 0], [1318.5, .12], [1760, .24]].forEach(function(n){ note(n[0], n[1], .9, 'sine'); }); },
+        fanfare: function(){ [[523.25, 0], [659.25, .14], [783.99, .28], [1046.5, .42]].forEach(function(n, i){ note(n[0], n[1], i === 3 ? 1 : .3, 'triangle', .5); }); },
+        coin:    function(){ note(987.77, 0, .1, 'square', .25); note(1318.5, .09, .5, 'square', .25); },
+        pop:     function(){ var o = actx.createOscillator(), e = actx.createGain(); o.frequency.setValueAtTime(320, t0); o.frequency.exponentialRampToValueAtTime(900, t0 + .12);
+                   e.gain.setValueAtTime(.7, t0); e.gain.exponentialRampToValueAtTime(.001, t0 + .25); o.connect(e); e.connect(master); o.start(t0); o.stop(t0 + .3); },
+        arcade:  function(){ [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach(function(f, i){ note(f, i * .06, .18, 'square', .22); }); }
+      };
+      (S[kind] || S.chime)();
+    } catch(e){}
+  }
+
+  /* ---------- Texte de l'alerte : "{name} offre {count}…" avec le pseudo en couleur ---------- */
+  function fill(tpl, e){
+    var frag = document.createDocumentFragment();
+    String(tpl || '').split(/(\{\w+\})/).forEach(function(part){
+      var m = /^\{(\w+)\}$/.exec(part);
+      if (!m){ if (part) frag.appendChild(document.createTextNode(part)); return; }
+      var v = { name: e.name, months: e.months, count: e.count, amount: e.amount, recipient: e.recipient, tier: e.tier }[m[1]];
+      if (v == null) v = '';
+      frag.appendChild(m[1] === 'name' || m[1] === 'recipient' ? el('b', '', String(v)) : document.createTextNode(String(v)));
+    });
+    return frag;
+  }
+
+  function confetti(box){
+    var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--ac'), cs.getPropertyValue('--ac2'), '#ffd700', '#ff5c8a', '#fff'];
+    for (var i = 0; i < 60; i++){
+      var c = el('i', 'confetti');
+      c.style.background = cols[i % cols.length];
+      var a = Math.random() * Math.PI * 2, d = 3 + Math.random() * 6;
+      c.style.setProperty('--dx', Math.cos(a) * d + 'em'); c.style.setProperty('--dy', Math.sin(a) * d - 1 + 'em');
+      c.style.setProperty('--r', (Math.random() * 900 - 450) + 'deg');
+      c.style.animationDelay = Math.random() * .15 + 's';
+      box.appendChild(c); setTimeout(c.remove.bind(c), 2200);
+    }
+  }
+
+  function showNext(){
+    if (busy || !queue.length) return;
+    busy = true;
+    var e = queue.shift();
+    var tpl = { sub: P.tsub, resub: P.tresub, subgift: P.tgift, giftbomb: P.tbomb, bits: P.tbits, raid: P.traid }[e.type];
+    var a = el('div', 'alert in-' + (/^(pop|slide|bounce)$/.test(P.anim) ? P.anim : 'pop'));
+    var icon = el('div', 'icon');
+    if (/^https:\/\//.test(P.img)){ var im = new Image(); im.src = P.img; im.alt = ''; icon.appendChild(im); } else icon.textContent = ICONS[e.type] || '✨';
+    a.appendChild(icon);
+    var body = el('div', 'body');
+    var t = el('div', 'title'); t.appendChild(fill(tpl, e)); body.appendChild(t);
+    if (P.showmsg === '1' && e.text && e.type !== 'raid'){
+      var text = e.type === 'bits' ? e.text.replace(/\b[a-z]+\d+\b/gi, '').trim() : e.text;
+      if (text){ var m = SKT.renderText(text, e.type === 'bits' ? '' : e.emotes, P.emotes3 === '1').node; m.className = 'msg'; body.appendChild(m); }
+    }
+    a.appendChild(body);
+    stage.appendChild(a);
+    play(P.sound);
+    if (P.confetti === '1') confetti(stage);
+    var dur = num(P.dur, 2, 30, 7) * 1000;
+    setTimeout(function(){
+      a.classList.add('out');
+      setTimeout(function(){ a.remove(); busy = false; setTimeout(showNext, 400); }, 460);
+    }, dur);
+  }
+
+  function onEvent(e){
+    if ((e.type === 'sub' || e.type === 'resub') && P.sub !== '1') return;
+    if (e.type === 'resub' && e.months <= 1) e.type = 'sub';
+    if (e.type === 'subgift' && (P.gift !== '1' || e.fromBomb)) return;
+    if (e.type === 'giftbomb' && P.gift !== '1') return;
+    if (e.type === 'bits' && (P.bits !== '1' || e.amount < num(P.minbits, 1, 1e6, 1))) return;
+    if (e.type === 'raid' && (P.raid !== '1' || e.count < num(P.minraid, 1, 1e6, 1))) return;
+    if (!/^(sub|resub|subgift|giftbomb|bits|raid)$/.test(e.type)) return;
+    if (queue.length > 30) queue.shift();
+    queue.push(e); showNext();
+  }
+
+  // Bouton « Tester » de l'éditeur
+  window.addEventListener('message', function(e){
+    if (e.origin !== location.origin || !e.data || e.data.type !== 'sk-test') return;
+    var ev = Object.assign({}, e.data.event); ev.emotes = SKT.demoEmotesTag(ev.text || '');
+    onEvent(ev);
+  });
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    var root = document.documentElement.style;
+    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--fs', num(P.fs, 14, 90, 34) + 'px');
+    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
+    root.setProperty('--ac2', SKO.hex(P.ac2, DEFAULTS.ac2));
+    document.body.className = 's-' + (/^(card|neon|banner|clean)$/.test(P.style) ? P.style : 'card');
+    if (P.emotes3 === '1') SKT.loadGlobalEmotes();
+
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      queue = [];
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, room: function(id){ if (P.emotes3 === '1') SKT.loadChannelEmotes(id); }, event: onEvent };
+      if (sk === 'demo'){
+        var seq = [
+          { type: 'sub', tier: 1, months: 1, name: 'Lunaa_', text: 'Trop contente d\'être là <3' },
+          { type: 'bits', amount: 500, name: 'KevGaming', text: 'Cheer500 GG pour la win !' },
+          { type: 'giftbomb', count: 5, tier: 1, name: 'Mamie_Gameuse', text: '' },
+          { type: 'raid', count: 42, name: 'Choupette', text: '' },
+          { type: 'resub', tier: 1, months: 14, name: 'Tonton_Raclette', text: 'Toujours fidèle au poste SeemsGood' },
+          { type: 'subgift', tier: 1, name: 'PixelPaulo', recipient: 'xXDarkSasukeXx', text: '' }
+        ];
+        var i = 0;
+        source = SKT.demo(h, { min: 2500, spread: 0, extra: function(){
+          if (queue.length) return { type: 'none' };
+          var e = Object.assign({}, seq[i++ % seq.length]); e.emotes = SKT.demoEmotesTag(e.text || ''); return e;
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>
