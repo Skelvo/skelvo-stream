@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Widget « musique en cours » gratuit pour stream — Skelvo Stream</title>
+<meta name="description" content="Affiche la musique que tu écoutes (Spotify, Deezer, YouTube Music, Apple Music) sur ton stream, avec la pochette. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/musique/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: flex; align-items: center; gap: 4px; padding: 4px; }
+  .sw b{ width: 20px; height: 20px; border-radius: 4px; background: linear-gradient(135deg, #1ed760, #2a2347); flex: none; }
+  .sw i{ height: 5px; flex: 1; border-radius: 3px; background: #fff; opacity: .7; }
+  .sw-card{ background: #17132a; border-left: 2px solid #1ed760; }
+  .sw-vinyl b{ border-radius: 50%; } .sw-vinyl{ background: #17132a; border-radius: 99px; }
+  .sw-clean{ background: transparent; }
+  .setup{ margin: 0 0 14px; padding-left: 18px; font-size: .88rem; color: #d9d3f0; display: grid; gap: 6px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="musique.title">Musique en cours</h1>
+    <p data-i18n="musique.lead">Le titre, l'artiste et la pochette de ce que tu écoutes s'affichent sur ton stream. Ça marche avec Spotify, Deezer, YouTube Music, Apple Music… grâce à Last.fm.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Relier ta musique</legend>
+        <ol class="setup">
+          <li>Crée un compte gratuit sur <a href="https://www.last.fm/join" target="_blank" rel="noopener">last.fm</a>.</li>
+          <li>Dans les réglages de Last.fm, onglet <b>Applications</b>, connecte Spotify (ou installe le scrobbler de ton appli de musique).</li>
+          <li>Entre ton pseudo Last.fm ci-dessous.</li>
+        </ol>
+        <label class="field"><span>Ton pseudo Last.fm</span><input type="text" name="user" value="" placeholder="ex. skelvo" maxlength="40" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Clé API Last.fm</span><input type="text" name="key" value="" placeholder="32 caractères" maxlength="64" spellcheck="false" autocapitalize="off"><small>Gratuite, en 1 minute sur <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">last.fm/api/account/create</a> (mets n'importe quel nom d'application).</small></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card"><b></b><i></i></span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-vinyl" value="vinyl"><label for="style-vinyl"><span class="sw sw-vinyl"><b></b><i></i></span><span>Vinyle</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><b></b><i></i></span><span>Texte seul</span></label></div>
+        </div>
+        <label class="check"><input type="checkbox" name="art" checked><span>Afficher la pochette</span></label>
+        <label class="check"><input type="checkbox" name="hide" checked><span>Cacher quand rien ne joue</span></label>
+        <label class="field"><span>Petit titre</span><input type="text" name="head" value="En écoute" placeholder="" maxlength="30" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Apparence</legend>
+        <div class="field colors"><label class="color"><input type="color" name="ac" value="#1ed760"><span>Accent</span></label></div>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="60" value="24"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma musique</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">700 × 140</b>.</span></li>
+          <li><span>La musique se met à jour toute seule toutes les 12 secondes. Si elle s'arrête, le widget se cache (si l'option est cochée).</span></li>
+        </ol>
+        <div class="tip">Pourquoi Last.fm et pas Spotify directement ? Depuis 2025, Spotify réserve son API aux grandes entreprises. Last.fm est gratuit et marche avec presque toutes les applis de musique.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-musique-size', def: { w: 700, h: 140 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-musique',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){  }
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Musique en cours — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  « En écoute » : titre, artiste et pochette de la musique en cours, lus sur
+  Last.fm (qui se branche gratuitement sur Spotify, Deezer, YouTube Music,
+  Apple Music…). On interroge l'API publique de Last.fm toutes les 12 secondes.
+  Spotify n'ouvre plus son API aux petits outils gratuits depuis 2025.
+-->
+<style>
+  :root{ --ac: #1ed760; --fs: 24px; --font: 'Space Grotesk', system-ui, sans-serif; }
+  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body{ font-family: var(--font); font-size: var(--fs); color: #fff; display: flex; align-items: center; padding: 0 .4em; box-sizing: border-box; }
+  .np{ display: flex; align-items: center; gap: .65em; max-width: 100%; transition: opacity .5s, transform .5s; }
+  .np.hidden{ opacity: 0; transform: translateY(.5em); }
+  .art{ flex: none; width: 2.9em; height: 2.9em; border-radius: .35em; background: linear-gradient(135deg, var(--ac), #2a2347) center/cover; box-shadow: 0 .15em .5em rgba(0,0,0,.45); }
+  .no-art .art{ display: none; }
+  .info{ min-width: 0; overflow: hidden; }
+  .head{ display: flex; align-items: center; gap: .45em; font-size: .52em; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ac); }
+  .eq{ display: inline-flex; gap: .12em; align-items: flex-end; height: .9em; }
+  .eq i{ width: .18em; background: var(--ac); border-radius: .1em; animation: eq 1s ease-in-out infinite; }
+  .eq i:nth-child(2){ animation-delay: -.3s; } .eq i:nth-child(3){ animation-delay: -.6s; }
+  @keyframes eq{ 0%,100%{ height: 25%; } 50%{ height: 100%; } }
+  .paused .eq i{ animation: none; height: 25%; }
+  .title, .artist{ white-space: nowrap; overflow: hidden; }
+  .title{ font-weight: 800; font-size: 1em; line-height: 1.25; }
+  .artist{ font-size: .72em; opacity: .8; font-weight: 600; }
+  .scroll span{ display: inline-block; padding-right: 2em; animation: marquee var(--mq, 10s) linear infinite; }
+  @keyframes marquee{ to{ transform: translateX(-50%); } }
+
+  .s-card .np{ background: rgba(12,10,22,.85); padding: .45em .9em .45em .45em; border-radius: .6em; box-shadow: 0 .15em .6em rgba(0,0,0,.4); border-left: .14em solid var(--ac); }
+  .s-clean .np{ text-shadow: 0 0 .08em #000, 0 .05em .15em #000; }
+  .s-vinyl .art{ border-radius: 50%; animation: spin 6s linear infinite; position: relative; }
+  .s-vinyl .art::after{ content: ""; position: absolute; inset: 40%; border-radius: 50%; background: #0c0a16; box-shadow: 0 0 0 .1em rgba(255,255,255,.2); }
+  .s-vinyl.paused .art{ animation-play-state: paused; }
+  .s-vinyl .np{ background: rgba(12,10,22,.8); padding: .4em .9em .4em .4em; border-radius: 999px; }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .change .info{ animation: change .6s ease; }
+  @keyframes change{ from{ opacity: 0; transform: translateX(.6em); } }
+</style>
+</head>
+<body>
+<div class="np hidden" id="np">
+  <div class="art" id="art"></div>
+  <div class="info">
+    <div class="head"><span class="eq"><i></i><i></i><i></i></span><span id="headtxt">En écoute</span></div>
+    <div class="title" id="title"></div>
+    <div class="artist" id="artist"></div>
+  </div>
+</div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  // Clé API Last.fm de Skelvo Stream (gratuite). Si elle est vide, le streamer met la sienne dans l'éditeur.
+  var DEFAULT_KEY = '';
+  var DEFAULTS = { user: '', key: '', style: 'card', ac: '1ed760', font: 'grotesk', fs: '24', art: '1', hide: '1', head: 'En écoute', demo: '0' };
+  var num = SKO.num;
+  var np = document.getElementById('np'), artEl = document.getElementById('art'), titleEl = document.getElementById('title'), artistEl = document.getElementById('artist');
+  var P = {}, timer = null, current = '', pollKey = '', last = null;
+
+  function setText(node, text){
+    node.textContent = '';
+    var span = document.createElement('span'); span.textContent = text; node.appendChild(span);
+    node.classList.remove('scroll');
+    // Défilement si le texte est trop long pour la place disponible
+    requestAnimationFrame(function(){
+      if (span.offsetWidth > node.clientWidth + 2){
+        var copy = document.createElement('span'); copy.textContent = text;
+        node.appendChild(copy); node.classList.add('scroll');
+        node.style.setProperty('--mq', Math.max(6, text.length * .35) + 's');
+      }
+    });
+  }
+
+  function show(track){
+    last = track;
+    if (!track){ if (P.hide === '1') np.classList.add('hidden'); document.body.classList.add('paused'); return; }
+    document.body.classList.toggle('paused', !track.playing);
+    if (!track.playing && P.hide === '1'){ np.classList.add('hidden'); return; }
+    var id = track.title + '|' + track.artist;
+    if (id !== current){
+      current = id;
+      setText(titleEl, track.title); setText(artistEl, track.artist);
+      artEl.style.backgroundImage = track.img ? 'url("' + track.img.replace(/"/g, '') + '")' : '';
+      np.classList.remove('change'); void np.offsetWidth; np.classList.add('change');
+    }
+    np.classList.remove('hidden');
+  }
+
+  function poll(){
+    var user = String(P.user || '').trim(), key = String(P.key || DEFAULT_KEY).trim();
+    if (!user || !key){ SKO.tellParent(user ? 'nokey' : 'nouser'); show(null); return; }
+    var url = 'https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&limit=1&format=json&user=' + encodeURIComponent(user) + '&api_key=' + encodeURIComponent(key);
+    fetch(url).then(function(r){ return r.json(); }).then(function(d){
+      if (d.error){ SKO.tellParent('lferror', { message: d.message }); show(null); return; }
+      SKO.tellParent('connected', { channel: user });
+      var t = d.recenttracks && d.recenttracks.track && d.recenttracks.track[0];
+      if (!t){ show(null); return; }
+      var img = (t.image || []).filter(function(i){ return i['#text']; }).pop();
+      // Last.fm renvoie une image grise par défaut quand il n'a pas de pochette
+      var src = img && !/2a96cbd8b46e442fc41c2b86b821562f/.test(img['#text']) ? img['#text'] : '';
+      show({ title: t.name, artist: t.artist && (t.artist['#text'] || t.artist.name) || '', img: src, playing: !!(t['@attr'] && t['@attr'].nowplaying === 'true') });
+    }).catch(function(){ SKO.tellParent('retry'); });
+  }
+
+  var DEMO = [
+    { title: 'Nuit blanche sur la Côte', artist: 'Les Pixels Perdus' },
+    { title: 'Respawn (Version longue qui ne tient pas dans la case)', artist: 'DJ Raclette' },
+    { title: 'Boss final', artist: 'Synthwave Club' }
+  ];
+  var demoI = 0;
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    var root = document.documentElement.style;
+    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--fs', num(P.fs, 12, 80, 24) + 'px');
+    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
+    document.body.className = 's-' + (/^(card|clean|vinyl)$/.test(P.style) ? P.style : 'card') + (P.art === '1' ? '' : ' no-art');
+    document.getElementById('headtxt').textContent = P.head || '';
+    document.querySelector('.head').style.display = P.head ? '' : 'none';
+    var k = P.demo === '1' ? 'demo' : P.user + '|' + P.key;
+    if (k !== pollKey){
+      pollKey = k; clearInterval(timer); current = '';
+      if (P.demo === '1'){
+        SKO.tellParent('demo');
+        var d = function(){ var t = DEMO[demoI++ % DEMO.length]; show({ title: t.title, artist: t.artist, img: '', playing: true }); };
+        d(); timer = setInterval(d, 6000);
+      } else { poll(); timer = setInterval(poll, 12000); }
+    } else { current = ''; show(last); }
+  });
+})();
+</script>
+</body>
+</html>

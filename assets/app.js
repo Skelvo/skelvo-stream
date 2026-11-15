@@ -193,12 +193,15 @@
       if (e.origin !== location.origin || !e.data || e.data.type !== 'sk-status') return;
       var ch = e.data.channel ? '#' + e.data.channel : '';
       switch (e.data.state){
-        case 'demo':       setStatus('demo', SK.t('st.demo', 'Démonstration avec un faux tchat. Passe sur « Ma chaîne » pour tester en vrai.')); break;
+        case 'demo':       setStatus('demo', SK.t('st.demo', 'Aperçu de démonstration. Clique sur l\'autre bouton, en haut à droite, pour tester en vrai.')); break;
         case 'connecting': setStatus('', SK.t('st.connecting', 'Connexion à') + ' ' + ch + '…'); break;
         case 'connected':  setStatus('ok', SK.t('st.connected', 'Connecté à') + ' ' + ch + '.'); break;
         case 'notfound':   setStatus('warn', SK.t('st.notfound', 'Pas de réponse de') + ' ' + ch + SK.t('st.notfound2', ' : vérifie le nom de la chaîne.')); break;
         case 'retry':      setStatus('warn', SK.t('st.retry', 'Connexion perdue, nouvelle tentative…')); break;
         case 'idle':       setStatus('warn', SK.t('st.idle', 'Entre le nom de ta chaîne pour tester en vrai.')); break;
+        case 'nouser':     setStatus('warn', SK.t('st.nouser', 'Entre ton pseudo Last.fm pour voir ta vraie musique.')); break;
+        case 'nokey':      setStatus('warn', SK.t('st.nokey', 'Il manque la clé API Last.fm.')); break;
+        case 'lferror':    setStatus('warn', 'Last.fm : ' + (e.data.message || SK.t('st.lferror', 'erreur'))); break;
       }
     });
   };

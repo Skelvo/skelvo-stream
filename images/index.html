@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Emotes, badges, panneaux et bannières Twitch gratuits — Skelvo Stream</title>
+<meta name="description" content="Redimensionne tes emotes et badges aux tailles Twitch et Discord, crée tes panneaux de profil et ta bannière hors ligne. Gratuit, tout se fait dans ton navigateur." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/images/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=Rubik:wght@700;800&family=Bebas+Neue&family=Nunito:wght@800;900&family=Permanent+Marker&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<!--
+  Atelier images : tout est dessiné dans un <canvas> du navigateur, aucune image
+  n'est envoyée nulle part.
+-->
+<style>
+  .tabs{ display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .tabs button{ border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); font: 600 .95rem 'Space Grotesk', sans-serif; padding: 10px 16px; border-radius: 12px; cursor: pointer; }
+  .tabs button[aria-selected="true"]{ color: var(--text); border-color: var(--accent); background: rgba(155,92,255,.14); }
+  .tab[hidden]{ display: none !important; }
+  .drop{ display: block; border: 2px dashed var(--line-2); border-radius: 16px; padding: 30px 18px; text-align: center; color: var(--muted); cursor: pointer; transition: border-color .2s, background .2s; }
+  .drop.over{ border-color: var(--accent); background: rgba(155,92,255,.08); }
+  .drop b{ color: var(--text); display: block; font-size: 1.05rem; margin-bottom: 4px; }
+  .sizes{ display: grid; gap: 14px; }
+  .group h3{ font-size: 1rem; margin: 0 0 10px; }
+  .outs{ display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .out{ display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
+  .out .bgs{ display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--line-2); }
+  .out .bgs span{ padding: 8px; display: grid; place-items: center; }
+  .out .bgs span:first-child{ background: #18181b; } .out .bgs span:last-child{ background: #f7f7f8; }
+  .out button{ font-size: .78rem; padding: 5px 10px; }
+  .panels{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .panels figure{ margin: 0; display: grid; gap: 6px; }
+  .panels canvas{ width: 100%; height: auto; border-radius: 6px; display: block; }
+  .banner canvas{ width: 100%; height: auto; border-radius: 10px; display: block; }
+  .tool-grid{ display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; align-items: start; padding-bottom: 60px; }
+  @media (max-width: 920px){ .tool-grid{ grid-template-columns: 1fr; } }
+  .pad{ padding: 18px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small>outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Atelier images pour ta chaîne</h1>
+    <p>Emotes et badges aux bonnes tailles, panneaux de profil, bannière hors ligne. Tout se fait dans ton navigateur : tes images ne sont envoyées nulle part.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="t-emotes">😀 Emotes et badges</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t-panels">🧩 Panneaux de profil</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t-banner">🖼️ Bannières</button>
+  </div>
+
+  <!-- ---------- Emotes et badges ---------- -->
+  <section class="tab tool-grid" id="t-emotes">
+    <div class="panel settings">
+      <fieldset>
+        <legend>Ton image</legend>
+        <label class="drop" id="drop"><input type="file" id="file" accept="image/*" hidden><b>Dépose ton image ici</b>ou clique pour la choisir (PNG transparent conseillé)</label>
+      </fieldset>
+      <fieldset>
+        <legend>Réglages</legend>
+        <label class="field"><span>Cadrage</span><select id="fit"><option value="contain">Image entière (marges transparentes)</option><option value="cover">Remplir le carré (rogne les bords)</option></select></label>
+        <label class="check"><input type="checkbox" id="trim" checked><span>Enlever les marges transparentes autour</span></label>
+        <label class="field"><span><span>Marge intérieure</span><output id="padout">0 %</output></span><input type="range" id="pad" min="0" max="20" value="0"></label>
+      </fieldset>
+    </div>
+    <div class="panel pad">
+      <div class="sizes" id="sizes"><p class="hint" style="margin:0">Ajoute une image pour voir tes emotes et badges à toutes les tailles, sur fond sombre et clair.</p></div>
+      <div class="btn-row" style="margin-top:16px"><button type="button" class="btn" id="dl-all" disabled>Tout télécharger</button></div>
+      <div class="tip">Tailles officielles : emotes Twitch 112, 56 et 28 px · badges d'abonné 72, 36 et 18 px · emojis Discord 128 px.</div>
+    </div>
+  </section>
+
+  <!-- ---------- Panneaux ---------- -->
+  <section class="tab tool-grid" id="t-panels" hidden>
+    <form class="panel settings" id="pform" autocomplete="off">
+      <fieldset>
+        <legend>Tes panneaux</legend>
+        <label class="field"><span>Un panneau par ligne</span><textarea id="ptext" rows="7">👋 À PROPOS
+📅 PLANNING
+💬 DISCORD
+📜 RÈGLES
+🖥️ MON SETUP
+💜 SOUTIEN</textarea></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <label class="field"><span>Modèle</span><select id="pstyle"><option value="gradient">Dégradé</option><option value="neon">Néon</option><option value="outline">Contour</option><option value="solid">Uni</option></select></label>
+        <div class="field colors"><label class="color"><input type="color" id="pc1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" id="pc2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" id="ptx" value="#ffffff"><span>Texte</span></label></div>
+        <label class="field"><span>Police</span><select id="pfont"><option value="Space Grotesk|700">Space Grotesk</option><option value="Rubik|800">Rubik</option><option value="Bebas Neue|400">Bebas Neue</option><option value="Nunito|900">Nunito</option><option value="Permanent Marker|400">Permanent Marker</option><option value="VT323|400">VT323 (pixel)</option></select></label>
+        <label class="field"><span>Hauteur</span><select id="ph"><option value="100">Fine (320 × 100)</option><option value="160">Haute (320 × 160)</option></select></label>
+      </fieldset>
+    </form>
+    <div class="panel pad">
+      <div class="panels" id="panels"></div>
+      <div class="btn-row" style="margin-top:16px"><button type="button" class="btn" id="pdl-all">Tout télécharger</button></div>
+      <div class="tip">Les panneaux sont exportés en double résolution (640 px de large) pour rester nets sur les écrans haute définition. Twitch les affiche en 320 px.</div>
+    </div>
+  </section>
+
+  <!-- ---------- Bannières ---------- -->
+  <section class="tab tool-grid" id="t-banner" hidden>
+    <form class="panel settings" id="bform" autocomplete="off">
+      <fieldset>
+        <legend>Bannière</legend>
+        <label class="field"><span>Type</span><select id="btype"><option value="offline">Bannière hors ligne (1920 × 1080)</option><option value="profile">Bannière de profil (1200 × 480)</option></select></label>
+        <label class="field"><span>Titre</span><input type="text" id="btitle" value="Hors ligne" maxlength="40"></label>
+        <label class="field"><span>Sous-titre</span><input type="text" id="bsub" value="Lives le mercredi et le samedi à 20 h" maxlength="80"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <label class="field"><span>Fond</span><select id="bbg"><option value="aurora">Aurore</option><option value="synth">Synthwave</option><option value="gradient">Dégradé</option><option value="grid">Grille</option></select></label>
+        <div class="field colors"><label class="color"><input type="color" id="bc1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" id="bc2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" id="bc3" value="#ff5c8a"><span>Couleur 3</span></label></div>
+        <label class="field"><span>Police</span><select id="bfont"><option value="Space Grotesk|700">Space Grotesk</option><option value="Rubik|800">Rubik</option><option value="Bebas Neue|400">Bebas Neue</option><option value="Nunito|900">Nunito</option><option value="Permanent Marker|400">Permanent Marker</option></select></label>
+      </fieldset>
+    </form>
+    <div class="panel pad banner">
+      <canvas id="bcanvas" width="1920" height="1080"></canvas>
+      <div class="btn-row" style="margin-top:16px"><button type="button" class="btn" id="bdl">Télécharger la bannière</button></div>
+      <div class="tip">Sur Twitch : Paramètres de la chaîne → Marque, pour la bannière de profil, et Lecteur vidéo pour la bannière hors ligne.</div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- Onglets ---------- */
+  var tabs = document.querySelectorAll('.tabs button');
+  function openTab(id){
+    tabs.forEach(function(t){ t.setAttribute('aria-selected', String(t.dataset.tab === id)); });
+    document.querySelectorAll('.tab').forEach(function(s){ s.hidden = s.id !== id; });
+    SK.store.set('sk-images-tab', id);
+    if (id === 't-panels') drawPanels(); if (id === 't-banner') drawBanner();
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ openTab(t.dataset.tab); }); });
+
+  function download(canvas, name){
+    var a = document.createElement('a'); a.download = name; a.href = canvas.toDataURL('image/png'); a.click();
+  }
+  function slug(s){ return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'image'; }
+
+  /* ================= Emotes et badges ================= */
+  var SIZES = [
+    ['Emotes Twitch', 'emote', [112, 56, 28]],
+    ['Badges d\'abonné Twitch', 'badge', [72, 36, 18]],
+    ['Emoji Discord', 'discord', [128]]
+  ];
+  var src = null, srcName = 'emote', outputs = [];
+  var drop = document.getElementById('drop'), fileIn = document.getElementById('file');
+  ['dragenter', 'dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function(e){ if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+  fileIn.addEventListener('change', function(){ if (fileIn.files[0]) load(fileIn.files[0]); });
+  window.addEventListener('paste', function(e){ var f = e.clipboardData && e.clipboardData.files[0]; if (f && /^image\//.test(f.type)) load(f); });
+
+  function load(file){
+    if (!/^image\//.test(file.type)){ SK.toast('Choisis un fichier image'); return; }
+    srcName = slug(file.name.replace(/\.[^.]+$/, ''));
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){ src = img; renderEmotes(); };
+    img.onerror = function(){ SK.toast('Impossible de lire cette image'); };
+    img.src = url;
+  }
+
+  // Zone utile de l'image (sans les bords transparents)
+  function bounds(img){
+    var c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    var ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
+    if (!document.getElementById('trim').checked) return { x: 0, y: 0, w: c.width, h: c.height };
+    var d = ctx.getImageData(0, 0, c.width, c.height).data, minX = c.width, minY = c.height, maxX = -1, maxY = -1;
+    for (var y = 0; y < c.height; y++) for (var x = 0; x < c.width; x++){
+      if (d[(y * c.width + x) * 4 + 3] > 8){ if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+    }
+    return maxX < 0 ? { x: 0, y: 0, w: c.width, h: c.height } : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+  }
+
+  // Réduction de bonne qualité : on divise par 2 plusieurs fois au lieu d'un seul grand saut
+  function squareAt(size, b){
+    var big = Math.max(size, Math.min(2048, Math.max(b.w, b.h)));
+    var c = document.createElement('canvas'); c.width = c.height = big;
+    var ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+    var pad = big * (+document.getElementById('pad').value / 100), area = big - pad * 2;
+    var cover = document.getElementById('fit').value === 'cover';
+    var s = cover ? Math.max(area / b.w, area / b.h) : Math.min(area / b.w, area / b.h);
+    var w = b.w * s, h = b.h * s;
+    ctx.drawImage(src, b.x, b.y, b.w, b.h, (big - w) / 2, (big - h) / 2, w, h);
+    while (c.width / 2 >= size){
+      var n = document.createElement('canvas'); n.width = n.height = Math.max(size, Math.round(c.width / 2));
+      var nc = n.getContext('2d'); nc.imageSmoothingQuality = 'high'; nc.drawImage(c, 0, 0, n.width, n.height); c = n;
+      if (n.width === size) break;
+    }
+    if (c.width !== size){ var f = document.createElement('canvas'); f.width = f.height = size; var fc = f.getContext('2d'); fc.imageSmoothingQuality = 'high'; fc.drawImage(c, 0, 0, size, size); c = f; }
+    return c;
+  }
+
+  function renderEmotes(){
+    if (!src) return;
+    var b = bounds(src), box = document.getElementById('sizes');
+    box.textContent = ''; outputs = [];
+    SIZES.forEach(function(g){
+      var grp = document.createElement('div'); grp.className = 'group';
+      var h = document.createElement('h3'); h.textContent = g[0]; grp.appendChild(h);
+      var row = document.createElement('div'); row.className = 'outs';
+      g[2].forEach(function(size){
+        var c = squareAt(size, b), name = srcName + '-' + g[1] + '-' + size + '.png';
+        outputs.push([c, name]);
+        var o = document.createElement('div'); o.className = 'out';
+        var bgs = document.createElement('div'); bgs.className = 'bgs';
+        [0, 1].forEach(function(){ var s = document.createElement('span'); var im = new Image(); im.src = c.toDataURL(); im.width = size; im.height = size; s.appendChild(im); bgs.appendChild(s); });
+        o.appendChild(bgs);
+        var lab = document.createElement('span'); lab.textContent = size + ' × ' + size; o.appendChild(lab);
+        var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn ghost small'; btn.textContent = 'Télécharger';
+        btn.addEventListener('click', function(){ download(c, name); }); o.appendChild(btn);
+        row.appendChild(o);
+      });
+      grp.appendChild(row); box.appendChild(grp);
+    });
+    document.getElementById('dl-all').disabled = false;
+  }
+  ['fit', 'trim', 'pad'].forEach(function(id){ document.getElementById(id).addEventListener('input', function(){ document.getElementById('padout').textContent = document.getElementById('pad').value + ' %'; renderEmotes(); }); });
+  document.getElementById('dl-all').addEventListener('click', function(){ outputs.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
+
+  /* ================= Panneaux ================= */
+  function fontOf(v){ var p = v.split('|'); return { family: p[0], weight: p[1] }; }
+  function withFont(f, cb){
+    var spec = f.weight + ' 40px "' + f.family + '"';
+    if (document.fonts && document.fonts.load) document.fonts.load(spec).then(cb, cb); else cb();
+  }
+  function drawPanel(text, opt){
+    var W = 640, H = opt.h * 2, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d'), r = 22;
+    function rr(px, py, pw, ph, rad){ x.beginPath(); x.roundRect ? x.roundRect(px, py, pw, ph, rad) : x.rect(px, py, pw, ph); }
+    if (opt.style === 'gradient'){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, opt.c1); g.addColorStop(1, opt.c2); x.fillStyle = g; rr(0, 0, W, H, r); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.12)'; for (var i = -H; i < W; i += 46){ x.beginPath(); x.moveTo(i, H); x.lineTo(i + H, 0); x.lineTo(i + H + 14, 0); x.lineTo(i + 14, H); x.fill(); } }
+    else if (opt.style === 'neon'){ x.fillStyle = '#0c0a16'; rr(0, 0, W, H, r); x.fill(); x.shadowColor = opt.c1; x.shadowBlur = 24; x.strokeStyle = opt.c1; x.lineWidth = 6; rr(10, 10, W - 20, H - 20, r - 6); x.stroke(); x.shadowBlur = 0; }
+    else if (opt.style === 'outline'){ x.fillStyle = '#0c0a16'; rr(0, 0, W, H, r); x.fill(); var g2 = x.createLinearGradient(0, 0, W, 0); g2.addColorStop(0, opt.c1); g2.addColorStop(1, opt.c2); x.strokeStyle = g2; x.lineWidth = 8; rr(4, 4, W - 8, H - 8, r - 2); x.stroke(); }
+    else { x.fillStyle = opt.c1; rr(0, 0, W, H, r); x.fill(); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, H - 14, W, 14); }
+    var size = opt.h === 100 ? 74 : 96;
+    x.font = opt.font.weight + ' ' + size + 'px "' + opt.font.family + '", sans-serif';
+    while (x.measureText(text).width > W - 60 && size > 20){ size -= 2; x.font = opt.font.weight + ' ' + size + 'px "' + opt.font.family + '", sans-serif'; }
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = opt.tx;
+    if (opt.style === 'neon'){ x.shadowColor = opt.c2; x.shadowBlur = 18; }
+    else { x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 8; x.shadowOffsetY = 3; }
+    x.fillText(text, W / 2, H / 2 + size * .04);
+    return c;
+  }
+  var panelCanvases = [];
+  function drawPanels(){
+    var opt = { style: pstyle.value, c1: pc1.value, c2: pc2.value, tx: ptx.value, font: fontOf(pfont.value), h: +ph.value };
+    withFont(opt.font, function(){
+      var box = document.getElementById('panels'); box.textContent = ''; panelCanvases = [];
+      document.getElementById('ptext').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 20).forEach(function(t){
+        var c = drawPanel(t, opt), f = document.createElement('figure');
+        f.appendChild(c);
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost small'; b.textContent = 'Télécharger';
+        var name = 'panneau-' + slug(t) + '.png';
+        b.addEventListener('click', function(){ download(c, name); });
+        f.appendChild(b); box.appendChild(f); panelCanvases.push([c, name]);
+      });
+      SK.store.set('sk-panels', { t: document.getElementById('ptext').value, s: opt.style, c1: opt.c1, c2: opt.c2, tx: opt.tx, f: pfont.value, h: ph.value });
+    });
+  }
+  var pstyle = document.getElementById('pstyle'), pc1 = document.getElementById('pc1'), pc2 = document.getElementById('pc2'), ptx = document.getElementById('ptx'), pfont = document.getElementById('pfont'), ph = document.getElementById('ph');
+  var ps = SK.store.get('sk-panels');
+  if (ps){ document.getElementById('ptext').value = ps.t; pstyle.value = ps.s; pc1.value = ps.c1; pc2.value = ps.c2; ptx.value = ps.tx; pfont.value = ps.f; ph.value = ps.h; }
+  document.getElementById('pform').addEventListener('input', drawPanels);
+  document.getElementById('pdl-all').addEventListener('click', function(){ panelCanvases.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
+
+  /* ================= Bannières ================= */
+  var bc = document.getElementById('bcanvas');
+  function v(id){ return document.getElementById(id).value; }
+  function drawBanner(){
+    var type = v('btype'), W = type === 'profile' ? 1200 : 1920, H = type === 'profile' ? 480 : 1080;
+    bc.width = W; bc.height = H;
+    var f = fontOf(v('bfont')), c1 = v('bc1'), c2 = v('bc2'), c3 = v('bc3');
+    withFont(f, function(){
+      var x = bc.getContext('2d'); x.clearRect(0, 0, W, H);
+      var bg = v('bbg');
+      if (bg === 'gradient'){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, c1); g.addColorStop(.5, c2); g.addColorStop(1, c3); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(5,4,12,.4)'; x.fillRect(0, 0, W, H); }
+      else {
+        x.fillStyle = '#07060d'; x.fillRect(0, 0, W, H);
+        if (bg === 'aurora'){
+          [[c1, .15, .1], [c2, .85, .35], [c3, .45, 1]].forEach(function(b){
+            var rg = x.createRadialGradient(W * b[1], H * b[2], 0, W * b[1], H * b[2], Math.max(W, H) * .55);
+            rg.addColorStop(0, b[0] + 'aa'); rg.addColorStop(1, b[0] + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
+          });
+        } else if (bg === 'synth'){
+          var sky = x.createLinearGradient(0, 0, 0, H * .55); sky.addColorStop(0, '#0b0518'); sky.addColorStop(1, '#2a0c3d'); x.fillStyle = sky; x.fillRect(0, 0, W, H * .55);
+          var R = H * .22, cx = W / 2, cy = H * .42, sg = x.createLinearGradient(0, cy - R, 0, cy + R); sg.addColorStop(0, c3); sg.addColorStop(1, c1);
+          x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip(); x.fillStyle = sg; x.fillRect(cx - R, cy - R, R * 2, R * 2);
+          x.fillStyle = '#2a0c3d'; for (var k = 0; k < 5; k++){ x.fillRect(cx - R, cy + R * (.15 + k * .17), R * 2, R * (.03 + k * .015)); } x.restore();
+          x.strokeStyle = c2; x.lineWidth = Math.max(1.5, H / 400); x.globalAlpha = .8; var hz = H * .55;
+          for (var gx = -12; gx <= 12; gx++){ x.beginPath(); x.moveTo(W / 2 + gx * W * .02, hz); x.lineTo(W / 2 + gx * W * .18, H); x.stroke(); }
+          for (var gy = 0; gy < 9; gy++){ var yy = hz + (H - hz) * Math.pow(gy / 8, 1.8); x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); }
+          x.globalAlpha = 1;
+        } else {
+          x.strokeStyle = c1 + '55'; x.lineWidth = 1.5; var step = H / 14;
+          for (var gx2 = 0; gx2 < W; gx2 += step){ x.beginPath(); x.moveTo(gx2, 0); x.lineTo(gx2, H); x.stroke(); }
+          for (var gy2 = 0; gy2 < H; gy2 += step){ x.beginPath(); x.moveTo(0, gy2); x.lineTo(W, gy2); x.stroke(); }
+          var rg2 = x.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * .6); rg2.addColorStop(0, c2 + '33'); rg2.addColorStop(1, '#07060d'); x.fillStyle = rg2; x.fillRect(0, 0, W, H);
+        }
+      }
+      var title = v('btitle'), sub = v('bsub'), ts = H * (type === 'profile' ? .2 : .13);
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = f.weight + ' ' + ts + 'px "' + f.family + '", sans-serif';
+      while (x.measureText(title).width > W * .86 && ts > 20){ ts -= 4; x.font = f.weight + ' ' + ts + 'px "' + f.family + '", sans-serif'; }
+      var ty = bg === 'synth' ? H * .75 : H * .46;
+      x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = ts * .25; x.fillStyle = '#fff'; x.fillText(title, W / 2, ty);
+      if (sub){
+        var ss = ts * .32; x.font = '600 ' + ss + 'px "Space Grotesk", sans-serif';
+        while (x.measureText(sub).width > W * .86 && ss > 12){ ss -= 2; x.font = '600 ' + ss + 'px "Space Grotesk", sans-serif'; }
+        x.fillStyle = c2; x.shadowBlur = ss * .4; x.fillText(sub, W / 2, ty + ts * .78);
+      }
+      x.shadowBlur = 0;
+      SK.store.set('sk-banner', { t: type, ti: title, s: sub, bg: bg, c1: c1, c2: c2, c3: c3, f: v('bfont') });
+    });
+  }
+  var bs = SK.store.get('sk-banner');
+  if (bs){ document.getElementById('btype').value = bs.t; document.getElementById('btitle').value = bs.ti; document.getElementById('bsub').value = bs.s; document.getElementById('bbg').value = bs.bg;
+    document.getElementById('bc1').value = bs.c1; document.getElementById('bc2').value = bs.c2; document.getElementById('bc3').value = bs.c3; document.getElementById('bfont').value = bs.f; }
+  document.getElementById('bform').addEventListener('input', drawBanner);
+  document.getElementById('bdl').addEventListener('click', function(){ download(bc, (v('btype') === 'profile' ? 'banniere-profil' : 'banniere-hors-ligne') + '.png'); });
+
+  openTab(SK.store.get('sk-images-tab') || 't-emotes');
+})();
+</script>
+</body>
+</html>
