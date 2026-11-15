@@ -17,13 +17,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
   .sw{ display: grid; place-items: center; font-size: 16px; }
-  .sw-card{ background: #17132a; border-bottom: 2px solid #9b5cff; }
-  .sw-neon{ background: #0d0a18; border: 1px solid #9b5cff; box-shadow: 0 0 6px #9b5cff; }
-  .sw-banner{ background: linear-gradient(90deg, #9b5cff, #2a2347); }
-  .sw-clean{ background: transparent; }
+  .sw-card{ background: #19171f; border-radius: 6px; }
+  .sw-banner{ background: #19171f; border-radius: 4px; justify-items: start; padding-left: 6px; }
+  .sw-big{ background: transparent; font-size: 22px; }
   .tests{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 </style>
 </head>
@@ -69,30 +68,40 @@
         <label class="check"><input type="checkbox" name="showmsg" checked><span>Afficher le message du viewer sous l'alerte</span></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
           <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card">⭐</span><span>Carte</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon">⭐</span><span>Néon</span></label></div>
           <div class="choice"><input type="radio" name="style" id="style-banner" value="banner"><label for="style-banner"><span class="sw sw-banner">⭐</span><span>Bandeau</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">⭐</span><span>Texte seul</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-big" value="big"><label for="style-big"><span class="sw sw-big">⭐</span><span>Géant sans fond</span></label></div>
         </div>
-        <label class="field"><span>Apparition</span><select name="anim"><option value="pop">Pop</option><option value="bounce">Rebond</option><option value="slide">Glisse</option></select></label>
+        <label class="field"><span>Position dans la source</span><select name="pos"><option value="center">Au centre</option><option value="top">En haut</option><option value="bottom">En bas</option><option value="left">À gauche</option><option value="right">À droite</option></select></label>
+        <label class="field"><span>Apparition</span><select name="anim"><option value="pop">Pop</option><option value="zoom">Zoom flou</option><option value="bounce">Rebond</option><option value="slide">Glisse du haut</option><option value="side">Glisse du côté</option><option value="fade">Fondu</option></select></label>
         <label class="field"><span><span>Durée de chaque alerte</span><output for="f-dur" data-unit=" s"></output></span><input type="range" id="f-dur" name="dur" min="3" max="20" value="7"></label>
         <label class="check"><input type="checkbox" name="confetti" checked><span>Confettis</span></label>
-        <label class="field"><span>Image ou GIF à la place de l'icône (lien https)</span><input type="text" name="img" value="" placeholder="https://…/mon-gif.gif" maxlength="300" ></label>
+        <label class="check"><input type="checkbox" name="timebar" checked><span>Petite barre de temps en bas de l'alerte</span></label>
+        <label class="check"><input type="checkbox" name="wiggle" checked><span>Icône qui bouge</span></label>
+        <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="16" max="80" value="34"></label>
+        <label class="check"><input type="checkbox" name="emotes3" checked><span>Emotes 7TV, BTTV et FFZ</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Icônes et images</legend>
+        <p class="hint">Un emoji par type d'alerte, ou tes propres images (PNG, GIF animé…).</p>
+        <div class="row2"><label class="field"><span>Abonnement</span><input type="text" name="isub" value="⭐" placeholder="" maxlength="8" ></label><label class="field"><span>Sub offert</span><input type="text" name="igift" value="🎁" placeholder="" maxlength="8" ></label></div>
+        <div class="row2"><label class="field"><span>Bits</span><input type="text" name="ibits" value="💎" placeholder="" maxlength="8" ></label><label class="field"><span>Raid</span><input type="text" name="iraid" value="🚀" placeholder="" maxlength="8" ></label></div>
+        <div class="field"><span>Une image pour toutes les alertes</span><input type="text" name="img" value="" placeholder="Lien https ou Importer" data-image="320" spellcheck="false"><small>Importée (petite image) ou lien https. Remplace les emojis.</small></div>
+        <label class="field"><span>Image ou GIF pour les abonnements (lien)</span><input type="text" name="img_sub" value="" placeholder="https://…" maxlength="400" ></label>
+        <label class="field"><span>Image ou GIF pour les subs offerts (lien)</span><input type="text" name="img_gift" value="" placeholder="https://…" maxlength="400" ></label>
+        <label class="field"><span>Image ou GIF pour les bits (lien)</span><input type="text" name="img_bits" value="" placeholder="https://…" maxlength="400" ></label>
+        <label class="field"><span>Image ou GIF pour les raids (lien)</span><input type="text" name="img_raid" value="" placeholder="https://…" maxlength="400" ><small>Héberge tes GIF gratuitement (ex. imgur.com, giphy.com) et colle le lien direct.</small></label>
+        <label class="field"><span><span>Taille de l'image</span><output for="f-imgh" data-unit=" em"></output></span><input type="range" id="f-imgh" name="imgh" min="1" max="8" value="3.6" step="0.2"></label>
       </fieldset>
       <fieldset>
         <legend>Son</legend>
-        <label class="field"><span>Son</span><select name="sound"><option value="chime">Carillon</option><option value="fanfare">Fanfare</option><option value="coin">Pièce</option><option value="arcade">Arcade</option><option value="pop">Pop</option><option value="none">Aucun</option></select></label>
+        <label class="field"><span>Son intégré</span><select name="sound"><option value="chime">Carillon</option><option value="fanfare">Fanfare</option><option value="coin">Pièce</option><option value="arcade">Arcade</option><option value="pop">Pop</option><option value="none">Aucun</option></select></label>
+        <label class="field"><span>Ou ton propre son (lien mp3 / ogg)</span><input type="text" name="snd" value="" placeholder="https://…/mon-son.mp3" maxlength="400" ><small>Remplace le son intégré.</small></label>
         <label class="field"><span><span>Volume</span><output for="f-vol" data-unit=" %"></output></span><input type="range" id="f-vol" name="vol" min="0" max="100" value="60"></label>
       </fieldset>
-      <fieldset>
-        <legend>Apparence</legend>
-        <div class="field colors"><label class="color"><input type="color" name="ac" value="#9b5cff"><span>Accent</span></label><label class="color"><input type="color" name="ac2" value="#4be1c3"><span>Pseudos</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
-        <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="16" max="70" value="34"></label>
-        <label class="check"><input type="checkbox" name="emotes3" checked><span>Emotes 7TV, BTTV et FFZ</span></label>
-      </fieldset>
+      <div data-theme-panel="minimal"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -139,7 +148,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';

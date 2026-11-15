@@ -17,14 +17,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
-  .sw{ display: grid; place-items: center; font: 700 13px 'Space Grotesk', sans-serif; color: #fff; }
-  .sw-pill{ background: #17132a; border-radius: 999px; border: 1px solid #ff5c8a; color: #ff5c8a; }
-  .sw-big{ background: transparent; font-size: 18px; }
-  .sw-minimal{ background: transparent; color: #ff5c8a; text-shadow: 0 0 2px #000; }
-  .sw-neon{ background: #0d0a18; border: 1px solid #ff5c8a; box-shadow: 0 0 6px #ff5c8a; }
-  .sw-badge{ background: linear-gradient(135deg, #ff5c8a, #7a1d3a); border-radius: 5px; }
+  .sw{ display: grid; place-items: center; font: 800 12px 'Inter', sans-serif; color: #fff; }
+  .sw-pill{ background: #19171f; border-radius: 99px; } .sw-pill b{ color: #a78bfa; }
+  .sw-card{ background: #19171f; border-radius: 6px; font-size: 15px; }
+  .sw-split{ background: linear-gradient(90deg, #19171f 55%, #a78bfa 55%); border-radius: 6px; }
+  .sw-big{ background: transparent; font-size: 20px; }
+  .sw-clean{ background: transparent; text-shadow: 0 0 2px #000; }
   .ideas{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 </style>
 </head>
@@ -39,59 +39,35 @@
 
 <main class="wrap">
   <div class="editor-head">
-    <h1 data-i18n="count.title">Compteur piloté par le tchat</h1>
-    <p data-i18n="count.lead">Morts, victoires, rage-quits, cafés… Tes modos tapent une commande dans le tchat et le compteur bouge à l'écran. Aucun bot à installer.</p>
+    <h1 data-i18n="compteur.title">Compteur piloté par le tchat</h1>
+    <p data-i18n="compteur.lead">Morts, victoires, rage-quits, cafés… Tes modos tapent une commande dans le tchat et le compteur bouge à l'écran. Aucun bot à installer.</p>
   </div>
 
   <div class="editor">
     <form class="panel settings" id="settings" autocomplete="off">
       <fieldset>
-        <legend data-i18n="count.what">Ton compteur</legend>
+        <legend>Ton compteur</legend>
         <div class="ideas" id="ideas"></div>
         <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
-        <div class="row2">
-          <label class="field"><span data-i18n="count.label">Texte affiché</span><input type="text" name="label" maxlength="30" value="Morts"></label>
-          <label class="field"><span data-i18n="count.icon">Icône</span><input type="text" name="icon" maxlength="8" value="💀"></label>
-        </div>
-        <div class="row2">
-          <label class="field"><span data-i18n="count.cmd">Commande</span><input type="text" name="name" maxlength="20" value="mort" spellcheck="false" autocapitalize="off"></label>
-          <label class="field"><span data-i18n="count.start">Valeur de départ</span><input type="text" name="start" maxlength="7" value="0" inputmode="numeric"></label>
-        </div>
-        <label class="field"><span data-i18n="count.who">Qui peut le modifier ?</span>
-          <select name="who">
-            <option value="mods" data-i18n="who.mods">Toi et tes modos</option>
-            <option value="broadcaster" data-i18n="who.me">Toi seulement</option>
-            <option value="all" data-i18n="who.all">Tout le monde (1 fois toutes les 10 s)</option>
-          </select>
-        </label>
+        <div class="row2"><label class="field"><span>Texte affiché</span><input type="text" name="label" value="Morts" placeholder="" maxlength="30" ></label><label class="field"><span>Icône (emoji)</span><input type="text" name="icon" value="💀" placeholder="" maxlength="8" ></label></div>
+        <div class="field"><span>Ou ta propre image d'icône</span><input type="text" name="img" value="" placeholder="Lien https ou Importer" data-image="160" spellcheck="false"><small>Remplace l'emoji. PNG transparent conseillé.</small></div>
+        <div class="row2"><label class="field"><span>Commande</span><input type="text" name="name" value="mort" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label><label class="field"><span>Valeur de départ</span><input type="text" name="start" value="0" placeholder="" maxlength="7" inputmode="numeric"></label></div>
+        <label class="field"><span>Qui peut le modifier ?</span><select name="who"><option value="mods">Toi et tes modos</option><option value="broadcaster">Toi seulement</option><option value="all">Tout le monde (1 fois toutes les 10 s)</option></select></label>
       </fieldset>
-
       <fieldset>
-        <legend data-i18n="frame.style">Style</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
-          <div class="choice"><input type="radio" name="style" id="s-pill" value="pill" checked><label for="s-pill"><span class="sw sw-pill">💀 12</span><span data-i18n="cs.pill">Pastille</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="s-neon" value="neon"><label for="s-neon"><span class="sw sw-neon">12</span><span data-i18n="style.neon">Néon</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="s-badge" value="badge"><label for="s-badge"><span class="sw sw-badge">12</span><span data-i18n="cs.badge">Étiquette</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="s-big" value="big"><label for="s-big"><span class="sw sw-big">12</span><span data-i18n="cs.big">Gros chiffre</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="s-minimal" value="minimal"><label for="s-minimal"><span class="sw sw-minimal">💀 12</span><span data-i18n="theme.clean">Texte seul</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-pill" value="pill" checked><label for="style-pill"><span class="sw sw-pill">💀 <b>12</b></span><span>Pastille</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card"><label for="style-card"><span class="sw sw-card">12</span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-split" value="split"><label for="style-split"><span class="sw sw-split">12</span><span>Deux blocs</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-big" value="big"><label for="style-big"><span class="sw sw-big">12</span><span>Gros chiffre</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">💀 12</span><span>Texte seul</span></label></div>
         </div>
+        <label class="field"><span>Couleur du chiffre</span><select name="vc"><option value="accent">Couleur d'accent</option><option value="text">Couleur du texte</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="20" max="160" value="64"></label>
+        <label class="field"><span>Alignement</span><select name="align"><option value="center">Centré</option><option value="left">À gauche</option><option value="right">À droite</option></select></label>
       </fieldset>
-
-      <fieldset>
-        <legend data-i18n="chat.look">Apparence</legend>
-        <div class="field colors"><label class="color"><input type="color" name="ac" value="#ff5c8a"><span data-i18n="chat.accent">Accent</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span>
-          <select name="font">
-            <option value="grotesk">Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option>
-            <option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option>
-          </select>
-        </label>
-        <label class="field"><span><span data-i18n="chat.fs">Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="20" max="140" value="64"></label>
-        <label class="field"><span data-i18n="chat.align">Alignement</span>
-          <select name="align"><option value="center" data-i18n="align.center">Centré</option><option value="left" data-i18n="align.left">À gauche</option><option value="right" data-i18n="align.right">À droite</option></select>
-        </label>
-      </fieldset>
-
+      <div data-theme-panel="minimal"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -122,10 +98,10 @@
         <ol class="steps">
           <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
           <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">600 × 200</b>.</span></li>
-          <li><span data-i18n="count.step3">Dans le tchat, utilise les commandes ci-dessous. Le compteur est mémorisé, même si tu fermes OBS.</span></li>
+          <li><span>Dans le tchat, utilise les commandes ci-dessous. Le compteur est mémorisé, même si tu fermes OBS.</span></li>
         </ol>
         <ul class="cmds" id="cmds"></ul>
-        <div class="tip" data-i18n="count.tip">Plusieurs compteurs ? Crée une source par compteur, avec une commande différente pour chacun (ex. « mort » et « victoire »).</div>
+        <div class="tip">Plusieurs compteurs ? Crée une source par compteur, avec une commande différente pour chacun (ex. « mort » et « victoire »).</div>
       </div>
     </div>
   </div>
@@ -138,42 +114,31 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';
-  var IDEAS = [
-    ['💀', 'Morts', 'mort'], ['🏆', 'Victoires', 'win'], ['😡', 'Rage-quits', 'rage'],
-    ['☕', 'Cafés', 'cafe'], ['🤬', 'Gros mots', 'grosmot'], ['🎯', 'Headshots', 'hs'], ['🐞', 'Bugs', 'bug']
-  ];
-  var ideas = document.getElementById('ideas');
-  IDEAS.forEach(function(i){
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'preset'; b.textContent = i[0] + ' ' + i[1];
-    b.addEventListener('click', function(){ ed.set({ icon: i[0], label: i[1], name: i[2] }); });
-    ideas.appendChild(b);
-  });
-
   SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
     sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-compteur-size', def: { w: 600, h: 200 } });
   SK.watchStatus(document.getElementById('status'));
   var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
-
+  var IDEAS = [['💀', 'Morts', 'mort'], ['🏆', 'Victoires', 'win'], ['😡', 'Rage-quits', 'rage'], ['☕', 'Cafés', 'cafe'], ['🤬', 'Gros mots', 'grosmot'], ['🎯', 'Headshots', 'hs'], ['🐞', 'Bugs', 'bug']];
+  var ideas = document.getElementById('ideas');
+  IDEAS.forEach(function(i){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'preset'; b.textContent = i[0] + ' ' + i[1];
+    b.addEventListener('click', function(){ ed.set({ icon: i[0], label: i[1], name: i[2] }); });
+    ideas.appendChild(b);
+  });
   var cmds = document.getElementById('cmds');
   function showCmds(p){
-    var n = (p.name || 'mort').toLowerCase().replace(/^!/, '').replace(/\s+/g, '');
-    var rows = [
-      ['!' + n + '+', SK.t('cmd.plus', 'ajoute 1 (ou !' + n + '+ 3 pour ajouter 3)')],
-      ['!' + n + '-', SK.t('cmd.minus', 'retire 1')],
-      ['!' + n + '= 12', SK.t('cmd.set', 'met le compteur à 12 (modos)')]
-    ];
+    var n = '!' + (p.name || 'mort').toLowerCase().replace(/^!/, '').replace(/\s+/g, '');
     cmds.textContent = '';
-    rows.forEach(function(r){
+    [[n + '+', 'ajoute 1 (ou ' + n + '+ 3 pour ajouter 3)'], [n + '-', 'retire 1'], [n + '= 12', 'met le compteur à 12 (modos)']].forEach(function(r){
       var li = document.createElement('li'), c = document.createElement('code');
       c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
     });
   }
-
   var ed = SK.overlayEditor({
     form: document.getElementById('settings'),
     iframe: document.getElementById('preview'),
@@ -183,8 +148,9 @@
     copyBtn: document.getElementById('copy'),
     resetBtn: document.getElementById('reset'),
     previewParams: function(p){ return withDemo(p); },
-    onChange: showCmds
+    onChange: function(p){ showCmds(p); }
   });
+
 })();
 </script>
 </body>

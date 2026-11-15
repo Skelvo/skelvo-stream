@@ -231,3 +231,6 @@ details.more summary::-webkit-details-marker{ display: none; }
 .more-body{ padding: 4px 14px 14px; }
 .sub-legend{ font: 600 .74rem 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--accent-2); margin: 14px 0 8px; }
 .sub-legend:first-child{ margin-top: 4px; }
+.img-row{ display: flex; gap: 8px; align-items: center; }
+.img-row input[type=text]{ flex: 1; min-width: 0; }
+.img-prev{ width: 40px; height: 40px; object-fit: contain; border-radius: 8px; background: repeating-conic-gradient(#2a2545 0 25%, #1b1830 0 50%) 0 0/10px 10px; flex: none; }

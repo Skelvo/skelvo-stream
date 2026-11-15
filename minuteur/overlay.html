@@ -13,45 +13,52 @@
   L'état est mémorisé dans OBS (localStorage) : rien n'est perdu si OBS redémarre,
   et le temps continue de s'écouler pendant qu'OBS est fermé (fin = date précise).
 -->
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
 <style>
-  :root{ --ac: #4be1c3; --fs: 72px; --font: 'Space Grotesk', system-ui, sans-serif; }
-  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
-  body{ display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: var(--fs); color: #fff; }
+  :root{ --fs: 72px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ display: flex; align-items: center; justify-content: center; font-size: var(--fs); }
 
   .box{ position: relative; display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
-  .label{ font-size: .3em; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin-bottom: .3em; }
-  .time{ font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-  .state{ font-size: .22em; margin-top: .45em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ac); min-height: 1em; }
+  .label{ font-size: .26em; font-weight: var(--fw); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .35em; }
+  .time{ font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .state{ font-size: .2em; margin-top: .5em; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ac); min-height: 1em; }
+  .t-accent .time{ color: var(--ac); text-shadow: var(--glow-text); }
+  .sk-accent .t-accent .time{ color: inherit; text-shadow: none; }
 
-  .s-card .box{ background: rgba(12,10,22,.8); padding: .3em .55em .32em; border-radius: .22em; border-bottom: .06em solid var(--ac); box-shadow: 0 .1em .5em rgba(0,0,0,.4); }
-  .s-neon .time{ text-shadow: 0 0 .06em #fff, 0 0 .2em var(--ac), 0 0 .5em var(--ac); }
-  .s-neon .label{ color: var(--ac); text-shadow: 0 0 .3em var(--ac); }
-  .s-clean .box{ text-shadow: 0 0 .04em #000, 0 0 .08em #000, .03em .03em .06em #000; }
-  .s-gradient .time{ background: linear-gradient(90deg, var(--ac), #fff, var(--ac)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 4s linear infinite; filter: drop-shadow(0 .03em .06em rgba(0,0,0,.6)); }
-  @keyframes shine{ to{ background-position: -200% 0; } }
+  .l-card .box{ padding: .32em .6em .3em; }
+  .l-pill .box{ flex-direction: row; gap: .35em; padding: .18em .55em .22em; border-radius: max(var(--rad), .3em); }
+  .l-pill .label{ margin: 0; font-size: .3em; } .l-pill .state{ display: none; }
+  .l-clean .box.sk-surface{ background: none; border: 0; box-shadow: none; text-shadow: 0 .04em .2em rgba(0,0,0,.7); }
+  .l-shine .box.sk-surface{ background: none; border: 0; box-shadow: none; }
+  .l-shine .time{ background: linear-gradient(90deg, var(--ac), var(--tx), var(--ac2), var(--ac)); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent !important; animation: shine 6s linear infinite; filter: drop-shadow(0 .03em .08em rgba(0,0,0,.55)); }
+  @keyframes shine{ to{ background-position: -300% 0; } }
+  .bar{ display: none; width: 100%; height: .07em; border-radius: 1em; background: rgba(255,255,255,.12); margin-top: .3em; overflow: hidden; }
+  .bar i{ display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ac), var(--ac2)); transition: width 1s linear; }
+  .with-bar .bar{ display: block; }
 
   .paused .time{ opacity: .55; }
-  .low .time{ color: #ff5c8a; animation: blink 1s steps(2) infinite; -webkit-text-fill-color: #ff5c8a; }
+  .low .time{ color: #ff5c6c !important; -webkit-text-fill-color: #ff5c6c; animation: blink 1s steps(2) infinite; }
   @keyframes blink{ 50%{ opacity: .55; } }
 
-  .add{ position: absolute; left: 50%; top: 0; font-size: .38em; font-weight: 800; color: var(--ac); white-space: nowrap; text-shadow: 0 0 .25em rgba(0,0,0,.8); animation: add 2.2s ease-out forwards; pointer-events: none; }
-  .add small{ display: block; font-size: .55em; font-weight: 600; color: #fff; text-align: center; }
-  .add.neg{ color: #ff5c8a; }
-  @keyframes add{ 0%{ opacity: 0; transform: translate(-50%, .4em) scale(.7); } 15%{ opacity: 1; transform: translate(-50%, -.6em) scale(1.05); } 75%{ opacity: 1; transform: translate(-50%, -1.1em); } 100%{ opacity: 0; transform: translate(-50%, -1.6em); } }
+  .add{ position: absolute; left: 50%; top: 0; font-size: .34em; font-weight: 800; color: var(--ac); white-space: nowrap; text-shadow: 0 0 .25em rgba(0,0,0,.8); animation: add 2.2s ease-out forwards; pointer-events: none; }
+  .add small{ display: block; font-size: .55em; font-weight: 600; color: var(--tx); text-align: center; }
+  .add.neg{ color: #ff5c6c; }
+  @keyframes add{ 0%{ opacity: 0; transform: translate(-50%, .4em) scale(.7); } 15%{ opacity: 1; transform: translate(-50%, -.7em) scale(1.05); } 75%{ opacity: 1; transform: translate(-50%, -1.2em); } 100%{ opacity: 0; transform: translate(-50%, -1.7em); } }
 </style>
 </head>
 <body>
-<div class="box" id="box"><div class="label" id="label"></div><div class="time" id="time">0:00</div><div class="state" id="state"></div></div>
+<div class="box sk-surface" id="box"><div class="label" id="label"></div><div class="time" id="time">0:00</div><div class="bar"><i id="bar"></i></div><div class="state" id="state"></div></div>
 
-<script src="../assets/overlay.js?v=2"></script>
-<script src="../assets/twitch.js?v=2"></script>
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = {
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', start: '120', t1: '5', t2: '10', t3: '20', gift: '5', bits: '1', raid: '0', max: '0',
-    label: 'Subathon', cmd: 'timer', endtext: 'Terminé !', style: 'card', ac: '4be1c3', font: 'grotesk', fs: '72', demo: '0'
-  };
+    label: 'Subathon', cmd: 'timer', endtext: 'Terminé !', style: 'card', tc: 'text', showbar: '0', fs: '72', demo: '0'
+  });
   var num = SKO.num;
   var timeEl = document.getElementById('time'), stateEl = document.getElementById('state'), labelEl = document.getElementById('label'), box = document.getElementById('box');
   var P = {}, S = null, key = '', source = null, sourceKey = '';
@@ -88,6 +95,8 @@
     document.body.classList.toggle('low', S.running && left > 0 && left <= 60);
     if (left <= 0 && S.running){ S.running = false; S.left = 0; save(); }
     timeEl.textContent = left <= 0 ? (P.endtext || '0:00') : SKO.clock(left);
+    var ref = num(P.max, 0, 100000, 0) * 60 || Math.max(num(P.start, 0, 100000, 120) * 60, left);
+    document.getElementById('bar').style.width = Math.min(100, left / ref * 100) + '%';
     stateEl.textContent = (!S.running && left > 0) ? 'En pause' : '';
   }
   setInterval(function(){ if (S) draw(); }, 250);
@@ -132,11 +141,10 @@
   SKO.params(DEFAULTS, function(p){
     var prevStart = P.start;
     P = p;
-    var root = document.documentElement.style;
-    root.setProperty('--font', SKO.useFont(P.font));
-    root.setProperty('--fs', num(P.fs, 20, 220, 72) + 'px');
-    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
-    document.body.className = 's-' + (/^(card|neon|clean|gradient)$/.test(P.style) ? P.style : 'card');
+    SKO.theme(P);
+    document.documentElement.style.setProperty('--fs', num(P.fs, 20, 220, 72) + 'px');
+    var st = { card: 'card', neon: 'card', pill: 'pill', clean: 'clean', gradient: 'shine', shine: 'shine' }[P.style] || 'card';
+    document.body.className = 'l-' + st + (P.tc === 'accent' ? ' t-accent' : '') + (P.showbar === '1' ? ' with-bar' : '');
     labelEl.textContent = P.label || '';
     labelEl.style.display = P.label ? '' : 'none';
 

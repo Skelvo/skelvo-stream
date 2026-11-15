@@ -17,15 +17,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
   .sw{ display: flex; align-items: center; gap: 4px; padding: 4px; }
-  .sw b{ width: 20px; height: 20px; border-radius: 4px; background: linear-gradient(135deg, #1ed760, #2a2347); flex: none; }
+  .sw b{ width: 20px; height: 20px; border-radius: 4px; background: linear-gradient(135deg, #a78bfa, #67e8f9); flex: none; }
   .sw i{ height: 5px; flex: 1; border-radius: 3px; background: #fff; opacity: .7; }
-  .sw-card{ background: #17132a; border-left: 2px solid #1ed760; }
-  .sw-vinyl b{ border-radius: 50%; } .sw-vinyl{ background: #17132a; border-radius: 99px; }
+  .sw-card{ background: #19171f; border-radius: 6px; }
+  .sw-big{ background: #19171f; border-radius: 6px; flex-direction: column; align-items: flex-start; } .sw-big i{ width: 60%; flex: none; }
+  .sw-vinyl b{ border-radius: 50%; } .sw-vinyl{ background: #19171f; border-radius: 99px; }
   .sw-clean{ background: transparent; }
-  .setup{ margin: 0 0 14px; padding-left: 18px; font-size: .88rem; color: #d9d3f0; display: grid; gap: 6px; }
+  .setup{ margin: 0; padding-left: 18px; font-size: .88rem; color: #d9d3f0; display: grid; gap: 6px; }
 </style>
 </head>
 <body>
@@ -56,22 +57,20 @@
         <label class="field"><span>Clé API Last.fm</span><input type="text" name="key" value="" placeholder="32 caractères" maxlength="64" spellcheck="false" autocapitalize="off"><small>Gratuite, en 1 minute sur <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">last.fm/api/account/create</a> (mets n'importe quel nom d'application).</small></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
           <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card"><b></b><i></i></span><span>Carte</span></label></div>
           <div class="choice"><input type="radio" name="style" id="style-vinyl" value="vinyl"><label for="style-vinyl"><span class="sw sw-vinyl"><b></b><i></i></span><span>Vinyle</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><b></b><i></i></span><span>Texte seul</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-big" value="big"><label for="style-big"><span class="sw sw-big"><b></b><i></i></span><span>Grande pochette</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><b></b><i></i></span><span>Sans fond</span></label></div>
         </div>
         <label class="check"><input type="checkbox" name="art" checked><span>Afficher la pochette</span></label>
         <label class="check"><input type="checkbox" name="hide" checked><span>Cacher quand rien ne joue</span></label>
         <label class="field"><span>Petit titre</span><input type="text" name="head" value="En écoute" placeholder="" maxlength="30" ></label>
-      </fieldset>
-      <fieldset>
-        <legend>Apparence</legend>
-        <div class="field colors"><label class="color"><input type="color" name="ac" value="#1ed760"><span>Accent</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span>Alignement</span><select name="align"><option value="left">À gauche</option><option value="center">Centré</option><option value="right">À droite</option></select></label>
         <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="60" value="24"></label>
       </fieldset>
+      <div data-theme-panel="minimal"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -117,7 +116,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';

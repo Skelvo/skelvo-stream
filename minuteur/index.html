@@ -17,12 +17,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
-  .sw{ display: grid; place-items: center; font: 800 14px 'Space Grotesk', sans-serif; color: #fff; }
-  .sw-card{ background: #17132a; border-bottom: 2px solid #4be1c3; }
-  .sw-neon{ background: #0d0a18; text-shadow: 0 0 6px #4be1c3, 0 0 12px #4be1c3; }
-  .sw-gradient{ background: transparent; color: #4be1c3; }
+  .sw{ display: grid; place-items: center; font: 800 14px 'Inter', sans-serif; color: #fff; }
+  .sw-card{ background: #19171f; border-radius: 6px; }
+  .sw-pill{ background: #19171f; border-radius: 99px; font-size: 12px; }
+  .sw-shine{ background: transparent; color: #a78bfa; }
   .sw-clean{ background: transparent; text-shadow: 0 0 2px #000; }
 </style>
 </head>
@@ -57,22 +57,20 @@
         <label class="field"><span>Temps restant maximum (minutes)</span><input type="text" name="max" value="0" placeholder="" maxlength="6" inputmode="numeric"><small>0 = pas de limite.</small></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
-          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card">2:14:09</span><span>Carte</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon">2:14:09</span><span>Néon</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-gradient" value="gradient"><label for="style-gradient"><span class="sw sw-gradient">2:14:09</span><span>Brillant</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">2:14:09</span><span>Texte seul</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card">2:14</span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-pill" value="pill"><label for="style-pill"><span class="sw sw-pill">2:14</span><span>Ligne</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-shine" value="shine"><label for="style-shine"><span class="sw sw-shine">2:14</span><span>Brillant</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">2:14</span><span>Texte seul</span></label></div>
         </div>
-      </fieldset>
-      <fieldset>
-        <legend>Apparence</legend>
-        <label class="field"><span>Titre au-dessus</span><input type="text" name="label" value="Subathon" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Titre</span><input type="text" name="label" value="Subathon" placeholder="" maxlength="30" ></label>
         <label class="field"><span>Texte à la fin</span><input type="text" name="endtext" value="Terminé !" placeholder="" maxlength="30" ></label>
-        <div class="field colors"><label class="color"><input type="color" name="ac" value="#4be1c3"><span>Accent</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span>Couleur du temps</span><select name="tc"><option value="text">Couleur du texte</option><option value="accent">Couleur d'accent</option></select></label>
+        <label class="check"><input type="checkbox" name="showbar"><span>Barre de progression sous le temps</span></label>
         <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="30" max="180" value="72"></label>
       </fieldset>
+      <div data-theme-panel="minimal"></div>
       <fieldset>
         <legend>Commande</legend>
         <label class="field"><span>Nom de la commande</span><input type="text" name="cmd" value="timer" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
@@ -124,7 +122,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';

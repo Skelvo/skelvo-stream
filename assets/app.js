@@ -116,6 +116,7 @@
     qs.forEach(function(v, k){ if (k in defaults) fromUrl[k] = v; });
     var saved = SK.store.get(opts.storageKey) || {};
     writeForm(form, Object.assign({}, defaults, saved, fromUrl));
+    (SK._imgShow || []).forEach(function(f){ f(); });
 
     function buildUrl(p){
       var u = new URL(base.href);
@@ -151,7 +152,7 @@
 
     var api = {
       get: function(){ return readForm(form); },
-      set: function(p){ writeForm(form, p); update(); },
+      set: function(p){ writeForm(form, p); (SK._imgShow || []).forEach(function(f){ f(); }); update(); },
       update: update
     };
     SK._themeTarget = api;
@@ -344,6 +345,61 @@
     holder.replaceWith(fs);
   };
   document.querySelectorAll('[data-theme-panel]').forEach(SK.buildThemePanel);
+
+  /* ======================================================================
+     Champs d'image : <input type="text" name="img" data-image="256">
+     Ajoute un bouton « Importer » : l'image est réduite (data-image = taille
+     max en px), compressée en WebP et intégrée directement au lien de l'overlay.
+     Un lien OBS doit rester court : au-delà d'environ 24 Ko, on demande un lien.
+     ====================================================================== */
+  var MAX_INLINE = 24000;
+  SK.enhanceImageField = function(input){
+    var max = +input.getAttribute('data-image') || 256;
+    var wrap = document.createElement('div'); wrap.className = 'img-row';
+    input.parentNode.insertBefore(wrap, input); wrap.appendChild(input);
+    var file = document.createElement('input'); file.type = 'file'; file.accept = 'image/*'; file.hidden = true;
+    var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn ghost small'; btn.textContent = 'Importer';
+    var clear = document.createElement('button'); clear.type = 'button'; clear.className = 'btn ghost small'; clear.textContent = '✕'; clear.title = 'Retirer l\'image';
+    var prev = document.createElement('img'); prev.className = 'img-prev'; prev.alt = '';
+    wrap.appendChild(prev); wrap.appendChild(btn); wrap.appendChild(clear); wrap.appendChild(file);
+    function show(){ var v = input.value.trim(); prev.style.display = v ? '' : 'none'; if (v) prev.src = v; clear.style.display = v ? '' : 'none';
+      input.style.display = /^data:/.test(v) ? 'none' : ''; if (/^data:/.test(v)) prev.title = 'Image importée (' + Math.round(v.length / 1000) + ' Ko dans le lien)'; }
+    function set(v){ input.value = v; input.dispatchEvent(new Event('input', { bubbles: true })); show(); }
+    btn.addEventListener('click', function(){ file.click(); });
+    clear.addEventListener('click', function(){ set(''); });
+    input.addEventListener('input', show);
+    file.addEventListener('change', function(){
+      var f = file.files[0]; file.value = ''; if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(){
+        // GIF animé : gardé tel quel s'il est assez léger, sinon il faut un lien
+        if (f.type === 'image/gif'){
+          if (reader.result.length <= MAX_INLINE) return set(reader.result);
+          return SK.toast('GIF trop lourd pour être intégré : héberge-le (ex. imgur.com) et colle son lien');
+        }
+        var img = new Image();
+        img.onload = function(){
+          var sc = Math.min(1, max / Math.max(img.width, img.height));
+          var c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+          var x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height);
+          var q = .9, out = c.toDataURL('image/webp', q);
+          while (out.length > MAX_INLINE && q > .35){ q -= .1; out = c.toDataURL('image/webp', q); }
+          while (out.length > MAX_INLINE && c.width > 48){
+            var n = document.createElement('canvas'); n.width = Math.round(c.width * .8); n.height = Math.round(c.height * .8);
+            n.getContext('2d').drawImage(c, 0, 0, n.width, n.height); c = n; out = c.toDataURL('image/webp', .7);
+          }
+          if (out.length > MAX_INLINE) return SK.toast('Image trop lourde : héberge-la et colle son lien');
+          set(out);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(f);
+    });
+    show();
+    SK._imgShow = SK._imgShow || []; SK._imgShow.push(show);
+  };
+  document.querySelectorAll('input[data-image]').forEach(SK.enhanceImageField);
+
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

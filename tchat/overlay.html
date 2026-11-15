@@ -103,7 +103,7 @@
   var FALLBACK = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#38d9a9', '#4dabf7', '#9775fa', '#f783ac', '#63e6be', '#ff922b'];
   // Couleur de pseudo : celle de Twitch, ajustée pour rester lisible sur le fond du thème
   function nameColor(raw, login){
-    if (P.sk === 'accent') return 'var(--ac-tx)';
+    if (P.sk === 'accent') return 'var(--tx)';
     if (P.names === 'accent') return hex(P.ac, DEFAULTS.ac);
     if (P.names === 'white' || P.names === 'text') return hex(P.tx, 'ffffff');
     var c;

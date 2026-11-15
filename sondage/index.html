@@ -17,13 +17,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
   .sw{ display: flex; flex-direction: column; gap: 3px; justify-content: center; padding: 4px; }
-  .sw i{ display: block; height: 5px; border-radius: 3px; background: #9b5cff; }
+  .sw i{ display: block; height: 5px; border-radius: 3px; background: #a78bfa; }
   .sw i + i{ width: 60%; opacity: .6; }
-  .sw-card{ background: #17132a; border-top: 2px solid #9b5cff; }
-  .sw-neon{ background: #0d0a18; border: 1px solid #9b5cff; box-shadow: 0 0 6px #9b5cff; }
+  .sw-card{ background: #19171f; border-radius: 6px; }
+  .sw-compact{ background: #19171f; border-radius: 6px; gap: 2px; } .sw-compact i{ height: 3px; }
   .sw-clean{ background: transparent; }
 </style>
 </head>
@@ -55,19 +55,15 @@
         <label class="field"><span>Nom de la commande</span><input type="text" name="cmd" value="sondage" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
           <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card"><i></i><i></i></span><span>Carte</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon"><i></i><i></i></span><span>Néon</span></label></div>
-          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><i></i><i></i></span><span>Texte seul</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-compact" value="compact"><label for="style-compact"><span class="sw sw-compact"><i></i><i></i></span><span>Compacte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><i></i><i></i></span><span>Sans fond</span></label></div>
         </div>
-      </fieldset>
-      <fieldset>
-        <legend>Apparence</legend>
-        <div class="field colors"><label class="color"><input type="color" name="ac" value="#9b5cff"><span>Accent</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
         <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="48" value="24"></label>
       </fieldset>
+      <div data-theme-panel="minimal"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -114,7 +110,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';
