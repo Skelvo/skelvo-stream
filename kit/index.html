@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kit de stream complet et gratuit pour OBS — Skelvo Stream</title>
+<meta name="description" content="Un kit de stream complet et assorti en 2 minutes : contour caméra, tchat, alertes, écrans d'attente… et un fichier de scènes OBS prêt à importer. Gratuit, sans compte." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/kit/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=7">
+<!--
+  Kit complet : un pack + une chaîne + une liste d'outils
+  -> tous les liens des overlays, assortis,
+  -> un fichier de collection de scènes OBS (Début, Live, Pause, Fin)
+     avec les sources navigateur déjà placées, à importer dans OBS
+     (Collection de scènes > Importer).
+-->
+<style>
+  .stage .layer{ position: absolute; border: 0; background: transparent; }
+  .stage .cam-ph{ position: absolute; border-radius: 22px; background: radial-gradient(80% 90% at 50% 20%, #3a3556, #15131f); overflow: hidden; }
+  .stage .cam-ph svg{ position: absolute; left: 50%; bottom: 0; width: 46%; transform: translateX(-50%); }
+  .tools{ display: grid; gap: 4px; }
+  .tools .check{ margin: 0; padding: 8px 10px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); }
+  .tools .check small{ display: block; color: var(--muted); font-size: .78rem; }
+  .links{ display: grid; gap: 8px; margin-top: 4px; }
+  .link{ display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 12px; }
+  .link b{ font: 600 .92rem 'Space Grotesk', sans-serif; }
+  .link small{ display: block; color: var(--muted); font-size: .76rem; }
+  .big-dl{ width: 100%; justify-content: center; padding: 14px; font-size: 1.02rem; margin: 6px 0 12px; }
+  .scene-seg button{ min-width: 60px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small>outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Ton kit de stream complet</h1>
+    <p>Choisis un pack, entre ta chaîne, coche tes outils : tu récupères tous tes liens assortis et un fichier de scènes à importer dans OBS. Un stream complet en 2 minutes.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ton pack</legend>
+        <p class="hint">Tout ira ensemble : contour, tchat, alertes, écrans d'attente…</p>
+        <div id="packs"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span>Nom de ta chaîne Twitch</span><input type="text" id="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Ton pseudo sur le contour caméra</span><input type="text" id="label" maxlength="30" placeholder="Laisse vide pour ne rien afficher"></label>
+        <label class="field"><span>Début du live dans (écran « Ça commence bientôt »)</span><select id="min"><option value="0">Pas de compte à rebours</option><option value="3">3 minutes</option><option value="5" selected>5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>Tes outils</legend>
+        <div class="tools" id="tools"></div>
+      </fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span>Aperçu de tes scènes</span></div>
+          <div class="seg scene-seg" id="scenes" role="group" aria-label="Scène">
+            <button type="button" data-scene="start">Début</button>
+            <button type="button" data-scene="live" aria-pressed="true">Live</button>
+            <button type="button" data-scene="brb">Pause</button>
+            <button type="button" data-scene="end">Fin</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel output">
+        <h2>Récupère ton kit</h2>
+        <button type="button" class="btn big-dl" id="dl">⬇ Télécharger mes scènes OBS</button>
+        <ol class="steps">
+          <li><span>Dans OBS, menu <b>Collection de scènes</b> → <b>Importer</b>, choisis le fichier téléchargé, puis clique sur <b>Importer</b>.</span></li>
+          <li><span>Toujours dans <b>Collection de scènes</b>, sélectionne <b>Skelvo Stream</b> : tes scènes Début, Live, Pause et Fin apparaissent, déjà montées.</span></li>
+          <li><span>Dans la scène <b>Live</b>, ajoute ta <b>capture de jeu</b> et ta <b>caméra</b> (tout en bas de la liste des sources), puis place ta caméra sous le contour.</span></li>
+        </ol>
+        <div class="tip">Les écrans, alertes et jeux sont transparents ou invisibles tant qu'il ne se passe rien. Si tu préfères ajouter les sources à la main, voici chaque lien :</div>
+        <div class="links" id="links"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
+<script>
+(function(){
+  'use strict';
+  var ROOT = new URL('../', location.href);
+  var THEME_KEYS = ['font', 'cf', 'fw', 'tx', 'ac', 'ac2', 'sk', 'sf', 'so', 'rad', 'bw', 'bc', 'bo', 'sh', 'shs', 'gl', 'up'];
+
+  /* Outils du kit : dossier, nom dans OBS, place dans la scène Live (sur 1920 × 1080),
+     taille de la source, réglages propres, et s'il est coché par défaut */
+  var TOOLS = [
+    { id: 'cadre',    name: 'Contour caméra',     x: 1320, y: 700, w: 580, h: 326, on: true,  theme: false, hint: 'Ta caméra va dessous.' },
+    { id: 'tchat',    name: 'Tchat',              x: 20,   y: 400, w: 460, h: 660, on: true,  theme: true },
+    { id: 'alertes',  name: 'Alertes',            x: 460,  y: 30,  w: 1000, h: 500, on: true, theme: true, audio: true },
+    { id: 'emotes',   name: 'Pluie d\'emotes',    x: 0,    y: 0,   w: 1920, h: 1080, on: true, theme: false },
+    { id: 'derniers', name: 'Derniers et tops',   x: 20,   y: 20,  w: 700,  h: 140, on: true,  theme: true },
+    { id: 'horloge',  name: 'Durée du live',      x: 1200, y: 20,  w: 700,  h: 140, on: true,  theme: true, extra: { align: 'right', show_time: '0' } },
+    { id: 'compteur', name: 'Compteur',           x: 1320, y: 600, w: 580,  h: 110, on: false, theme: true, extra: { fs: '48', align: 'right' } },
+    { id: 'objectif', name: 'Objectif',           x: 560,  y: 970, w: 800,  h: 100, on: false, theme: true, extra: { style: 'inside' } },
+    { id: 'minuteur', name: 'Minuteur subathon',  x: 610,  y: 160, w: 700,  h: 260, on: false, theme: true },
+    { id: 'sondage',  name: 'Sondage',            x: 1300, y: 170, w: 600,  h: 420, on: true,  theme: true },
+    { id: 'giveaway', name: 'Tirage au sort',     x: 610,  y: 280, w: 700,  h: 520, on: true,  theme: true },
+    { id: 'jeux',     name: 'Jeux du tchat',      x: 610,  y: 310, w: 700,  h: 460, on: true,  theme: true }
+  ];
+  var SCREENS = [ { id: 'start', name: 'Début' }, { id: 'brb', name: 'Pause' }, { id: 'end', name: 'Fin' } ];
+
+  /* ---------- État ---------- */
+  var saved = SK.store.get('sk-kit') || {};
+  var pack = (window.SK_PACKS || []).filter(function(p){ return p.id === saved.pack; })[0] || window.SK_PACKS[0];
+  var chIn = document.getElementById('ch'), labelIn = document.getElementById('label'), minIn = document.getElementById('min');
+  chIn.value = saved.ch || ''; labelIn.value = saved.label || ''; if (saved.min != null) minIn.value = saved.min;
+  var enabled = saved.tools || {};
+  TOOLS.forEach(function(t){ if (enabled[t.id] == null) enabled[t.id] = t.on; });
+
+  var grid = SK.buildPackGrid(function(p){ pack = p; update(); });
+  document.getElementById('packs').appendChild(grid);
+  function markPack(){ grid.querySelectorAll('.pack').forEach(function(b){ b.classList.toggle('on', b.dataset.pack === pack.id); }); }
+
+  var toolsEl = document.getElementById('tools');
+  TOOLS.forEach(function(t){
+    var l = document.createElement('label'); l.className = 'check';
+    var c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!enabled[t.id];
+    c.addEventListener('change', function(){ enabled[t.id] = c.checked; update(); });
+    var s = document.createElement('span'); s.textContent = t.name;
+    if (t.hint){ var sm = document.createElement('small'); sm.textContent = t.hint; s.appendChild(sm); }
+    l.appendChild(c); l.appendChild(s); toolsEl.appendChild(l);
+  });
+
+  /* ---------- Liens ---------- */
+  function cleanCh(){ return String(chIn.value || '').toLowerCase().replace(/^[#@]/, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); }
+  function themeParams(){ var o = {}; THEME_KEYS.forEach(function(k){ o[k] = k === 'cf' ? '' : (pack.t[k] != null ? pack.t[k] : ''); }); return o; }
+  function url(folder, params, page){
+    var u = new URL(folder + '/' + (page || 'overlay.html'), ROOT);
+    Object.keys(params).forEach(function(k){ if (params[k] !== '' && params[k] != null) u.searchParams.set(k, params[k]); });
+    return u.href;
+  }
+  function toolParams(t){
+    var p = {};
+    if (t.theme) Object.assign(p, themeParams());
+    if (t.id === 'cadre') Object.assign(p, { style: 'gradient', c1: pack.c[0], c2: pack.c[1], c3: pack.c[2], glow: '14', label: labelIn.value, lpos: 'bc', lfont: pack.t.font, lstyle: 'fill' });
+    else p.ch = cleanCh();
+    if (t.extra) Object.assign(p, t.extra);
+    return p;
+  }
+  function screenParams(mode){
+    return Object.assign(themeParams(), { mode: mode, bgpack: pack.id, pdim: pack.light ? '0' : '25', c1: pack.c[0], c2: pack.c[1], c3: pack.c[2], min: mode === 'start' ? minIn.value : '0', ch: cleanCh(),
+      sk: pack.t.sk === 'none' ? 'glass' : pack.t.sk });
+  }
+
+  /* ---------- Aperçu ---------- */
+  var stage = SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'), storageKey: 'sk-kit-size', def: { w: 1920, h: 1080 } });
+  var canvas = document.getElementById('canvas'), scene = 'live';
+  document.querySelectorAll('#scenes button').forEach(function(b){ b.addEventListener('click', function(){
+    scene = b.dataset.scene; document.querySelectorAll('#scenes button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); }); renderPreview();
+  }); });
+  var previewKey = '';
+  function renderPreview(){
+    var k = scene + '|' + pack.id + '|' + labelIn.value + '|' + JSON.stringify(enabled) + '|' + minIn.value;
+    if (k === previewKey) return; previewKey = k;
+    canvas.textContent = '';
+    function frame(src, x, y, w, h){ var f = document.createElement('iframe'); f.className = 'layer'; f.src = src; f.style.left = x + 'px'; f.style.top = y + 'px'; f.style.width = w + 'px'; f.style.height = h + 'px'; f.tabIndex = -1; canvas.appendChild(f); }
+    if (scene !== 'live'){ frame(url('ecrans', Object.assign(screenParams(scene), { demo: '1' })), 0, 0, 1920, 1080); return; }
+    var cam = TOOLS[0];
+    if (enabled.cadre){
+      var ph = document.createElement('div'); ph.className = 'cam-ph';
+      ph.style.left = (cam.x + 26) + 'px'; ph.style.top = (cam.y + 26) + 'px'; ph.style.width = (cam.w - 52) + 'px'; ph.style.height = (cam.h - 52) + 'px';
+      ph.innerHTML = '<svg viewBox="0 0 100 80"><circle cx="50" cy="30" r="17" fill="#6d6690"/><path d="M14 80c2-20 17-31 36-31s34 11 36 31z" fill="#6d6690"/></svg>';
+      canvas.appendChild(ph);
+    }
+    TOOLS.forEach(function(t){
+      if (!enabled[t.id]) return;
+      // En aperçu : démo pour tout le monde ; les jeux / tirages / sondages apparaissent tour à tour
+      var quiet = t.id === 'sondage' || t.id === 'giveaway' || t.id === 'jeux'; // invisibles tant qu'on ne les lance pas
+      var extra = quiet ? { ch: '' } : { demo: '1' };
+      if (t.id === 'emotes') extra.max = '18';
+      frame(url(t.id, Object.assign(toolParams(t), extra)), t.x, t.y, t.w, t.h);
+    });
+  }
+
+  /* ---------- Liste des liens ---------- */
+  function renderLinks(){
+    var box = document.getElementById('links'); box.textContent = '';
+    function row(name, sub, href, editor){
+      var d = document.createElement('div'); d.className = 'link';
+      var t = document.createElement('div'); var b = document.createElement('b'); b.textContent = name; t.appendChild(b);
+      var s = document.createElement('small'); s.textContent = sub; t.appendChild(s); d.appendChild(t);
+      var c = document.createElement('button'); c.type = 'button'; c.className = 'btn small'; c.textContent = 'Copier'; c.addEventListener('click', function(){ SK.copy(href); }); d.appendChild(c);
+      var e = document.createElement('a'); e.className = 'btn ghost small'; e.textContent = 'Modifier'; e.href = editor; e.target = '_blank'; e.rel = 'noopener'; d.appendChild(e);
+      box.appendChild(d);
+    }
+    TOOLS.forEach(function(t){
+      if (!enabled[t.id]) return;
+      var p = toolParams(t);
+      row(t.name, 'Taille ' + t.w + ' × ' + t.h, url(t.id, p), url(t.id, p, ''));
+    });
+    SCREENS.forEach(function(s){ var p = screenParams(s.id); row('Écran « ' + s.name + ' »', 'Taille 1920 × 1080', url('ecrans', p), url('ecrans', p, '')); });
+  }
+
+  /* ---------- Collection de scènes OBS ---------- */
+  function uuid(){ return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){ var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }); }
+  function browserSource(name, href, w, h, audio){
+    return { name: name, uuid: uuid(), id: 'browser_source', versioned_id: 'browser_source',
+      settings: { url: href, width: w, height: h, reroute_audio: !!audio, restart_when_active: false, shutdown: false, css: '' },
+      mixers: 255, sync: 0, flags: 0, volume: 1.0, balance: 0.5, enabled: true, muted: false,
+      'push-to-mute': false, 'push-to-mute-delay': 0, 'push-to-talk': false, 'push-to-talk-delay': 0,
+      hotkeys: {}, deinterlace_mode: 0, deinterlace_field_order: 0, monitoring_type: 0, private_settings: {} };
+  }
+  function sceneSource(name, items){
+    return { name: name, uuid: uuid(), id: 'scene', versioned_id: 'scene',
+      settings: { id_counter: items.length, custom_size: false, items: items.map(function(it, i){
+        return { name: it.src.name, source_uuid: it.src.uuid, visible: true, locked: false, rot: 0.0,
+          pos: { x: it.x, y: it.y }, scale: { x: 1.0, y: 1.0 }, align: 5, bounds_type: 0, bounds_align: 0, bounds_crop: false,
+          bounds: { x: 0.0, y: 0.0 }, crop_left: 0, crop_top: 0, crop_right: 0, crop_bottom: 0, id: i + 1,
+          group_item_backup: false, scale_filter: 'disable', blend_method: 'default', blend_type: 'normal',
+          show_transition: { duration: 0 }, hide_transition: { duration: 0 }, private_settings: {} };
+      }) },
+      mixers: 0, sync: 0, flags: 0, volume: 1.0, balance: 0.5, enabled: true, muted: false,
+      'push-to-mute': false, 'push-to-mute-delay': 0, 'push-to-talk': false, 'push-to-talk-delay': 0,
+      hotkeys: {}, deinterlace_mode: 0, deinterlace_field_order: 0, monitoring_type: 0, private_settings: {} };
+  }
+  function buildCollection(){
+    var sources = [], scenes = [];
+    // Écrans : une scène chacun, plein écran
+    var screenScenes = {};
+    SCREENS.forEach(function(s){
+      var src = browserSource('Skelvo · Écran ' + s.name, url('ecrans', screenParams(s.id)), 1920, 1080, false);
+      sources.push(src); screenScenes[s.id] = sceneSource(s.name, [{ src: src, x: 0, y: 0 }]);
+    });
+    // Live : les overlays cochés, du bas vers le haut de la liste OBS
+    var order = ['cadre', 'derniers', 'horloge', 'compteur', 'objectif', 'tchat', 'sondage', 'minuteur', 'jeux', 'giveaway', 'alertes', 'emotes'];
+    var items = [];
+    order.forEach(function(id){
+      var t = TOOLS.filter(function(x){ return x.id === id; })[0];
+      if (!t || !enabled[id]) return;
+      var src = browserSource('Skelvo · ' + t.name, url(t.id, toolParams(t)), t.w, t.h, t.audio);
+      sources.push(src); items.push({ src: src, x: t.x, y: t.y });
+    });
+    var live = sceneSource('Live', items);
+    scenes = [screenScenes.start, live, screenScenes.brb, screenScenes.end];
+    return {
+      current_scene: 'Début', current_program_scene: 'Début',
+      scene_order: scenes.map(function(s){ return { name: s.name }; }),
+      name: 'Skelvo Stream', sources: scenes.concat(sources), groups: [],
+      quick_transitions: [], transitions: [], saved_projectors: [],
+      transition_duration: 300,
+      preview_locked: false, scaling_enabled: false, scaling_level: 0, scaling_off_x: 0.0, scaling_off_y: 0.0,
+      modules: {}
+    };
+  }
+  document.getElementById('dl').addEventListener('click', function(){
+    if (!cleanCh() && !confirm('Tu n\'as pas entré le nom de ta chaîne : le tchat, les alertes et les jeux ne marcheront pas. Télécharger quand même ?')) return;
+    var blob = new Blob([JSON.stringify(buildCollection(), null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'skelvo-stream-' + pack.id + '.json'; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    SK.toast('Scènes téléchargées ! Importe le fichier dans OBS');
+  });
+
+  /* ---------- Mise à jour ---------- */
+  var t = null;
+  function update(){
+    markPack();
+    SK.store.set('sk-kit', { pack: pack.id, ch: chIn.value, label: labelIn.value, min: minIn.value, tools: enabled });
+    renderLinks();
+    clearTimeout(t); t = setTimeout(renderPreview, 250);
+  }
+  [chIn, labelIn, minIn].forEach(function(i){ i.addEventListener('input', update); i.addEventListener('change', update); });
+  update();
+  window.SK_KIT_BUILD = buildCollection; // pour les tests
+})();
+</script>
+</body>
+</html>
