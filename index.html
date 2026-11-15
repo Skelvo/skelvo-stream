@@ -36,7 +36,11 @@
   @media (max-width: 900px){ .hero .wrap{ grid-template-columns: 1fr; } .hero{ padding-top: 48px; } }
   .kicker{ display: inline-flex; gap: 8px; align-items: center; font: 600 .82rem 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-2); background: rgba(75,225,195,.1); border: 1px solid rgba(75,225,195,.25); border-radius: 999px; padding: 6px 12px; }
   .hero h1{ font-size: clamp(2.3rem, 5.6vw, 4.2rem); line-height: 1.02; margin: 18px 0 0; font-weight: 700; }
-  .hero h1 em{ font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--hot)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* « gratuitement » : dégradé qui défile en boucle (début et fin de même couleur = pas de saut) */
+  .hero h1 em{ font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--hot), var(--accent)); background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 5s linear infinite; display: inline-block; }
+  @keyframes shimmer{ from{ background-position: 0% 50%; } to{ background-position: 200% 50%; } }
+  @media (prefers-reduced-motion: reduce){ .hero h1 em{ animation: none; } }
   .hero p.lead{ color: var(--muted); font-size: 1.12rem; max-width: 50ch; margin: 18px 0 28px; }
   .hero .cta{ display: flex; gap: 12px; flex-wrap: wrap; }
   .perks{ display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 26px; color: #d9d3f0; font-size: .92rem; list-style: none; padding: 0; }
@@ -45,11 +49,13 @@
   /* Démo vivante : le vrai overlay du cadre, en petit */
   .hero-demo{ position: relative; aspect-ratio: 16 / 10; border-radius: 18px; overflow: hidden; background: #08070d; border: 1px solid var(--line); box-shadow: 0 30px 80px -30px rgba(155,92,255,.5); }
   .hero-demo .fake-game{ position: absolute; inset: 0; }
-  .hero-demo .cam{ position: absolute; right: 5%; bottom: 8%; width: 42%; aspect-ratio: 16/9; }
-  .hero-demo .cam .pic{ position: absolute; inset: 18px; border-radius: 10px; /* = marge du cadre (lueur 10 × 1,6) + moitié de son épaisseur : le visage tombe pile dans le cadre */ background: radial-gradient(80% 90% at 50% 20%, #3a3556, #15131f); overflow: hidden; }
-  .hero-demo .cam .pic svg{ position: absolute; left: 50%; bottom: 0; width: 55%; transform: translateX(-50%); }
+  /* La démo est dessinée à taille fixe (1280 × 800) puis réduite : mêmes proportions sur téléphone et sur ordinateur */
+  .hero-demo .scene{ position: absolute; left: 0; top: 0; width: 1280px; height: 800px; transform-origin: 0 0; }
+  .hero-demo .cam{ position: absolute; right: 56px; bottom: 64px; width: 560px; height: 315px; }
+  .hero-demo .cam .pic{ position: absolute; inset: 30px; border-radius: 20px; /* = marge du cadre (lueur 16 × 1,6) + moitié de son épaisseur (8) : le visage tombe pile dans le cadre */ background: radial-gradient(80% 90% at 50% 20%, #3a3556, #15131f); overflow: hidden; }
+  .hero-demo .cam .pic svg{ position: absolute; left: 50%; bottom: 0; width: 46%; transform: translateX(-50%); }
   .hero-demo .cam iframe, .hero-demo .chat iframe{ position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  .hero-demo .chat{ position: absolute; left: 3%; top: 4%; bottom: 4%; width: 40%; }
+  .hero-demo .chat{ position: absolute; left: 32px; top: 28px; bottom: 28px; width: 500px; }
 
   .tools{ padding: 30px 0 70px; }
   .group-head{ margin: 34px 0 16px; }
@@ -108,10 +114,12 @@
       </div>
       <div class="hero-demo" aria-hidden="true">
         <div class="fake-game"></div>
-        <div class="chat"><iframe src="tchat/overlay.html?demo=1&fs=13&max=8&theme=bubble&events=1" tabindex="-1" title=""></iframe></div>
-        <div class="cam">
-          <div class="pic"><svg viewBox="0 0 100 80"><circle cx="50" cy="30" r="17" fill="#6d6690"/><path d="M14 80c2-20 17-31 36-31s34 11 36 31z" fill="#6d6690"/></svg></div>
-          <iframe src="cadre/overlay.html?style=gradient&w=4&r=12&glow=10&speed=4&label=Skelvo&ls=11" tabindex="-1" title=""></iframe>
+        <div class="scene" id="scene">
+          <div class="chat"><iframe src="tchat/overlay.html?demo=1&fs=24&max=8&theme=bubble&events=1" tabindex="-1" title=""></iframe></div>
+          <div class="cam">
+            <div class="pic"><svg viewBox="0 0 100 80"><circle cx="50" cy="30" r="17" fill="#6d6690"/><path d="M14 80c2-20 17-31 36-31s34 11 36 31z" fill="#6d6690"/></svg></div>
+            <iframe src="cadre/overlay.html?style=gradient&w=8&r=24&glow=16&speed=4&label=Skelvo&ls=22&lpos=bc" tabindex="-1" title=""></iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -238,6 +246,14 @@
   </div>
 </footer>
 
-<script src="assets/app.js?v=5"></script>
+<script src="assets/app.js?v=6"></script>
+<script>
+  // Réduit la scène de démo à la largeur disponible
+  (function(){
+    var demo = document.querySelector('.hero-demo'), scene = document.getElementById('scene');
+    if (!demo || !scene || !window.ResizeObserver) return;
+    new ResizeObserver(function(){ scene.style.transform = 'scale(' + demo.clientWidth / 1280 + ')'; }).observe(demo);
+  })();
+</script>
 </body>
 </html>
