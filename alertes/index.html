@@ -49,6 +49,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       <fieldset>
         <legend>Ta chaîne</legend>
         <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+        <div data-auth-box></div>
       </fieldset>
       <fieldset>
         <legend>Quelles alertes ?</legend>
@@ -61,7 +62,6 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="check"><input type="checkbox" name="reward" checked><span>Récompenses de points de chaîne (connexion Twitch)</span></label>
         <label class="check"><input type="checkbox" name="tip" checked><span>Dons StreamElements (connexion StreamElements)</span></label>
         <label class="field"><span>Don minimum</span><input type="text" name="mintip" value="0" placeholder="" maxlength="7" inputmode="decimal"></label>
-        <div data-auth-box></div>
       </fieldset>
       <fieldset>
         <legend>Textes</legend>
@@ -161,7 +161,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=23"></script>
+<script src="../assets/app.js?v=24"></script>
 <script>
 (function(){
   'use strict';

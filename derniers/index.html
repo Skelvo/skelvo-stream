@@ -49,6 +49,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       <fieldset>
         <legend>Ta chaîne</legend>
         <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+        <div data-auth-box></div>
       </fieldset>
       <fieldset>
         <legend>Ce qui est affiché</legend>
@@ -61,7 +62,6 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="check"><input type="checkbox" name="i_topchat" checked><span>Top tchatteur du jour</span></label>
         <label class="check"><input type="checkbox" name="i_follow"><span>Dernier follow (connexion Twitch)</span></label>
         <label class="check"><input type="checkbox" name="i_tip"><span>Dernier don (connexion StreamElements)</span></label>
-        <div data-auth-box></div>
         <label class="field"><span>Texte quand il n'y a encore personne</span><input type="text" name="empty" value="—" placeholder="" maxlength="30" ></label>
       </fieldset>
       <fieldset>
@@ -124,7 +124,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=23"></script>
+<script src="../assets/app.js?v=24"></script>
 <script>
 (function(){
   'use strict';
