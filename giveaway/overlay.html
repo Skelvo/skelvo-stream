@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Tirage au sort — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Tirage au sort par le tchat. Commandes du streamer et des modos :
+    !giveaway start Un jeu Steam    ouvre les participations (le texte = le lot)
+    !giveaway stop                  ferme les participations
+    !giveaway tirage                tire un (ou plusieurs) gagnant(s)
+    !giveaway annule                cache tout
+  Les viewers participent avec !participer (une seule fois chacun).
+  Invisible quand aucun tirage n'est en cours. Mémorisé si OBS redémarre.
+-->
+<style>
+  :root{ --fs: 26px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; align-items: center; justify-content: center; padding: .6em; box-sizing: border-box; }
+  .gw{ position: relative; width: 100%; max-width: 22em; padding: 1em 1.1em 1.1em; text-align: center; transition: opacity .5s, transform .6s cubic-bezier(.2,1.2,.3,1); }
+  .gw.hidden{ opacity: 0; transform: scale(.92) translateY(.6em); }
+  .kick{ font-size: .55em; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ac); }
+  .title{ font-size: 1.35em; font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); line-height: 1.1; margin: .2em 0 .1em; }
+  .prize{ font-size: .8em; color: var(--muted); font-weight: 600; }
+  .how{ margin: .8em auto .4em; display: inline-flex; align-items: center; gap: .5em; font-size: .7em; font-weight: 600; padding: .45em .9em; border-radius: 999px; background: rgba(127,127,127,.16); }
+  .how code{ font: 800 1em var(--font); color: var(--ac); }
+  .meta{ display: flex; justify-content: center; gap: 1.2em; font-size: .62em; color: var(--muted); font-weight: 600; margin-top: .3em; }
+  .meta b{ color: var(--tx); font-size: 1.25em; font-variant-numeric: tabular-nums; }
+  .joins{ display: flex; flex-wrap: wrap; justify-content: center; gap: .3em; margin-top: .7em; min-height: 1.4em; max-height: 3.2em; overflow: hidden; }
+  .joins span{ font-size: .55em; font-weight: 600; padding: .25em .6em; border-radius: 999px; background: rgba(127,127,127,.18); animation: pop .4s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes pop{ from{ opacity: 0; transform: scale(.5); } }
+
+  /* Tirage : défilement façon machine à sous */
+  .slot{ position: relative; height: 1.8em; overflow: hidden; margin: .7em auto .2em; border-radius: calc(var(--rad) * .6); background: rgba(127,127,127,.14); }
+  .slot::before, .slot::after{ content: ""; position: absolute; left: 0; right: 0; height: .5em; z-index: 1; pointer-events: none; }
+  .slot .reel{ position: absolute; left: 0; right: 0; top: 0; }
+  .slot .reel div{ height: 1.8em; line-height: 1.8em; font-weight: 800; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 .5em; }
+  /* Roue */
+  .wheel{ position: relative; width: 9em; height: 9em; margin: .6em auto .2em; }
+  .wheel canvas{ width: 100%; height: 100%; display: block; }
+  .wheel::after{ content: ""; position: absolute; top: -.25em; left: 50%; transform: translateX(-50%); border: .45em solid transparent; border-top: .7em solid var(--tx); filter: drop-shadow(0 .05em .1em rgba(0,0,0,.5)); }
+
+  .winners{ margin-top: .6em; }
+  .winner{ font-size: 1.5em; font-weight: 800; color: var(--ac); text-shadow: var(--glow-text); animation: win .8s cubic-bezier(.2,1.5,.4,1) both; line-height: 1.2; }
+  .sk-accent .winner{ color: inherit; }
+  @keyframes win{ from{ opacity: 0; transform: scale(.4); } }
+  .winlabel{ font-size: .6em; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+  .confetti{ position: absolute; left: 50%; top: 50%; width: .3em; height: .48em; border-radius: .06em; animation: conf 2s cubic-bezier(.15,.7,.4,1) forwards; pointer-events: none; }
+  @keyframes conf{ from{ transform: translate(-50%,-50%) rotate(0); opacity: 1; } to{ transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="gw sk-surface hidden" id="gw"></div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', cmd: 'participer', mcmd: 'giveaway', title: 'Giveaway !', prize: '', subonly: '0', winners: '1',
+    dur: '0', anim: 'slot', hide: '25', fs: '26', demo: '0'
+  });
+  var num = SKO.num, el = SKO.el;
+  var box = document.getElementById('gw');
+  var P = {}, S = null, key = '', source = null, sourceKey = '', hideTimer = null, tickTimer = null;
+
+  function save(){ if (S) SKO.store.set(key, S); else SKO.store.del(key); }
+  function blank(){ return { state: 'open', prize: P.prize || '', people: [], winners: [], end: 0 }; }
+
+  function open(prize){
+    S = blank(); S.prize = prize || P.prize || '';
+    var d = num(P.dur, 0, 3600, 0); S.end = d ? Date.now() + d * 1000 : 0;
+    save(); render();
+  }
+  function close(){ if (S && S.state === 'open'){ S.state = 'closed'; save(); render(); } }
+  function cancel(){ S = null; save(); render(); }
+
+  function join(m){
+    if (!S || S.state !== 'open') return;
+    if (P.subonly === '1' && !m.isSub && !m.isMod && !m.isVip) return;
+    if (S.people.some(function(p){ return p.l === m.login; })) return;
+    S.people.push({ l: m.login, n: m.name }); save();
+    var j = box.querySelector('.joins');
+    if (j){ var c = el('span', '', m.name); j.appendChild(c); while (j.children.length > 14) j.firstChild.remove(); }
+    var cnt = box.querySelector('.cnt'); if (cnt) cnt.textContent = S.people.length;
+  }
+
+  function draw(){
+    if (!S) return;
+    var pool = S.people.filter(function(p){ return !S.winners.some(function(w){ return w.l === p.l; }); });
+    if (!pool.length) return;
+    S.state = 'drawing'; save();
+    var n = Math.min(num(P.winners, 1, 20, 1), pool.length), picked = [];
+    var arr = new Uint32Array(n); crypto.getRandomValues(arr);
+    for (var i = 0; i < n; i++){ var k = arr[i] % pool.length; picked.push(pool.splice(k, 1)[0]); }
+    renderDrawing(picked, function(){
+      S.winners = S.winners.concat(picked); S.state = 'done'; save(); render(); confetti();
+    });
+  }
+
+  /* ---------- Affichage ---------- */
+  function head(){
+    var f = document.createDocumentFragment();
+    f.appendChild(el('div', 'kick', 'Tirage au sort'));
+    f.appendChild(el('div', 'title', P.title || 'Giveaway !'));
+    if (S.prize) f.appendChild(el('div', 'prize', '🎁 ' + S.prize));
+    return f;
+  }
+  function render(){
+    clearTimeout(hideTimer); clearInterval(tickTimer);
+    if (!S){ box.classList.add('hidden'); return; }
+    if (S.state === 'drawing'){ return; }
+    box.textContent = ''; box.appendChild(head());
+    if (S.state === 'open' || S.state === 'closed'){
+      var how = el('div', 'how');
+      if (S.state === 'open'){ how.appendChild(document.createTextNode('Tape ')); how.appendChild(el('code', '', '!' + cmdName())); how.appendChild(document.createTextNode(P.subonly === '1' ? ' (abonnés)' : ' pour participer')); }
+      else how.textContent = 'Participations fermées · tirage imminent';
+      box.appendChild(how);
+      var meta = el('div', 'meta'), a = el('span'); a.appendChild(el('b', 'cnt', String(S.people.length))); a.appendChild(document.createTextNode(' participants'));
+      meta.appendChild(a);
+      if (S.end && S.state === 'open'){ var t = el('span'); t.appendChild(el('b', 'left', '')); t.appendChild(document.createTextNode(' restant')); meta.appendChild(t); }
+      box.appendChild(meta);
+      var j = el('div', 'joins'); S.people.slice(-14).forEach(function(p){ j.appendChild(el('span', '', p.n)); }); box.appendChild(j);
+      if (S.end && S.state === 'open'){
+        var tick = function(){ var l = box.querySelector('.left'); var s = (S.end - Date.now()) / 1000; if (s <= 0){ close(); return; } if (l) l.textContent = SKO.clock(s); };
+        tick(); tickTimer = setInterval(tick, 500);
+      }
+    } else if (S.state === 'done'){
+      var w = el('div', 'winners'); w.appendChild(el('div', 'winlabel', S.winners.length > 1 ? 'Les gagnants' : 'Le gagnant'));
+      S.winners.forEach(function(x){ w.appendChild(el('div', 'winner', x.n)); });
+      box.appendChild(w);
+      var h = num(P.hide, 0, 600, 25); if (h) hideTimer = setTimeout(cancel, h * 1000);
+    }
+    box.classList.remove('hidden');
+  }
+
+  function renderDrawing(picked, done){
+    box.textContent = ''; box.appendChild(head());
+    var names = S.people.map(function(p){ return p.n; });
+    var target = picked[0].n;
+    if (P.anim === 'wheel') wheel(names, target, done); else slot(names, target, done);
+    box.classList.remove('hidden');
+  }
+  function slot(names, target, done){
+    var s = el('div', 'slot'), reel = el('div', 'reel'); s.appendChild(reel); box.appendChild(s);
+    var seq = []; for (var i = 0; i < 40; i++) seq.push(names[Math.floor(Math.random() * names.length)]); seq.push(target);
+    seq.forEach(function(n){ reel.appendChild(el('div', '', n)); });
+    var h = s.clientHeight, total = (seq.length - 1) * h;
+    reel.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(' + (-total) + 'px)' }], { duration: 4200, easing: 'cubic-bezier(.12,.6,.12,1)', fill: 'forwards' })
+      .onfinish = function(){ setTimeout(done, 500); };
+  }
+  function wheel(names, target, done){
+    var wrap = el('div', 'wheel'), c = document.createElement('canvas'); wrap.appendChild(c); box.appendChild(wrap);
+    var list = names.length > 24 ? names.slice(0, 23).concat([target]).filter(function(v, i, a){ return a.indexOf(v) === i; }) : names.slice();
+    if (list.indexOf(target) < 0) list[list.length - 1] = target;
+    var N = list.length, size = 600; c.width = c.height = size;
+    var x = c.getContext('2d'), cs = getComputedStyle(document.documentElement);
+    var cols = [cs.getPropertyValue('--ac').trim(), cs.getPropertyValue('--ac2').trim()];
+    var font = cs.getPropertyValue('--font');
+    function paint(rot){
+      x.clearRect(0, 0, size, size); x.save(); x.translate(size / 2, size / 2); x.rotate(rot);
+      for (var i = 0; i < N; i++){
+        var a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2;
+        x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, size / 2 - 4, a0, a1); x.closePath();
+        x.fillStyle = cols[i % 2]; x.globalAlpha = i % 2 ? .75 : 1; x.fill(); x.globalAlpha = 1;
+        x.save(); x.rotate((a0 + a1) / 2); x.fillStyle = '#fff'; x.font = '700 ' + Math.max(14, Math.min(34, 380 / N)) + 'px ' + font;
+        x.textAlign = 'right'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = 4;
+        x.fillText(String(list[i]).slice(0, 16), size / 2 - 22, 0); x.restore();
+      }
+      x.restore();
+    }
+    var ti = list.indexOf(target);
+    // Le pointeur est en haut (angle -90°) : on vise le milieu de la part gagnante
+    var final = -Math.PI / 2 - (ti + .5) / N * Math.PI * 2 + Math.PI * 2 * 7;
+    var t0 = performance.now(), dur = 5200;
+    (function frame(now){
+      var t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 4);
+      paint(final * e);
+      if (t < 1) requestAnimationFrame(frame); else setTimeout(done, 600);
+    })(t0);
+  }
+  function confetti(){
+    var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--ac'), cs.getPropertyValue('--ac2'), '#ffd700', '#fff'];
+    for (var i = 0; i < 70; i++){
+      var c = el('i', 'confetti'); c.style.background = cols[i % cols.length];
+      var a = Math.random() * Math.PI * 2, d = 4 + Math.random() * 7;
+      c.style.setProperty('--dx', Math.cos(a) * d + 'em'); c.style.setProperty('--dy', Math.sin(a) * d - 1 + 'em'); c.style.setProperty('--r', (Math.random() * 900 - 450) + 'deg');
+      box.appendChild(c); setTimeout(c.remove.bind(c), 2100);
+    }
+  }
+
+  function cmdName(){ return String(P.cmd || 'participer').toLowerCase().replace(/^!/, ''); }
+  function onMessage(m){
+    if (!m.cmd) return;
+    var mc = String(P.mcmd || 'giveaway').toLowerCase().replace(/^!/, '');
+    if (m.cmd.name === mc && m.isMod){
+      var a = (m.cmd.args[0] || '').toLowerCase(), rest = m.cmd.args.slice(1).join(' ');
+      if (a === 'start' || a === 'ouvre' || a === 'go') open(rest.slice(0, 80));
+      else if (a === 'stop' || a === 'ferme') close();
+      else if (a === 'tirage' || a === 'draw' || a === 'roll') draw();
+      else if (a === 'annule' || a === 'reset' || a === 'cacher' || a === 'cancel') cancel();
+      return;
+    }
+    if (m.cmd.name === cmdName()) join(m);
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    document.documentElement.style.setProperty('--fs', num(P.fs, 12, 72, 26) + 'px');
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var k = 'sk-giveaway:' + sk;
+    if (k !== key){ key = k; S = P.demo === '1' ? null : SKO.store.get(key); if (S && S.state === 'drawing') S.state = 'closed'; }
+    if (S && S.state !== 'drawing') render();
+
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      if (sk === 'demo'){
+        var step = 0;
+        source = SKT.demo(h, { min: 450, spread: 300, extra: function(){
+          step++;
+          var mod = SKT.DEMO_USERS[2];
+          if (step === 1) return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' start Une carte cadeau de 20 €');
+          if (step > 1 && step < 16) return SKT.fakeMessage({ n: ['Lunaa_', 'KevGaming', 'Choupette', 'PixelPaulo', 'Tonton_Raclette', 'Mamie_Gameuse', 'xXDarkSasukeXx', 'Zoé_42', 'BaguetteMan', 'LaMouette', 'Kiki', 'Nono', 'Patate', 'Sushi'][step - 2], c: '', b: 'subscriber/1' }, '!' + cmdName());
+          if (step === 18) return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' tirage');
+          if (step === 40){ step = 0; return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' annule'); }
+          return { type: 'none' };
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>

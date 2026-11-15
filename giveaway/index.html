@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tirage au sort (giveaway) gratuit pour Twitch — Skelvo Stream</title>
+<meta name="description" content="Organise un giveaway sur ton stream : tes viewers tapent !participer, une roue ou une machine à sous tire le gagnant à l'écran. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/giveaway/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=7">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 20px; }
+  .sw-slot{ background: #19171f; border-radius: 6px; font: 800 11px 'Inter', sans-serif; color: #c4b5fd; }
+  .sw-wheel{ background: conic-gradient(#a78bfa 0 25%, #67e8f9 0 50%, #a78bfa 0 75%, #67e8f9 0); border-radius: 50%; width: 30px !important; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="giveaway.title">Tirage au sort</h1>
+    <p data-i18n="giveaway.lead">Tes viewers tapent !participer, puis une roue ou une machine à sous désigne le gagnant en direct, avec des confettis. Abonnés seulement ou plusieurs gagnants : c'est toi qui choisis.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Le tirage</legend>
+        <label class="field"><span>Titre</span><input type="text" name="title" value="Giveaway !" placeholder="" maxlength="40" ></label>
+        <label class="field"><span>Lot par défaut</span><input type="text" name="prize" value="" placeholder="ex. Un jeu Steam au choix" maxlength="80" ><small>Tu peux aussi le donner dans la commande : !giveaway start Un jeu Steam</small></label>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="anim" id="anim-slot" value="slot" checked><label for="anim-slot"><span class="sw sw-slot">Kev…</span><span>Machine à sous</span></label></div>
+          <div class="choice"><input type="radio" name="anim" id="anim-wheel" value="wheel"><label for="anim-wheel"><span class="sw sw-wheel"></span><span>Roue</span></label></div>
+        </div>
+        <label class="field"><span><span>Nombre de gagnants</span><output for="f-winners" data-unit=""></output></span><input type="range" id="f-winners" name="winners" min="1" max="10" value="1"></label>
+        <label class="check"><input type="checkbox" name="subonly"><span>Abonnés, VIP et modos seulement</span></label>
+        <label class="field"><span><span>Fermeture automatique des participations</span><output for="f-dur" data-unit=" s"></output></span><input type="range" id="f-dur" name="dur" min="0" max="600" value="0" step="10"><small>0 = tu fermes toi-même avec la commande.</small></label>
+        <label class="field"><span><span>Gagnant affiché pendant</span><output for="f-hide" data-unit=" s"></output></span><input type="range" id="f-hide" name="hide" min="0" max="120" value="25" step="5"><small>0 = reste affiché jusqu'au prochain tirage.</small></label>
+      </fieldset>
+      <fieldset>
+        <legend>Commandes</legend>
+        <label class="field"><span>Commande des viewers</span><input type="text" name="cmd" value="participer" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Commande des modos</span><input type="text" name="mcmd" value="giveaway" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="48" value="26"></label>
+      </fieldset>
+      <div data-theme-panel="minimal"></div>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">700 × 520</b>.</span></li>
+          <li><span>Le tirage est invisible tant que tu n'en lances pas un : laisse la source dans ta scène de live.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+        <div class="tip">Le tirage est vraiment aléatoire (générateur cryptographique du navigateur) et chaque viewer ne compte qu'une fois. Relance « tirage » pour tirer un nouveau gagnant si le premier ne répond pas.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-giveaway-size', def: { w: 700, h: 520 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    var m = '!' + (p.mcmd || 'giveaway').replace(/^!/, ''), v = '!' + (p.cmd || 'participer').replace(/^!/, '');
+    cmds.textContent = '';
+    [[m + ' start Un jeu Steam', 'ouvre les participations (le texte = le lot)'], [v, 'les viewers participent'], [m + ' stop', 'ferme les participations'],
+     [m + ' tirage', 'tire le ou les gagnants'], [m + ' annule', 'cache le tirage']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-giveaway',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>
