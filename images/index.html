@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=Rubik:wght@700;800&family=Bebas+Neue&family=Nunito:wght@800;900&family=Permanent+Marker&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <!--
   Atelier images : tout est dessiné dans un <canvas> du navigateur, aucune image
   n'est envoyée nulle part.
@@ -45,6 +45,10 @@
   .tool-grid{ display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; align-items: start; padding-bottom: 60px; }
   @media (max-width: 920px){ .tool-grid{ grid-template-columns: 1fr; } }
   .pad{ padding: 18px; }
+  .tpls{ display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .tpl{ border: 1px solid var(--line-2); background: var(--bg-2); color: var(--text); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font: 500 .78rem 'IBM Plex Sans', sans-serif; align-items: stretch; }
+  .tpl.on{ border-color: var(--accent); background: rgba(155,92,255,.12); }
+  .tpl canvas{ width: 100%; height: auto; border-radius: 6px; display: block; }
 </style>
 </head>
 <body>
@@ -94,25 +98,43 @@
     <form class="panel settings" id="pform" autocomplete="off">
       <fieldset>
         <legend>Tes panneaux</legend>
-        <label class="field"><span>Un panneau par ligne</span><textarea id="ptext" rows="7">👋 À PROPOS
-📅 PLANNING
-💬 DISCORD
-📜 RÈGLES
-🖥️ MON SETUP
-💜 SOUTIEN</textarea></label>
+        <label class="field"><span>Un panneau par ligne (emoji au début = icône)</span><textarea id="ptext" rows="7">👋 À propos
+📅 Planning
+💬 Discord
+📜 Règles
+🖥️ Mon setup
+💜 Soutien</textarea></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
-        <label class="field"><span>Modèle</span><select id="pstyle"><option value="gradient">Dégradé</option><option value="neon">Néon</option><option value="outline">Contour</option><option value="solid">Uni</option></select></label>
-        <div class="field colors"><label class="color"><input type="color" id="pc1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" id="pc2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" id="ptx" value="#ffffff"><span>Texte</span></label></div>
-        <label class="field"><span>Police</span><select id="pfont"><option value="Space Grotesk|700">Space Grotesk</option><option value="Rubik|800">Rubik</option><option value="Bebas Neue|400">Bebas Neue</option><option value="Nunito|900">Nunito</option><option value="Permanent Marker|400">Permanent Marker</option><option value="VT323|400">VT323 (pixel)</option></select></label>
-        <label class="field"><span>Hauteur</span><select id="ph"><option value="100">Fine (320 × 100)</option><option value="160">Haute (320 × 160)</option></select></label>
+        <legend>Modèle</legend>
+        <div class="tpls" id="ptpls"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Texte</legend>
+        <label class="field"><span>Police</span><select id="pfont"></select></label>
+        <div class="row2">
+          <label class="field"><span>Épaisseur</span><select id="pfw"><option value="400">Normale</option><option value="500">Moyenne</option><option value="600">Semi-grasse</option><option value="700" selected>Grasse</option><option value="800">Très grasse</option><option value="900">Noire</option></select></label>
+          <label class="field"><span>Alignement</span><select id="palign"><option value="left">À gauche</option><option value="center">Centré</option></select></label>
+        </div>
+        <label class="check"><input type="checkbox" id="pup" checked><span>En MAJUSCULES</span></label>
+        <label class="field"><span><span>Espacement des lettres</span><output id="plsout">8 %</output></span><input type="range" id="pls" min="0" max="40" value="8"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Couleurs et fond</legend>
+        <div class="field colors"><label class="color"><input type="color" id="pc1" value="#a78bfa"><span>Couleur 1</span></label><label class="color"><input type="color" id="pc2" value="#67e8f9"><span>Couleur 2</span></label><label class="color"><input type="color" id="ptx" value="#ffffff"><span>Texte</span></label><label class="color"><input type="color" id="pbg" value="#0e0d14"><span>Fond</span></label></div>
+        <div class="field"><span>Ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="pbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="pbgclr" hidden>Retirer</button><input type="file" id="pbgfile" accept="image/*" hidden></div><small>Utilisée par le modèle « Ton image » et en fond flouté du modèle « Verre ».</small></div>
+        <label class="field"><span><span>Flou de l'image</span><output id="pblurout">0 px</output></span><input type="range" id="pblur" min="0" max="30" value="0"></label>
+        <label class="field"><span><span>Assombrir l'image</span><output id="pdimout">40 %</output></span><input type="range" id="pdim" min="0" max="90" value="40"></label>
+        <div class="field"><span>Ton icône (remplace les emojis)</span><div class="img-row"><button type="button" class="btn ghost small" id="picobtn">Importer une icône</button><button type="button" class="btn ghost small" id="picoclr" hidden>Retirer</button><input type="file" id="picofile" accept="image/*" hidden></div></div>
+        <label class="check"><input type="checkbox" id="pgrain" checked><span>Grain léger</span></label>
+        <label class="field"><span><span>Arrondi</span><output id="pradout">16 px</output></span><input type="range" id="prad" min="0" max="50" value="16"></label>
+        <label class="field"><span>Format</span><select id="ph"><option value="100">Fin (320 × 100)</option><option value="130">Moyen (320 × 130)</option><option value="160">Haut (320 × 160)</option></select></label>
       </fieldset>
     </form>
     <div class="panel pad">
       <div class="panels" id="panels"></div>
       <div class="btn-row" style="margin-top:16px"><button type="button" class="btn" id="pdl-all">Tout télécharger</button></div>
-      <div class="tip">Les panneaux sont exportés en double résolution (640 px de large) pour rester nets sur les écrans haute définition. Twitch les affiche en 320 px.</div>
+      <div class="tip">Exportés en double résolution (640 px de large) pour rester nets sur les écrans haute définition. Twitch les affiche en 320 px.</div>
     </div>
   </section>
 
@@ -122,14 +144,29 @@
       <fieldset>
         <legend>Bannière</legend>
         <label class="field"><span>Type</span><select id="btype"><option value="offline">Bannière hors ligne (1920 × 1080)</option><option value="profile">Bannière de profil (1200 × 480)</option></select></label>
-        <label class="field"><span>Titre</span><input type="text" id="btitle" value="Hors ligne" maxlength="40"></label>
+        <label class="field"><span>Petit texte au-dessus</span><input type="text" id="bkick" value="Hors ligne" maxlength="40"></label>
+        <label class="field"><span>Titre</span><input type="text" id="btitle" value="À très vite" maxlength="40"></label>
         <label class="field"><span>Sous-titre</span><input type="text" id="bsub" value="Lives le mercredi et le samedi à 20 h" maxlength="80"></label>
+        <div class="field"><span>Ton logo</span><div class="img-row"><button type="button" class="btn ghost small" id="blogobtn">Importer</button><button type="button" class="btn ghost small" id="blogoclr" hidden>Retirer</button><input type="file" id="blogofile" accept="image/*" hidden></div></div>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
-        <label class="field"><span>Fond</span><select id="bbg"><option value="aurora">Aurore</option><option value="synth">Synthwave</option><option value="gradient">Dégradé</option><option value="grid">Grille</option></select></label>
-        <div class="field colors"><label class="color"><input type="color" id="bc1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" id="bc2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" id="bc3" value="#ff5c8a"><span>Couleur 3</span></label></div>
-        <label class="field"><span>Police</span><select id="bfont"><option value="Space Grotesk|700">Space Grotesk</option><option value="Rubik|800">Rubik</option><option value="Bebas Neue|400">Bebas Neue</option><option value="Nunito|900">Nunito</option><option value="Permanent Marker|400">Permanent Marker</option></select></label>
+        <legend>Fond</legend>
+        <div class="tpls" id="btpls"></div>
+        <div class="field colors"><label class="color"><input type="color" id="bc1" value="#7c6cf2"><span>Couleur 1</span></label><label class="color"><input type="color" id="bc2" value="#3fc8d8"><span>Couleur 2</span></label><label class="color"><input type="color" id="bc3" value="#f472b6"><span>Couleur 3</span></label></div>
+        <div class="field"><span>Ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="bbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="bbgclr" hidden>Retirer</button><input type="file" id="bbgfile" accept="image/*" hidden></div></div>
+        <label class="field"><span><span>Assombrir l'image</span><output id="bdimout">45 %</output></span><input type="range" id="bdim" min="0" max="90" value="45"></label>
+        <label class="check"><input type="checkbox" id="bgrain" checked><span>Grain</span></label>
+        <label class="check"><input type="checkbox" id="bvig" checked><span>Vignettage</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Texte</legend>
+        <label class="field"><span>Mise en page</span><select id="blay"><option value="center">Centré</option><option value="left">À gauche</option></select></label>
+        <label class="field"><span>Police du titre</span><select id="bfont"></select></label>
+        <div class="row2">
+          <label class="field"><span>Épaisseur</span><select id="bfw"><option value="400">Normale</option><option value="600">Semi-grasse</option><option value="700">Grasse</option><option value="800" selected>Très grasse</option><option value="900">Noire</option></select></label>
+          <label class="field"><span>Majuscules</span><select id="bup"><option value="0">Non</option><option value="1">Oui</option></select></label>
+        </div>
+        <div class="field colors"><label class="color"><input type="color" id="btx" value="#ffffff"><span>Texte</span></label><label class="color"><input type="color" id="bac" value="#c4b5fd"><span>Accent</span></label></div>
       </fieldset>
     </form>
     <div class="panel pad banner">
@@ -147,7 +184,8 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
+<script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){
   'use strict';
@@ -248,107 +286,307 @@
   ['fit', 'trim', 'pad'].forEach(function(id){ document.getElementById(id).addEventListener('input', function(){ document.getElementById('padout').textContent = document.getElementById('pad').value + ' %'; renderEmotes(); }); });
   document.getElementById('dl-all').addEventListener('click', function(){ outputs.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
 
-  /* ================= Panneaux ================= */
-  function fontOf(v){ var p = v.split('|'); return { family: p[0], weight: p[1] }; }
-  function withFont(f, cb){
-    var spec = f.weight + ' 40px "' + f.family + '"';
-    if (document.fonts && document.fonts.load) document.fonts.load(spec).then(cb, cb); else cb();
+  /* ================= Outils de dessin communs ================= */
+  function $(id){ return document.getElementById(id); }
+  function fillFonts(sel, def){
+    SK.FONTS.forEach(function(f){ var o = document.createElement('option'); o.value = f[0]; o.textContent = f[1]; if (f[0] === def) o.selected = true; sel.appendChild(o); });
   }
-  function drawPanel(text, opt){
-    var W = 640, H = opt.h * 2, c = document.createElement('canvas'); c.width = W; c.height = H;
-    var x = c.getContext('2d'), r = 22;
-    function rr(px, py, pw, ph, rad){ x.beginPath(); x.roundRect ? x.roundRect(px, py, pw, ph, rad) : x.rect(px, py, pw, ph); }
-    if (opt.style === 'gradient'){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, opt.c1); g.addColorStop(1, opt.c2); x.fillStyle = g; rr(0, 0, W, H, r); x.fill();
-      x.fillStyle = 'rgba(255,255,255,.12)'; for (var i = -H; i < W; i += 46){ x.beginPath(); x.moveTo(i, H); x.lineTo(i + H, 0); x.lineTo(i + H + 14, 0); x.lineTo(i + 14, H); x.fill(); } }
-    else if (opt.style === 'neon'){ x.fillStyle = '#0c0a16'; rr(0, 0, W, H, r); x.fill(); x.shadowColor = opt.c1; x.shadowBlur = 24; x.strokeStyle = opt.c1; x.lineWidth = 6; rr(10, 10, W - 20, H - 20, r - 6); x.stroke(); x.shadowBlur = 0; }
-    else if (opt.style === 'outline'){ x.fillStyle = '#0c0a16'; rr(0, 0, W, H, r); x.fill(); var g2 = x.createLinearGradient(0, 0, W, 0); g2.addColorStop(0, opt.c1); g2.addColorStop(1, opt.c2); x.strokeStyle = g2; x.lineWidth = 8; rr(4, 4, W - 8, H - 8, r - 2); x.stroke(); }
-    else { x.fillStyle = opt.c1; rr(0, 0, W, H, r); x.fill(); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, H - 14, W, 14); }
-    var size = opt.h === 100 ? 74 : 96;
-    x.font = opt.font.weight + ' ' + size + 'px "' + opt.font.family + '", sans-serif';
-    while (x.measureText(text).width > W - 60 && size > 20){ size -= 2; x.font = opt.font.weight + ' ' + size + 'px "' + opt.font.family + '", sans-serif'; }
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillStyle = opt.tx;
-    if (opt.style === 'neon'){ x.shadowColor = opt.c2; x.shadowBlur = 18; }
-    else { x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 8; x.shadowOffsetY = 3; }
-    x.fillText(text, W / 2, H / 2 + size * .04);
+  // Charge la police (via overlay.js) puis attend qu'elle soit prête avant de dessiner
+  // La feuille de style Google arrive un peu après : on réessaie jusqu'à ce que la police soit là
+  function fontReady(key, weight){
+    var fam = SKO.useFont(key), name = fam.split(',')[0], spec = weight + ' 40px ' + name;
+    if (!document.fonts || !document.fonts.load) return Promise.resolve(name);
+    return new Promise(function(resolve){
+      var tries = 0;
+      (function attempt(){
+        document.fonts.load(spec).then(function(list){
+          if ((list && list.length) || key === 'system' || tries++ > 12) resolve(name);
+          else setTimeout(attempt, 250);
+        }, function(){ resolve(name); });
+      })();
+    });
+  }
+  function rgbaHex(h, a){ var n = parseInt(h.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
+  var grainTile = null;
+  function grain(x, W, H, alpha){
+    if (!grainTile){
+      grainTile = document.createElement('canvas'); grainTile.width = grainTile.height = 160;
+      var g = grainTile.getContext('2d'), d = g.createImageData(160, 160);
+      for (var i = 0; i < d.data.length; i += 4){ var v = Math.random() * 255 | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      g.putImageData(d, 0, 0);
+    }
+    x.save(); x.globalAlpha = alpha; x.globalCompositeOperation = 'overlay';
+    x.fillStyle = x.createPattern(grainTile, 'repeat'); x.fillRect(0, 0, W, H); x.restore();
+  }
+  function mesh(x, W, H, cols, base){
+    x.fillStyle = base; x.fillRect(0, 0, W, H);
+    var spots = [[.12, .1, .75], [.88, .35, .6], [.45, 1.05, .7]];
+    x.save(); x.filter = 'blur(' + Math.round(Math.min(W, H) * .08) + 'px)';
+    cols.forEach(function(c, i){
+      var sp = spots[i % 3], r = Math.max(W, H) * sp[2] * .6;
+      var g = x.createRadialGradient(W * sp[0], H * sp[1], 0, W * sp[0], H * sp[1], r);
+      g.addColorStop(0, rgbaHex(c, .75)); g.addColorStop(1, rgbaHex(c, 0));
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+    });
+    x.restore();
+  }
+  function coverImage(x, img, W, H, blur){
+    var s = Math.max(W / img.width, H / img.height), w = img.width * s, h = img.height * s;
+    x.save(); if (blur) x.filter = 'blur(' + blur + 'px)';
+    var m = blur * 2; x.drawImage(img, (W - w) / 2 - m, (H - h) / 2 - m, w + m * 2, h + m * 2); x.restore();
+  }
+  function rr(x, px, py, pw, ph, rad){ x.beginPath(); if (x.roundRect) x.roundRect(px, py, pw, ph, rad); else x.rect(px, py, pw, ph); }
+  // Charge une image importée (gardée en mémoire et dans le navigateur)
+  function imagePicker(btnId, clrId, fileId, storeKey, maxPx, cb){
+    var img = null, btn = $(btnId), clr = $(clrId), file = $(fileId);
+    // cb est toujours appelé plus tard : tous les sélecteurs d'images existent alors
+    function load(url){ if (!url){ img = null; clr.hidden = true; setTimeout(cb, 0); return; } var i = new Image(); i.onload = function(){ img = i; clr.hidden = false; setTimeout(cb, 0); }; i.src = url; }
+    btn.addEventListener('click', function(){ file.click(); });
+    clr.addEventListener('click', function(){ SK.store.del(storeKey); load(''); });
+    file.addEventListener('change', function(){
+      var f = file.files[0]; file.value = ''; if (!f) return;
+      var r = new FileReader();
+      r.onload = function(){
+        var i = new Image();
+        i.onload = function(){
+          var sc = Math.min(1, maxPx / Math.max(i.width, i.height)), c = document.createElement('canvas');
+          c.width = Math.round(i.width * sc); c.height = Math.round(i.height * sc);
+          c.getContext('2d').drawImage(i, 0, 0, c.width, c.height);
+          var url = c.toDataURL(f.type === 'image/png' ? 'image/png' : 'image/jpeg', .9);
+          SK.store.set(storeKey, url); load(url);
+        };
+        i.src = r.result;
+      };
+      r.readAsDataURL(f);
+    });
+    load(SK.store.get(storeKey));
+    return function(){ return img; };
+  }
+
+  /* ================= Panneaux ================= */
+  var PTPLS = [['minimal', 'Minimal'], ['glass', 'Verre'], ['soft', 'Dégradé doux'], ['outline', 'Contour'], ['light', 'Clair'], ['split', 'Deux blocs'], ['image', 'Ton image']];
+  var ptpl = 'minimal';
+  fillFonts($('pfont'), 'sora');
+  var pBg = imagePicker('pbgbtn', 'pbgclr', 'pbgfile', 'sk-panel-bg', 1400, function(){ drawPanels(); });
+  var pIco = imagePicker('picobtn', 'picoclr', 'picofile', 'sk-panel-ico', 256, function(){ drawPanels(); });
+
+  function splitIcon(t){
+    var m = /^(\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic})*)\s*/u.exec(t);
+    return m ? { icon: m[1], text: t.slice(m[0].length) } : { icon: '', text: t };
+  }
+  function popt(){
+    return { tpl: ptpl, c1: $('pc1').value, c2: $('pc2').value, tx: $('ptx').value, bg: $('pbg').value, font: $('pfont').value, fw: $('pfw').value,
+      align: $('palign').value, up: $('pup').checked, ls: +$('pls').value, blur: +$('pblur').value, dim: +$('pdim').value, grain: $('pgrain').checked,
+      rad: +$('prad').value, h: +$('ph').value };
+  }
+  function drawPanel(text, o, fam, scale){
+    scale = scale || 2;
+    var W = 320 * scale, H = o.h * scale, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d'), R = o.rad * scale, bgImg = pBg(), ico = pIco();
+    var p = splitIcon(text), label = o.up ? p.text.toUpperCase() : p.text;
+    rr(x, 0, 0, W, H, R); x.save(); x.clip();
+    var txc = o.tx, pad = 26 * scale, iconBox = null;
+    if (o.tpl === 'minimal'){
+      x.fillStyle = o.bg; x.fillRect(0, 0, W, H);
+      var g = x.createRadialGradient(W, 0, 0, W, 0, W * .8); g.addColorStop(0, rgbaHex(o.c1, .28)); g.addColorStop(1, rgbaHex(o.c1, 0)); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      var lg = x.createLinearGradient(0, 0, 0, H); lg.addColorStop(0, o.c1); lg.addColorStop(1, o.c2);
+      x.fillStyle = lg; x.fillRect(0, H * .22, 4 * scale, H * .56);
+    } else if (o.tpl === 'glass'){
+      if (bgImg) coverImage(x, bgImg, W, H, 18 * scale); else mesh(x, W, H, [o.c1, o.c2, o.c1], o.bg);
+      x.fillStyle = 'rgba(255,255,255,.1)'; rr(x, 10 * scale, 10 * scale, W - 20 * scale, H - 20 * scale, Math.max(0, R - 6 * scale)); x.fill();
+      x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = scale; x.stroke();
+    } else if (o.tpl === 'soft'){
+      mesh(x, W, H, [o.c1, o.c2, o.c1], o.bg);
+    } else if (o.tpl === 'outline'){
+      x.fillStyle = o.bg; x.fillRect(0, 0, W, H);
+      var og = x.createLinearGradient(0, 0, W, H); og.addColorStop(0, o.c1); og.addColorStop(1, o.c2);
+      x.restore(); x.save(); rr(x, 0, 0, W, H, R); x.clip();
+      x.strokeStyle = og; x.lineWidth = 3 * scale; rr(x, 1.5 * scale, 1.5 * scale, W - 3 * scale, H - 3 * scale, Math.max(0, R - 1.5 * scale)); x.stroke();
+    } else if (o.tpl === 'light'){
+      x.fillStyle = '#f7f6fb'; x.fillRect(0, 0, W, H); txc = o.tx.toLowerCase() === '#ffffff' ? '#16151d' : o.tx;
+      x.fillStyle = o.c1; x.beginPath(); x.arc(W - 22 * scale, H / 2, 5 * scale, 0, 7); x.fill();
+    } else if (o.tpl === 'split'){
+      x.fillStyle = o.bg; x.fillRect(0, 0, W, H);
+      var sg = x.createLinearGradient(0, 0, H, H); sg.addColorStop(0, o.c1); sg.addColorStop(1, o.c2);
+      x.fillStyle = sg; x.fillRect(0, 0, H, H); iconBox = [0, 0, H, H];
+    } else { // image
+      if (bgImg) coverImage(x, bgImg, W, H, o.blur * scale); else mesh(x, W, H, [o.c1, o.c2, o.c1], o.bg);
+      x.fillStyle = 'rgba(0,0,0,' + o.dim / 100 + ')'; x.fillRect(0, 0, W, H);
+    }
+    if (o.grain && o.tpl !== 'light') grain(x, W, H, .16);
+    x.restore();
+
+    // Icône : image importée > emoji
+    var size = (o.h <= 100 ? 30 : o.h <= 130 ? 34 : 40) * scale;
+    var hasIcon = !!(ico || p.icon), iconW = hasIcon ? size * 1.15 : 0;
+    x.font = o.fw + ' ' + size + 'px ' + fam + ', sans-serif';
+    if ('letterSpacing' in x) x.letterSpacing = (o.ls / 100 * size).toFixed(1) + 'px';
+    var maxW = W - pad * 2 - (iconBox ? H : iconW + 12 * scale);
+    while (x.measureText(label).width > maxW && size > 12 * scale){ size -= scale; x.font = o.fw + ' ' + size + 'px ' + fam + ', sans-serif'; if ('letterSpacing' in x) x.letterSpacing = (o.ls / 100 * size).toFixed(1) + 'px'; }
+    var tw = x.measureText(label).width;
+    var startX, cy = H / 2;
+    if (iconBox){
+      drawIcon(x, ico, p.icon, iconBox[2] / 2, cy, size * 1.25);
+      startX = H + pad * .8; x.textAlign = 'left';
+    } else if (o.align === 'center'){
+      var total = tw + (hasIcon ? iconW + 10 * scale : 0);
+      var left = (W - total) / 2;
+      if (hasIcon) drawIcon(x, ico, p.icon, left + iconW / 2, cy, size * 1.05);
+      startX = left + (hasIcon ? iconW + 10 * scale : 0); x.textAlign = 'left';
+    } else {
+      var lx = pad + (o.tpl === 'minimal' ? 6 * scale : 0);
+      if (hasIcon) drawIcon(x, ico, p.icon, lx + iconW / 2, cy, size * 1.05);
+      startX = lx + (hasIcon ? iconW + 12 * scale : 0); x.textAlign = 'left';
+    }
+    x.textBaseline = 'middle'; x.fillStyle = txc;
+    if (o.tpl !== 'light'){ x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 10 * scale; x.shadowOffsetY = 2 * scale; }
+    x.fillText(label, startX, cy + size * .05);
     return c;
+  }
+  function drawIcon(x, img, emoji, cx, cy, size){
+    x.save(); x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = 8;
+    if (img){ var s = size / Math.max(img.width, img.height); x.drawImage(img, cx - img.width * s / 2, cy - img.height * s / 2, img.width * s, img.height * s); }
+    else if (emoji){ x.font = size * .82 + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(emoji, cx, cy + size * .04); }
+    x.restore();
   }
   var panelCanvases = [];
   function drawPanels(){
-    var opt = { style: pstyle.value, c1: pc1.value, c2: pc2.value, tx: ptx.value, font: fontOf(pfont.value), h: +ph.value };
-    withFont(opt.font, function(){
-      var box = document.getElementById('panels'); box.textContent = ''; panelCanvases = [];
-      document.getElementById('ptext').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 20).forEach(function(t){
-        var c = drawPanel(t, opt), f = document.createElement('figure');
+    var o = popt();
+    $('plsout').textContent = o.ls + ' %'; $('pblurout').textContent = o.blur + ' px'; $('pdimout').textContent = o.dim + ' %'; $('pradout').textContent = o.rad + ' px';
+    fontReady(o.font, o.fw).then(function(fam){
+      var box = $('panels'); box.textContent = ''; panelCanvases = [];
+      $('ptext').value.split('\n').map(function(t){ return t.trim(); }).filter(Boolean).slice(0, 20).forEach(function(t){
+        var c = drawPanel(t, o, fam), f = document.createElement('figure');
         f.appendChild(c);
         var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost small'; b.textContent = 'Télécharger';
-        var name = 'panneau-' + slug(t) + '.png';
+        var name = 'panneau-' + slug(splitIcon(t).text) + '.png';
         b.addEventListener('click', function(){ download(c, name); });
         f.appendChild(b); box.appendChild(f); panelCanvases.push([c, name]);
       });
-      SK.store.set('sk-panels', { t: document.getElementById('ptext').value, s: opt.style, c1: opt.c1, c2: opt.c2, tx: opt.tx, f: pfont.value, h: ph.value });
+      // miniatures des modèles avec le premier texte
+      var first = ($('ptext').value.split('\n')[0] || 'Panneau').trim();
+      document.querySelectorAll('#ptpls .tpl').forEach(function(btn){
+        var mini = drawPanel(first, Object.assign({}, o, { tpl: btn.dataset.tpl, h: 100 }), fam, 1);
+        var old = btn.querySelector('canvas'); btn.replaceChild(mini, old);
+      });
+      SK.store.set('sk-panels2', { t: $('ptext').value, tpl: ptpl, o: o });
     });
   }
-  var pstyle = document.getElementById('pstyle'), pc1 = document.getElementById('pc1'), pc2 = document.getElementById('pc2'), ptx = document.getElementById('ptx'), pfont = document.getElementById('pfont'), ph = document.getElementById('ph');
-  var ps = SK.store.get('sk-panels');
-  if (ps){ document.getElementById('ptext').value = ps.t; pstyle.value = ps.s; pc1.value = ps.c1; pc2.value = ps.c2; ptx.value = ps.tx; pfont.value = ps.f; ph.value = ps.h; }
-  document.getElementById('pform').addEventListener('input', drawPanels);
-  document.getElementById('pdl-all').addEventListener('click', function(){ panelCanvases.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
+  PTPLS.forEach(function(t){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tpl' + (t[0] === ptpl ? ' on' : ''); b.dataset.tpl = t[0];
+    b.appendChild(document.createElement('canvas'));
+    var sp = document.createElement('span'); sp.textContent = t[1]; b.appendChild(sp);
+    b.addEventListener('click', function(){ ptpl = t[0]; document.querySelectorAll('#ptpls .tpl').forEach(function(x){ x.classList.toggle('on', x === b); }); drawPanels(); });
+    $('ptpls').appendChild(b);
+  });
+  (function restore(){
+    var st = SK.store.get('sk-panels2'); if (!st) return;
+    $('ptext').value = st.t; ptpl = st.tpl || ptpl;
+    var o = st.o || {};
+    [['pc1', 'c1'], ['pc2', 'c2'], ['ptx', 'tx'], ['pbg', 'bg'], ['pfont', 'font'], ['pfw', 'fw'], ['palign', 'align'], ['pls', 'ls'], ['pblur', 'blur'], ['pdim', 'dim'], ['prad', 'rad'], ['ph', 'h']].forEach(function(m){ if (o[m[1]] != null) $(m[0]).value = o[m[1]]; });
+    if (o.up != null) $('pup').checked = o.up; if (o.grain != null) $('pgrain').checked = o.grain;
+    document.querySelectorAll('#ptpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === ptpl); });
+  })();
+  $('pform').addEventListener('input', drawPanels);
+  $('pdl-all').addEventListener('click', function(){ panelCanvases.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
 
   /* ================= Bannières ================= */
-  var bc = document.getElementById('bcanvas');
-  function v(id){ return document.getElementById(id).value; }
+  var BTPLS = [['mesh', 'Brume'], ['halo', 'Halo'], ['lines', 'Lignes'], ['synth', 'Synthwave'], ['plain', 'Minimal'], ['image', 'Ton image']];
+  var btpl = 'mesh';
+  fillFonts($('bfont'), 'sora');
+  var bBg = imagePicker('bbgbtn', 'bbgclr', 'bbgfile', 'sk-banner-bg', 2400, function(){ drawBanner(); });
+  var bLogo = imagePicker('blogobtn', 'blogoclr', 'blogofile', 'sk-banner-logo', 800, function(){ drawBanner(); });
+  var bc = $('bcanvas');
+  function bopt(){
+    return { tpl: btpl, type: $('btype').value, kick: $('bkick').value, title: $('btitle').value, sub: $('bsub').value, c1: $('bc1').value, c2: $('bc2').value, c3: $('bc3').value,
+      dim: +$('bdim').value, grain: $('bgrain').checked, vig: $('bvig').checked, lay: $('blay').value, font: $('bfont').value, fw: $('bfw').value, up: $('bup').value === '1', tx: $('btx').value, ac: $('bac').value };
+  }
+  function bannerBg(x, o, W, H){
+    if (o.tpl === 'image' && bBg()){ coverImage(x, bBg(), W, H, 0); x.fillStyle = 'rgba(0,0,0,' + o.dim / 100 + ')'; x.fillRect(0, 0, W, H); return; }
+    if (o.tpl === 'mesh' || o.tpl === 'image'){ mesh(x, W, H, [o.c1, o.c2, o.c3], '#060609'); x.fillStyle = 'rgba(6,6,9,.25)'; x.fillRect(0, 0, W, H); return; }
+    if (o.tpl === 'halo'){
+      x.fillStyle = '#060609'; x.fillRect(0, 0, W, H);
+      var g = x.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, Math.max(W, H) * .45); g.addColorStop(0, rgbaHex(o.c1, .9)); g.addColorStop(1, rgbaHex(o.c1, 0)); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      var g2 = x.createRadialGradient(W / 2, H * .45, 0, W / 2, H * .45, Math.max(W, H) * .22); g2.addColorStop(0, rgbaHex(o.c2, .45)); g2.addColorStop(1, rgbaHex(o.c2, 0)); x.fillStyle = g2; x.fillRect(0, 0, W, H);
+      return;
+    }
+    if (o.tpl === 'lines'){
+      x.fillStyle = '#09090e'; x.fillRect(0, 0, W, H);
+      x.save(); x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = Math.max(1, H / 900);
+      for (var i = -H; i < W + H; i += H / 30){ x.beginPath(); x.moveTo(i, H); x.lineTo(i + H * .47, 0); x.stroke(); }
+      x.restore();
+      [[o.c1, .72, .25, .5], [o.c2, .18, .85, .4]].forEach(function(b){ var r = Math.max(W, H) * b[3]; var gg = x.createRadialGradient(W * b[1], H * b[2], 0, W * b[1], H * b[2], r); gg.addColorStop(0, rgbaHex(b[0], .35)); gg.addColorStop(1, rgbaHex(b[0], 0)); x.fillStyle = gg; x.fillRect(0, 0, W, H); });
+      return;
+    }
+    if (o.tpl === 'synth'){
+      var sky = x.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#07040f'); sky.addColorStop(.5, '#1b0a2e'); sky.addColorStop(.55, '#0d0518'); sky.addColorStop(1, '#030208'); x.fillStyle = sky; x.fillRect(0, 0, W, H);
+      var R = H * .2, cx = W / 2, cy = H * .38, sg = x.createLinearGradient(0, cy - R, 0, cy + R); sg.addColorStop(0, o.c3); sg.addColorStop(1, o.c1);
+      x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip(); x.globalAlpha = .9; x.fillStyle = sg; x.fillRect(cx - R, cy - R, R * 2, R * 2);
+      x.globalAlpha = 1; x.fillStyle = '#1b0a2e'; for (var k = 0; k < 5; k++) x.fillRect(cx - R, cy + R * (.15 + k * .17), R * 2, R * (.03 + k * .015)); x.restore();
+      x.strokeStyle = rgbaHex(o.c2, .55); x.lineWidth = Math.max(1.2, H / 500); var hz = H * .55;
+      for (var gx = -14; gx <= 14; gx++){ x.beginPath(); x.moveTo(W / 2 + gx * W * .018, hz); x.lineTo(W / 2 + gx * W * .17, H); x.stroke(); }
+      for (var gy = 0; gy < 10; gy++){ var yy = hz + (H - hz) * Math.pow(gy / 9, 1.8); x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); }
+      return;
+    }
+    // minimal
+    x.fillStyle = '#0b0b10'; x.fillRect(0, 0, W, H);
+    var gm = x.createRadialGradient(W * .8, 0, 0, W * .8, 0, W * .7); gm.addColorStop(0, rgbaHex(o.c1, .22)); gm.addColorStop(1, rgbaHex(o.c1, 0)); x.fillStyle = gm; x.fillRect(0, 0, W, H);
+  }
+  function drawBannerTo(canvas, o, fam, W, H){
+    canvas.width = W; canvas.height = H;
+    var x = canvas.getContext('2d');
+    bannerBg(x, o, W, H);
+    if (o.vig){ var v = x.createRadialGradient(W / 2, H * .45, Math.min(W, H) * .35, W / 2, H * .45, Math.max(W, H) * .75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.6)'); x.fillStyle = v; x.fillRect(0, 0, W, H); }
+    if (o.grain) grain(x, W, H, .14);
+    var left = o.lay === 'left', mx = left ? W * .08 : W / 2;
+    var ts = H * (o.type === 'profile' ? .18 : .12), title = o.up ? o.title.toUpperCase() : o.title;
+    x.textAlign = left ? 'left' : 'center'; x.textBaseline = 'alphabetic';
+    x.font = o.fw + ' ' + ts + 'px ' + fam + ', sans-serif';
+    while (x.measureText(title).width > W * .84 && ts > 16){ ts -= 2; x.font = o.fw + ' ' + ts + 'px ' + fam + ', sans-serif'; }
+    var logo = bLogo(), lh = logo ? ts * 1.3 : 0;
+    var ks = ts * .2, ss = ts * .3, gap = ts * .35;
+    var block = (logo ? lh + gap : 0) + (o.kick ? ks + gap : 0) + ts + (o.sub ? gap * .8 + ss : 0);
+    var y = (o.tpl === 'synth' ? H * .78 : H / 2) - block / 2;
+    if (logo){ var s = lh / logo.height, lw = logo.width * s; x.drawImage(logo, left ? mx : mx - lw / 2, y, lw, lh); y += lh + gap; }
+    if (o.kick){
+      x.font = '600 ' + ks + 'px Inter, sans-serif'; if ('letterSpacing' in x) x.letterSpacing = (ks * .35) + 'px';
+      x.fillStyle = o.ac; x.fillText(o.kick.toUpperCase(), mx, y + ks); y += ks + gap;
+      if ('letterSpacing' in x) x.letterSpacing = '0px';
+    }
+    x.font = o.fw + ' ' + ts + 'px ' + fam + ', sans-serif'; if ('letterSpacing' in x) x.letterSpacing = (o.up ? ts * .03 : -ts * .01) + 'px';
+    x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = ts * .3; x.fillStyle = o.tx; x.fillText(title, mx, y + ts * .82); y += ts;
+    x.shadowBlur = 0; if ('letterSpacing' in x) x.letterSpacing = '0px';
+    if (o.sub){ x.font = '500 ' + ss + 'px Inter, sans-serif'; x.fillStyle = rgbaHex(o.tx, .72); x.fillText(o.sub, mx, y + gap * .8 + ss * .85); }
+  }
   function drawBanner(){
-    var type = v('btype'), W = type === 'profile' ? 1200 : 1920, H = type === 'profile' ? 480 : 1080;
-    bc.width = W; bc.height = H;
-    var f = fontOf(v('bfont')), c1 = v('bc1'), c2 = v('bc2'), c3 = v('bc3');
-    withFont(f, function(){
-      var x = bc.getContext('2d'); x.clearRect(0, 0, W, H);
-      var bg = v('bbg');
-      if (bg === 'gradient'){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, c1); g.addColorStop(.5, c2); g.addColorStop(1, c3); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(5,4,12,.4)'; x.fillRect(0, 0, W, H); }
-      else {
-        x.fillStyle = '#07060d'; x.fillRect(0, 0, W, H);
-        if (bg === 'aurora'){
-          [[c1, .15, .1], [c2, .85, .35], [c3, .45, 1]].forEach(function(b){
-            var rg = x.createRadialGradient(W * b[1], H * b[2], 0, W * b[1], H * b[2], Math.max(W, H) * .55);
-            rg.addColorStop(0, b[0] + 'aa'); rg.addColorStop(1, b[0] + '00'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
-          });
-        } else if (bg === 'synth'){
-          var sky = x.createLinearGradient(0, 0, 0, H * .55); sky.addColorStop(0, '#0b0518'); sky.addColorStop(1, '#2a0c3d'); x.fillStyle = sky; x.fillRect(0, 0, W, H * .55);
-          var R = H * .22, cx = W / 2, cy = H * .42, sg = x.createLinearGradient(0, cy - R, 0, cy + R); sg.addColorStop(0, c3); sg.addColorStop(1, c1);
-          x.save(); x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.clip(); x.fillStyle = sg; x.fillRect(cx - R, cy - R, R * 2, R * 2);
-          x.fillStyle = '#2a0c3d'; for (var k = 0; k < 5; k++){ x.fillRect(cx - R, cy + R * (.15 + k * .17), R * 2, R * (.03 + k * .015)); } x.restore();
-          x.strokeStyle = c2; x.lineWidth = Math.max(1.5, H / 400); x.globalAlpha = .8; var hz = H * .55;
-          for (var gx = -12; gx <= 12; gx++){ x.beginPath(); x.moveTo(W / 2 + gx * W * .02, hz); x.lineTo(W / 2 + gx * W * .18, H); x.stroke(); }
-          for (var gy = 0; gy < 9; gy++){ var yy = hz + (H - hz) * Math.pow(gy / 8, 1.8); x.beginPath(); x.moveTo(0, yy); x.lineTo(W, yy); x.stroke(); }
-          x.globalAlpha = 1;
-        } else {
-          x.strokeStyle = c1 + '55'; x.lineWidth = 1.5; var step = H / 14;
-          for (var gx2 = 0; gx2 < W; gx2 += step){ x.beginPath(); x.moveTo(gx2, 0); x.lineTo(gx2, H); x.stroke(); }
-          for (var gy2 = 0; gy2 < H; gy2 += step){ x.beginPath(); x.moveTo(0, gy2); x.lineTo(W, gy2); x.stroke(); }
-          var rg2 = x.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * .6); rg2.addColorStop(0, c2 + '33'); rg2.addColorStop(1, '#07060d'); x.fillStyle = rg2; x.fillRect(0, 0, W, H);
-        }
-      }
-      var title = v('btitle'), sub = v('bsub'), ts = H * (type === 'profile' ? .2 : .13);
-      x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.font = f.weight + ' ' + ts + 'px "' + f.family + '", sans-serif';
-      while (x.measureText(title).width > W * .86 && ts > 20){ ts -= 4; x.font = f.weight + ' ' + ts + 'px "' + f.family + '", sans-serif'; }
-      var ty = bg === 'synth' ? H * .75 : H * .46;
-      x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = ts * .25; x.fillStyle = '#fff'; x.fillText(title, W / 2, ty);
-      if (sub){
-        var ss = ts * .32; x.font = '600 ' + ss + 'px "Space Grotesk", sans-serif';
-        while (x.measureText(sub).width > W * .86 && ss > 12){ ss -= 2; x.font = '600 ' + ss + 'px "Space Grotesk", sans-serif'; }
-        x.fillStyle = c2; x.shadowBlur = ss * .4; x.fillText(sub, W / 2, ty + ts * .78);
-      }
-      x.shadowBlur = 0;
-      SK.store.set('sk-banner', { t: type, ti: title, s: sub, bg: bg, c1: c1, c2: c2, c3: c3, f: v('bfont') });
+    var o = bopt(), W = o.type === 'profile' ? 1200 : 1920, H = o.type === 'profile' ? 480 : 1080;
+    $('bdimout').textContent = o.dim + ' %';
+    Promise.all([fontReady(o.font, o.fw), fontReady('inter', '500'), fontReady('inter', '600')]).then(function(r){
+      var fam = r[0];
+      drawBannerTo(bc, o, fam, W, H);
+      document.querySelectorAll('#btpls .tpl').forEach(function(btn){
+        var mini = document.createElement('canvas'); drawBannerTo(mini, Object.assign({}, o, { tpl: btn.dataset.tpl }), fam, 320, 180);
+        btn.replaceChild(mini, btn.querySelector('canvas'));
+      });
+      SK.store.set('sk-banner2', o);
     });
   }
-  var bs = SK.store.get('sk-banner');
-  if (bs){ document.getElementById('btype').value = bs.t; document.getElementById('btitle').value = bs.ti; document.getElementById('bsub').value = bs.s; document.getElementById('bbg').value = bs.bg;
-    document.getElementById('bc1').value = bs.c1; document.getElementById('bc2').value = bs.c2; document.getElementById('bc3').value = bs.c3; document.getElementById('bfont').value = bs.f; }
-  document.getElementById('bform').addEventListener('input', drawBanner);
-  document.getElementById('bdl').addEventListener('click', function(){ download(bc, (v('btype') === 'profile' ? 'banniere-profil' : 'banniere-hors-ligne') + '.png'); });
+  BTPLS.forEach(function(t){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tpl' + (t[0] === btpl ? ' on' : ''); b.dataset.tpl = t[0];
+    b.appendChild(document.createElement('canvas'));
+    var sp = document.createElement('span'); sp.textContent = t[1]; b.appendChild(sp);
+    b.addEventListener('click', function(){ btpl = t[0]; document.querySelectorAll('#btpls .tpl').forEach(function(x){ x.classList.toggle('on', x === b); }); drawBanner(); });
+    $('btpls').appendChild(b);
+  });
+  (function restore(){
+    var o = SK.store.get('sk-banner2'); if (!o) return;
+    btpl = o.tpl || btpl;
+    [['btype', 'type'], ['bkick', 'kick'], ['btitle', 'title'], ['bsub', 'sub'], ['bc1', 'c1'], ['bc2', 'c2'], ['bc3', 'c3'], ['bdim', 'dim'], ['blay', 'lay'], ['bfont', 'font'], ['bfw', 'fw'], ['btx', 'tx'], ['bac', 'ac']].forEach(function(m){ if (o[m[1]] != null) $(m[0]).value = o[m[1]]; });
+    $('bup').value = o.up ? '1' : '0'; if (o.grain != null) $('bgrain').checked = o.grain; if (o.vig != null) $('bvig').checked = o.vig;
+    document.querySelectorAll('#btpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === btpl); });
+  })();
+  $('bform').addEventListener('input', drawBanner);
+  $('bdl').addEventListener('click', function(){ download(bc, ($('btype').value === 'profile' ? 'banniere-profil' : 'banniere-hors-ligne') + '.png'); });
 
   openTab(SK.store.get('sk-images-tab') || 't-emotes');
 })();
