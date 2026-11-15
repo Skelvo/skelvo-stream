@@ -345,3 +345,8 @@ details.more summary::-webkit-details-marker{ display: none; }
   .steps-nav.alone{ top: var(--topbar-h, 64px); }
   html:has(.has-steps .sticky-preview){ scroll-padding-top: calc(var(--topbar-h, 64px) + 30vh + 120px); }
 }
+
+/* iPhone (encoche, heure, batterie) : le bandeau de mise à jour descend sous
+   la zone système, et le message en bas reste au-dessus de la barre d'accueil */
+.upd{ top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.toast{ bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); }
