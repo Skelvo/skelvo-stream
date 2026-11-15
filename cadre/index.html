@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=4">
+<link rel="stylesheet" href="../assets/app.css?v=5">
 <style>
   /* Miniatures des styles */
   .sw{ background: var(--bg); position: relative; }
@@ -206,7 +206,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=4"></script>
+<script src="../assets/app.js?v=5"></script>
 <script>
 (function(){
   'use strict';
@@ -252,6 +252,7 @@
     SK.store.set('sk-cadre-size', size);
     ratioBtns.forEach(function(b){ b.setAttribute('aria-pressed', String(+b.dataset.w === w && +b.dataset.h === h)); });
     stage.style.aspectRatio = w + ' / ' + h;
+    stage.style.setProperty('--ar', String(w / h));
     // En vertical, on évite un aperçu gigantesque
     stage.style.maxWidth = h > w ? '380px' : '';
     canvas.style.width = w + 'px'; canvas.style.height = h + 'px';

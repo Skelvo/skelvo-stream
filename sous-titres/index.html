@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=4">
+<link rel="stylesheet" href="../assets/app.css?v=5">
 <!--
   Page « micro » : reconnaissance vocale du navigateur (Chrome / Edge),
   traduction locale avec l'API Translator de Chrome si disponible, puis envoi
@@ -79,7 +79,7 @@
     </form>
 
     <div class="preview-col">
-      <div class="panel mic">
+      <div class="panel mic" data-step="Micro">
         <div class="mic-row">
           <select id="lang" aria-label="Langue parlée">
             <option value="fr-FR">Je parle français</option><option value="en-US">I speak English</option><option value="es-ES">Hablo español</option>
@@ -132,7 +132,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=4"></script>
+<script src="../assets/app.js?v=5"></script>
 <script src="../assets/vendor/peerjs-1.5.4.min.js"></script>
 <script>
 (function(){

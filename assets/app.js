@@ -177,6 +177,7 @@
       SK.store.set(opts.storageKey, size);
       if (opts.buttons) opts.buttons.forEach(function(b){ b.setAttribute('aria-pressed', String(+b.dataset.w === w && +b.dataset.h === h)); });
       opts.stage.style.aspectRatio = w + ' / ' + h;
+      opts.stage.style.setProperty('--ar', String(w / h));
       opts.stage.style.maxWidth = h > w ? '400px' : '';
       opts.canvas.style.width = w + 'px'; opts.canvas.style.height = h + 'px';
       if (opts.sizeTxt) opts.sizeTxt.textContent = w + ' × ' + h;
@@ -407,7 +408,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.2';
+  SK.VERSION = '1.3';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -439,6 +440,115 @@
   checkUpdate();
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkUpdate(); });
   setInterval(checkUpdate, 5 * 60 * 1000);
+
+  /* ======================================================================
+     Étapes : chaque bloc de réglages (fieldset avec un titre) devient une étape.
+     Une seule étape ouverte à la fois, « Suivant » / « Précédent », et une barre
+     d'étapes cliquable collée sous l'aperçu, qui reste toujours visible
+     (en haut de l'écran sur téléphone, à droite sur ordinateur).
+     La dernière étape contient le lien à copier dans OBS.
+     ====================================================================== */
+  function stepSummary(fs){
+    if (fs.classList.contains('theme-panel')){ var on = fs.querySelector('.th.on span'); return on ? on.textContent : ''; }
+    var r = fs.querySelector('input[type=radio]:checked');
+    if (r){ var l = fs.querySelector('label[for="' + r.id + '"]'); if (l) return (l.querySelector('span:last-child') || l).textContent.trim(); }
+    var sel = fs.querySelector('select');
+    if (sel && sel.selectedOptions[0]) return sel.selectedOptions[0].textContent.trim();
+    var t = fs.querySelector('input[type=text]:not([readonly])');
+    if (t && t.value && !/^data:/.test(t.value)) return t.value;
+    return '';
+  }
+  SK.makeSteps = function(box){
+    var settings = box.querySelector(':scope > .settings'); if (!settings || settings.dataset.steps) return;
+    settings.dataset.steps = '1';
+    var preview = box.querySelector(':scope > .preview-col') || box.querySelector(':scope > .panel.pad');
+    var stageHolder = preview && (preview.querySelector('.stage') || preview.matches('.panel.pad')) ? preview : null;
+
+    // Blocs supplémentaires marqués data-step (ex. le micro des sous-titres) : en premier
+    var extra = preview ? Array.prototype.slice.call(preview.querySelectorAll(':scope > [data-step]')) : [];
+    extra.reverse().forEach(function(el){
+      var fs = document.createElement('fieldset'); fs.className = 'step-extra';
+      var lg = document.createElement('legend'); lg.textContent = el.getAttribute('data-step'); fs.appendChild(lg);
+      el.classList.remove('panel'); fs.appendChild(el);
+      settings.insertBefore(fs, settings.firstChild);
+    });
+
+    var all = Array.prototype.slice.call(settings.querySelectorAll(':scope > fieldset'));
+    var resetFs = all.filter(function(f){ return !f.querySelector(':scope > legend'); });
+    var steps = all.filter(function(f){ return f.querySelector(':scope > legend'); });
+
+    // Dernière étape : le lien OBS (ou le mode d'emploi)
+    var out = preview && preview.querySelector(':scope > .panel.output');
+    if (out){
+      var fin = document.createElement('fieldset'); fin.className = 'step-final';
+      var lg2 = document.createElement('legend'); var h2 = out.querySelector('h2');
+      lg2.textContent = h2 ? h2.textContent : 'Terminé'; if (h2) h2.remove();
+      fin.appendChild(lg2); out.classList.remove('panel'); fin.appendChild(out);
+      settings.appendChild(fin); steps.push(fin);
+    }
+    resetFs.forEach(function(f){ (steps[steps.length - 1] || settings).appendChild(f); f.classList.add('step-reset'); });
+    if (steps.length < 2) return;
+
+    // Barre d'étapes
+    var nav = document.createElement('nav'); nav.className = 'steps-nav'; nav.setAttribute('aria-label', 'Étapes');
+    var chips = steps.map(function(fs, i){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'step-chip';
+      var n = document.createElement('i'); n.textContent = i + 1;
+      var t = document.createElement('span'); t.textContent = fs.querySelector(':scope > legend').textContent;
+      var sm = document.createElement('small');
+      b.appendChild(n); b.appendChild(t); b.appendChild(sm);
+      b.addEventListener('click', function(){ go(i, true); });
+      nav.appendChild(b);
+      // En-tête et pied de chaque étape
+      var head = document.createElement('div'); head.className = 'step-count'; head.textContent = 'Étape ' + (i + 1) + ' sur ' + steps.length;
+      fs.insertBefore(head, fs.firstChild);
+      var foot = document.createElement('div'); foot.className = 'step-foot';
+      if (i > 0){ var pv = document.createElement('button'); pv.type = 'button'; pv.className = 'btn ghost small'; pv.textContent = '← Précédent'; pv.addEventListener('click', function(){ go(i - 1, true); }); foot.appendChild(pv); }
+      if (i < steps.length - 1){
+        var nx = document.createElement('button'); nx.type = 'button'; nx.className = 'btn small step-next';
+        nx.textContent = 'Suivant : ' + steps[i + 1].querySelector(':scope > legend').textContent + ' →';
+        nx.addEventListener('click', function(){ go(i + 1, true); }); foot.appendChild(nx);
+      }
+      fs.appendChild(foot);
+      fs.classList.add('step');
+      return b;
+    });
+    if (stageHolder){
+      stageHolder.classList.add('sticky-preview');
+      var host = stageHolder.querySelector('.panel');
+      if (host) host.appendChild(nav); else { nav.classList.add('top'); stageHolder.insertBefore(nav, stageHolder.firstChild); }
+    }
+    else { nav.classList.add('alone'); settings.insertBefore(nav, settings.firstChild); }
+    box.classList.add('has-steps');
+
+    var cur = 0, seen = {};
+    function refresh(){
+      chips.forEach(function(c, i){
+        c.classList.toggle('on', i === cur);
+        c.classList.toggle('done', !!seen[i] && i !== cur);
+        var sum = steps[i].classList.contains('step-final') ? '' : stepSummary(steps[i]);
+        c.querySelector('small').textContent = seen[i] && i !== cur ? sum.slice(0, 24) : '';
+      });
+    }
+    function go(i, user){
+      seen[cur] = true; cur = Math.max(0, Math.min(steps.length - 1, i));
+      steps.forEach(function(fs, k){ fs.classList.toggle('active', k === cur); });
+      refresh();
+      var chip = chips[cur]; if (chip.scrollIntoView) nav.scrollTo({ left: chip.offsetLeft - nav.clientWidth / 2 + chip.clientWidth / 2, behavior: 'smooth' });
+      if (user){
+        // Remonte au début de l'étape, juste sous l'aperçu collé en haut
+        var top = settings.getBoundingClientRect().top + window.scrollY;
+        var stickH = stageHolder && getComputedStyle(stageHolder).position === 'sticky' && window.innerWidth <= 920 ? stageHolder.offsetHeight : 0;
+        var target = top - 72 - stickH;
+        if (window.scrollY > target + 4 || window.scrollY < target - 400) window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+      }
+    }
+    settings.addEventListener('input', refresh); settings.addEventListener('change', refresh);
+    settings.addEventListener('click', function(){ setTimeout(refresh, 0); });
+    go(0, false);
+  };
+  function initSteps(){ document.querySelectorAll('.editor, .tool-grid').forEach(SK.makeSteps); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSteps); else setTimeout(initSteps, 0);
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();
