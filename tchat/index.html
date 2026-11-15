@@ -17,15 +17,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
-  .sw{ display: flex; flex-direction: column; gap: 3px; padding: 5px; justify-content: center; }
-  .sw i{ display: block; height: 6px; border-radius: 3px; }
-  .sw-bubble{ background: #2a2347; } .sw-bubble i{ background: #514a78; width: 80%; } .sw-bubble i + i{ width: 55%; }
-  .sw-clean{ background: linear-gradient(160deg, #1b2a4a, #2a1840); } .sw-clean i{ background: #fff; width: 75%; height: 4px; } .sw-clean i + i{ width: 50%; }
-  .sw-neon{ background: #17132a; border-left: 3px solid var(--accent); box-shadow: -2px 0 8px -1px var(--accent); } .sw-neon i{ background: #5b5380; width: 80%; } .sw-neon i + i{ width: 50%; }
-  .sw-card{ background: #2a2347; border-top: 3px solid var(--accent-2); } .sw-card i{ background: #514a78; width: 40%; height: 4px; } .sw-card i + i{ width: 80%; height: 6px; }
-
+  .sw{ display: flex; flex-direction: column; gap: 3px; padding: 5px; justify-content: center; position: relative; }
+  .sw i{ display: block; height: 5px; border-radius: 3px; background: #5b5580; width: 80%; }
+  .sw i + i{ width: 55%; }
+  .sw-bubble{ background: #221d38; border-radius: 9px; }
+  .sw-line{ background: #221d38; padding-left: 9px; } .sw-line::before{ content: ""; position: absolute; left: 3px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: #a78bfa; }
+  .sw-card{ background: #221d38; border-top: 2px solid #67e8f9; } .sw-card i{ width: 40%; height: 4px; } .sw-card i + i{ width: 80%; height: 5px; }
+  .sw-stack{ background: #221d38; } .sw-stack i{ width: 100%; }
+  .sw-clean{ background: linear-gradient(160deg, #1b2a4a, #2a1840); } .sw-clean i{ background: #fff; height: 4px; }
   .stage{ background: #08070d; margin: 0 auto; }
   .canvas{ position: absolute; top: 0; left: 0; transform-origin: 0 0; }
   .canvas iframe{ width: 100%; height: 100%; }
@@ -58,39 +59,30 @@
       </fieldset>
 
       <fieldset>
-        <legend data-i18n="chat.theme">Thème</legend>
+        <legend>Mise en page</legend>
         <div class="choices">
-          <div class="choice"><input type="radio" name="theme" id="th-bubble" value="bubble" checked><label for="th-bubble"><span class="sw sw-bubble"><i></i><i></i></span><span data-i18n="theme.bubble">Bulles</span></label></div>
-          <div class="choice"><input type="radio" name="theme" id="th-clean" value="clean"><label for="th-clean"><span class="sw sw-clean"><i></i><i></i></span><span data-i18n="theme.clean">Texte seul</span></label></div>
-          <div class="choice"><input type="radio" name="theme" id="th-neon" value="neon"><label for="th-neon"><span class="sw sw-neon"><i></i><i></i></span><span data-i18n="theme.neon">Néon</span></label></div>
-          <div class="choice"><input type="radio" name="theme" id="th-card" value="card"><label for="th-card"><span class="sw sw-card"><i></i><i></i></span><span data-i18n="theme.card">Cartes</span></label></div>
+          <div class="choice"><input type="radio" name="theme" id="th-bubble" value="bubble" checked><label for="th-bubble"><span class="sw sw-bubble"><i></i><i></i></span><span>Bulles</span></label></div>
+          <div class="choice"><input type="radio" name="theme" id="th-line" value="line"><label for="th-line"><span class="sw sw-line"><i></i><i></i></span><span>Trait</span></label></div>
+          <div class="choice"><input type="radio" name="theme" id="th-card" value="card"><label for="th-card"><span class="sw sw-card"><i></i><i></i></span><span>Cartes</span></label></div>
+          <div class="choice"><input type="radio" name="theme" id="th-stack" value="stack"><label for="th-stack"><span class="sw sw-stack"><i></i><i></i></span><span>Pleine largeur</span></label></div>
+          <div class="choice"><input type="radio" name="theme" id="th-clean" value="clean"><label for="th-clean"><span class="sw sw-clean"><i></i><i></i></span><span>Texte seul</span></label></div>
         </div>
+        <label class="field"><span><span>Taille du texte</span><output for="c-fs" data-unit=" px"></output></span><input type="range" id="c-fs" name="fs" min="12" max="48" value="20"></label>
+        <label class="field"><span><span>Espace entre les messages</span><output for="c-gap" data-unit=" %"></output></span><input type="range" id="c-gap" name="gap" min="0" max="120" value="35"></label>
+        <label class="field"><span>Couleur des pseudos</span>
+          <select name="names">
+            <option value="twitch">Celle choisie sur Twitch</option>
+            <option value="accent">Couleur d'accent du thème</option>
+            <option value="text">Couleur du texte</option>
+          </select>
+        </label>
+        <label class="field"><span>Abonnements et raids</span>
+          <select name="evs"><option value="accent">Mis en avant (couleur d'accent)</option><option value="outline">Contour coloré</option><option value="none">Comme les autres messages</option></select>
+        </label>
+        <label class="check"><input type="checkbox" name="bmono"><span>Badges discrets (sans couleur)</span></label>
       </fieldset>
 
-      <fieldset>
-        <legend data-i18n="chat.look">Apparence</legend>
-        <div class="field colors">
-          <label class="color"><input type="color" name="ac" value="#9b5cff"><span data-i18n="chat.accent">Accent</span></label>
-        </div>
-        <label class="field"><span><span data-i18n="chat.bgo">Opacité du fond</span><output for="c-bgo" data-unit=" %"></output></span><input type="range" id="c-bgo" name="bgo" min="0" max="100" value="70"></label>
-        <label class="field"><span data-i18n="chat.names">Couleur des pseudos</span>
-          <select name="names">
-            <option value="twitch" data-i18n="names.twitch">Celle choisie sur Twitch</option>
-            <option value="accent" data-i18n="names.accent">Couleur d'accent</option>
-            <option value="white" data-i18n="names.white">Blanc</option>
-          </select>
-        </label>
-        <label class="field"><span data-i18n="chat.font">Police</span>
-          <select name="font">
-            <option value="grotesk">Space Grotesk</option>
-            <option value="rounded">Nunito (arrondie)</option>
-            <option value="rubik">Rubik</option>
-            <option value="pixel">VT323 (pixel)</option>
-            <option value="system" data-i18n="font.system">Police du système</option>
-          </select>
-        </label>
-        <label class="field"><span><span data-i18n="chat.fs">Taille du texte</span><output for="c-fs" data-unit=" px"></output></span><input type="range" id="c-fs" name="fs" min="12" max="48" value="20"></label>
-      </fieldset>
+      <div data-theme-panel="minimal"></div>
 
       <fieldset>
         <legend data-i18n="chat.behaviour">Comportement</legend>
@@ -104,10 +96,12 @@
           <select name="anim">
             <option value="slide" data-i18n="anim.slide">Glisse</option>
             <option value="pop" data-i18n="anim.pop">Pop</option>
+            <option value="rise">Montée floutée</option>
             <option value="fade" data-i18n="anim.fade">Fondu</option>
             <option value="none" data-i18n="anim.none">Aucune</option>
           </select>
         </label>
+        <label class="field"><span>Les messages arrivent</span><select name="vpos"><option value="bottom">En bas, et montent</option><option value="top">En haut, et descendent</option></select></label>
         <label class="field"><span><span data-i18n="chat.max">Messages affichés au maximum</span><output for="c-max"></output></span><input type="range" id="c-max" name="max" min="1" max="30" value="12"></label>
         <label class="field"><span><span data-i18n="chat.fade">Disparition après</span><output for="c-fade" data-unit=" s"></output></span><input type="range" id="c-fade" name="fade" min="0" max="120" step="5" value="0"><small data-i18n="chat.fade.hint">0 = les messages restent jusqu'à ce que de nouveaux arrivent.</small></label>
       </fieldset>
@@ -172,7 +166,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';

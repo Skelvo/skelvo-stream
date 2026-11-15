@@ -212,3 +212,22 @@ textarea{ resize: vertical; min-height: 64px; }
 .setup{ margin-bottom: 14px !important; }
 .cmds li{ flex-wrap: wrap; row-gap: 2px; }
 .cmds code{ white-space: normal; overflow-wrap: anywhere; flex: 0 1 auto; }
+
+/* ---------- Panneau Thème ---------- */
+.themes{ display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.th{ border: 1px solid var(--line-2); background: var(--bg-2); color: var(--text); border-radius: 12px; padding: 8px 6px 7px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; font: 500 .78rem 'IBM Plex Sans', sans-serif; transition: border-color .15s, transform .15s; }
+.th:hover{ border-color: var(--accent); transform: translateY(-1px); }
+.th.on{ border-color: var(--accent); background: rgba(155,92,255,.12); }
+.th-sw{ width: 100%; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 0 9px; gap: 4px; box-sizing: border-box;
+  background-image: none; position: relative; }
+.th-sw b{ font-size: 15px; line-height: 1; }
+.th-sw i{ display: block; width: 60%; height: 3px; border-radius: 3px; }
+.theme-panel{ background: linear-gradient(180deg, rgba(155,92,255,.06), transparent 60%); }
+details.more{ margin-top: 14px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--bg-2); }
+details.more summary{ cursor: pointer; padding: 11px 14px; font: 600 .9rem 'Space Grotesk', sans-serif; list-style: none; display: flex; justify-content: space-between; }
+details.more summary::after{ content: "＋"; color: var(--muted); }
+details.more[open] summary::after{ content: "−"; }
+details.more summary::-webkit-details-marker{ display: none; }
+.more-body{ padding: 4px 14px 14px; }
+.sub-legend{ font: 600 .74rem 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: .08em; color: var(--accent-2); margin: 14px 0 8px; }
+.sub-legend:first-child{ margin-top: 4px; }

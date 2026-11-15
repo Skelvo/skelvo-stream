@@ -1,0 +1,39 @@
+/* ==========================================================================
+   Skelvo Stream — thème commun des overlays.
+   Les variables sont remplies par SKO.theme() (assets/overlay.js) à partir
+   des réglages de l'URL. Pas de color-mix() : OBS peut embarquer un Chrome
+   ancien, toutes les couleurs mélangées sont calculées en JavaScript.
+   ========================================================================== */
+:root{
+  --font: 'Inter', system-ui, sans-serif; --fw: 700;
+  --tx: #fff; --muted: rgba(255,255,255,.7); --ac: #a78bfa; --ac2: #67e8f9; --ac-tx: #111;
+  --sf: rgba(11,11,16,.78); --sf-solid: #0b0b10; --sf-tint: rgba(20,18,30,.78);
+  --rad: .44em; --bw: 1px; --bc: rgba(255,255,255,.12);
+  --shadow: 0 .3em 1.4em rgba(0,0,0,.28); --glow: 0 0 0 transparent; --glow-text: none;
+  --up: none; --ls: 0;
+}
+html, body{ background: transparent; }
+body{ font-family: var(--font); color: var(--tx); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Surface : le "fond" des cartes, bulles, pastilles… */
+.sk-surface{
+  background: var(--sf);
+  border: var(--bw) solid var(--bc);
+  border-radius: var(--rad);
+  box-shadow: var(--shadow), var(--glow);
+}
+.sk-glass .sk-surface{
+  background: linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,.03) 55%), var(--sf);
+  border-top-color: rgba(255,255,255,.35);
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+}
+.sk-gradient .sk-surface{ background: linear-gradient(145deg, var(--sf) 25%, var(--sf-tint)); }
+.sk-accent .sk-surface{ background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); border-color: transparent; }
+.sk-outline .sk-surface{ background: transparent; border: max(var(--bw), 2px) solid var(--ac); box-shadow: var(--glow); }
+.sk-none .sk-surface{ background: transparent; border-color: transparent; box-shadow: none; text-shadow: 0 0 .08em rgba(0,0,0,.9), 0 .04em .2em rgba(0,0,0,.8); }
+
+.sk-title{ font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); }
+.sk-accent-text{ color: var(--ac); text-shadow: var(--glow-text); }
+.sk-accent .sk-surface .sk-accent-text{ color: inherit; text-shadow: none; }
+.sk-muted{ color: var(--muted); }
+.sk-accent .sk-surface .sk-muted{ color: inherit; opacity: .78; }

@@ -19,64 +19,62 @@
   Tout le texte des messages passe par textContent / createTextNode : jamais
   d'innerHTML avec du contenu venant du tchat.
 -->
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
 <style>
-  :root{
-    --fs: 20px; --ac: #9b5cff; --bg: rgba(14,12,24,.7);
-    --font: 'Space Grotesk', system-ui, sans-serif;
-  }
-  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
-  body{ font-family: var(--font); font-size: var(--fs); color: #fff; -webkit-font-smoothing: antialiased; }
+  :root{ --fs: 20px; --gap: .35em; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); }
 
-  #chat{
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column; justify-content: flex-end;
-    gap: .32em; padding: .5em;
-    overflow: hidden;
-  }
+  #chat{ position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--gap); padding: .6em; overflow: hidden; }
   body.right #chat{ align-items: flex-end; }
   body.left  #chat{ align-items: flex-start; }
+  body.top #chat{ justify-content: flex-start; }
 
-  .msg{ max-width: 100%; line-height: 1.35; overflow-wrap: anywhere; position: relative; }
-  .meta{ display: inline-flex; align-items: center; gap: .25em; vertical-align: bottom; margin-right: .35em; }
-  .name{ font-weight: 700; }
-  .text .emote{ height: 1.5em; width: auto; vertical-align: middle; margin: -.25em .05em; display: inline-block; }
-  .msg.emote-only .text .emote{ height: 2.6em; margin: 0 .05em; }
+  .msg{ max-width: 100%; line-height: 1.38; overflow-wrap: anywhere; position: relative; font-weight: 500; }
+  .meta{ display: inline-flex; align-items: center; gap: .3em; vertical-align: bottom; margin-right: .4em; }
+  .name{ font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); }
+  .text .emote{ height: 1.5em; width: auto; vertical-align: middle; margin: -.25em .04em; display: inline-block; }
+  .msg.emote-only .text .emote{ height: 2.4em; margin: 0 .04em; }
   .msg.action .text{ font-style: italic; color: var(--name-color); }
 
-  .badges{ display: inline-flex; gap: .18em; }
-  .badge{ width: 1.05em; height: 1.05em; border-radius: .25em; display: inline-grid; place-items: center; }
-  .badge svg{ width: .72em; height: .72em; fill: #fff; }
-  .b-broadcaster{ background: #e91916; } .b-moderator{ background: #00ad03; }
-  .b-vip{ background: #e005b9; } .b-subscriber{ background: var(--ac); }
-  .b-partner{ background: #9147ff; } .b-artist{ background: #1e69ff; }
+  .badges{ display: inline-flex; gap: .2em; }
+  .badge{ width: 1.05em; height: 1.05em; border-radius: .28em; display: inline-grid; place-items: center; }
+  .badge svg{ width: .68em; height: .68em; fill: #fff; }
+  .b-broadcaster{ background: #e5484d; } .b-moderator{ background: #30a46c; } .b-vip{ background: #d6409f; }
+  .b-subscriber{ background: var(--ac); } .b-subscriber svg{ fill: var(--ac-tx); } .b-partner{ background: #8e4ec6; } .b-artist{ background: #3e63dd; }
+  .mono-badges .badge{ background: rgba(255,255,255,.14); } .mono-badges .badge svg{ fill: currentColor; }
 
-  /* ---------- Thèmes ---------- */
-  .t-bubble .msg{ background: var(--bg); padding: .38em .7em .42em; border-radius: .8em; box-shadow: 0 .2em .8em rgba(0,0,0,.25); }
-  .t-bubble .msg.event{ background: linear-gradient(135deg, var(--ac), color-mix(in srgb, var(--ac) 55%, #000)); }
+  /* ---------- Mises en page (le style vient du thème) ---------- */
+  .l-bubble .msg{ padding: .42em .78em .46em; }
+  .l-card .msg{ padding: .5em .8em .6em; min-width: 7em; }
+  .l-card .meta{ display: flex; margin: 0 0 .15em; font-size: .8em; }
+  .l-card .msg::before{ content: ""; position: absolute; left: .8em; right: .8em; top: 0; height: .12em; border-radius: 0 0 .2em .2em; background: var(--name-color); opacity: .9; }
+  .l-line .msg{ padding: .36em .7em .4em .85em; border-left-width: 0; }
+  .l-line .msg::before{ content: ""; position: absolute; left: 0; top: .35em; bottom: .35em; width: .16em; border-radius: .2em; background: var(--name-color); }
+  .l-clean .msg{ padding: .08em .1em; text-shadow: 0 0 .08em rgba(0,0,0,.95), 0 .04em .18em rgba(0,0,0,.85); }
+  .l-clean .msg.sk-surface{ background: none; border: 0; box-shadow: none; }
+  .l-stack .msg{ padding: .5em .8em; width: 100%; box-sizing: border-box; }
+  .l-stack .meta{ display: flex; font-size: .78em; margin-bottom: .12em; }
 
-  .t-clean .msg{ padding: .1em .2em; text-shadow: 0 0 2px #000, 0 0 3px #000, 1px 1px 2px #000, -1px -1px 2px #000; }
-  .t-clean .msg.event .text{ color: var(--ac); font-weight: 700; }
-
-  .t-neon .msg{ background: var(--bg); padding: .36em .7em .4em .75em; border-radius: .35em; border-left: .18em solid var(--ac); box-shadow: -.15em 0 .7em -.1em var(--ac); }
-  .t-neon .name{ text-shadow: 0 0 .5em currentColor; }
-  .t-neon .msg.event{ border: .1em solid var(--ac); box-shadow: 0 0 1em var(--ac), inset 0 0 .6em color-mix(in srgb, var(--ac) 40%, transparent); }
-
-  .t-card .msg{ background: var(--bg); padding: .45em .75em .55em; border-radius: .6em; border-top: .16em solid var(--name-color, var(--ac)); min-width: 6em; }
-  .t-card .meta{ display: flex; margin: 0 0 .15em; font-size: .82em; }
-  .t-card .msg.event{ border-top-color: var(--ac); background: color-mix(in srgb, var(--ac) 35%, var(--bg)); }
-
-  .msg.event .sys{ display: block; font-weight: 700; }
+  /* Événements (subs, raids…) */
+  .msg.event{ border-color: transparent; }
+  .msg.event .sys{ display: block; font-weight: var(--fw); }
   .msg.event .text{ display: block; margin-top: .15em; opacity: .95; }
+  .ev-accent .msg.event{ background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); text-shadow: none; }
+  .ev-outline .msg.event{ box-shadow: inset 0 0 0 .1em var(--ac), var(--shadow), var(--glow); }
+  .ev-outline .msg.event .sys{ color: var(--ac); }
 
-  /* ---------- Animations d'entrée / sortie ---------- */
-  .a-slide .msg{ animation: inSlide .35s cubic-bezier(.2,.9,.3,1.2) both; }
+  /* ---------- Animations ---------- */
+  .a-slide .msg{ animation: inSlide .45s cubic-bezier(.2,.9,.25,1) both; }
   body.right.a-slide .msg{ animation-name: inSlideR; }
-  .a-fade  .msg{ animation: inFade .4s ease both; }
-  .a-pop   .msg{ animation: inPop .35s cubic-bezier(.2,.9,.3,1.4) both; }
-  @keyframes inSlide{ from{ opacity: 0; transform: translateX(-1.5em); } }
-  @keyframes inSlideR{ from{ opacity: 0; transform: translateX(1.5em); } }
-  @keyframes inFade{ from{ opacity: 0; transform: translateY(.6em); } }
-  @keyframes inPop{ from{ opacity: 0; transform: scale(.6); } }
+  .a-fade  .msg{ animation: inFade .45s ease both; }
+  .a-pop   .msg{ animation: inPop .4s cubic-bezier(.2,.9,.3,1.3) both; }
+  .a-rise  .msg{ animation: inRise .5s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes inSlide{ from{ opacity: 0; transform: translateX(-1.2em); } }
+  @keyframes inSlideR{ from{ opacity: 0; transform: translateX(1.2em); } }
+  @keyframes inFade{ from{ opacity: 0; } }
+  @keyframes inPop{ from{ opacity: 0; transform: scale(.7); } }
+  @keyframes inRise{ from{ opacity: 0; transform: translateY(.8em); filter: blur(4px); } }
   .msg.out{ animation: out .5s ease forwards !important; }
   @keyframes out{ to{ opacity: 0; transform: translateY(-.3em); } }
 </style>
@@ -84,35 +82,41 @@
 <body>
 <div id="chat" aria-live="polite"></div>
 
-<script src="../assets/overlay.js?v=2"></script>
-<script src="../assets/twitch.js?v=2"></script>
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
 <script>
 (function(){
   'use strict';
 
-  var DEFAULTS = {
-    ch: '', theme: 'bubble', fs: '20', max: '12', fade: '0',
-    align: 'left', anim: 'slide', font: 'grotesk',
-    ac: '9b5cff', bgo: '70', names: 'twitch',
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', theme: 'bubble', fs: '20', gap: '35', max: '12', fade: '0',
+    align: 'left', vpos: 'bottom', anim: 'slide', names: 'twitch', evs: 'accent', bmono: '0',
     badges: '1', emotes3: '1', hidecmd: '1', events: '1',
     bots: 'nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot',
     demo: '0'
-  };
+  });
   var num = SKO.num, hex = SKO.hex, el = SKO.el;
   var chatEl = document.getElementById('chat');
   var P = {}, hidden = {}, source = null, sourceKey = '';
 
   // Couleur de pseudo : celle de Twitch, éclaircie si elle est illisible sur fond sombre
   var FALLBACK = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#38d9a9', '#4dabf7', '#9775fa', '#f783ac', '#63e6be', '#ff922b'];
+  // Couleur de pseudo : celle de Twitch, ajustée pour rester lisible sur le fond du thème
   function nameColor(raw, login){
+    if (P.sk === 'accent') return 'var(--ac-tx)';
     if (P.names === 'accent') return hex(P.ac, DEFAULTS.ac);
-    if (P.names === 'white') return '#ffffff';
+    if (P.names === 'white' || P.names === 'text') return hex(P.tx, 'ffffff');
+    var c;
     if (!/^#[0-9a-f]{6}$/i.test(raw || '')){
       var h = 0; for (var i = 0; i < login.length; i++) h = (h * 31 + login.charCodeAt(i)) >>> 0;
-      return FALLBACK[h % FALLBACK.length];
-    }
-    var c = SKO.rgb(raw), lum = (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000;
-    if (lum < 110){ var k = (110 - lum) / 160 + .25; c = c.map(function(v){ return v + (255 - v) * k; }); }
+      c = SKO.rgb(FALLBACK[h % FALLBACK.length]);
+    } else c = SKO.rgb(raw);
+    var lum = (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000;
+    // Fond clair (thème Clair, Pastel…) : on fonce les couleurs trop pâles ; fond sombre : on éclaircit les trop foncées
+    var bg = SKO.rgb(hex(P.sf, '000000')), bgLum = (bg[0] * 299 + bg[1] * 587 + bg[2] * 114) / 1000;
+    var lightBg = P.sk !== 'none' && P.sk !== 'outline' && P.theme !== 'clean' && bgLum > 160 && num(P.so, 0, 100, 78) > 45;
+    if (lightBg && lum > 120){ var d = Math.min(.75, (lum - 120) / 180 + .3); c = c.map(function(v){ return v * (1 - d); }); }
+    else if (!lightBg && lum < 110){ var k = (110 - lum) / 160 + .25; c = c.map(function(v){ return v + (255 - v) * k; }); }
     return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')';
   }
 
@@ -143,10 +147,11 @@
 
   // ---------- Affichage ----------
   function show(m){
-    var div = el('div', 'msg');
+    var div = el('div', 'msg sk-surface');
     if (m.id) div.dataset.id = m.id;
     if (m.uid) div.dataset.uid = m.uid;
     var col = nameColor(m.color, m.login || '');
+    div.dataset.c = m.color || ''; div.dataset.l = m.login || '';
     div.style.setProperty('--name-color', col);
     var third = P.emotes3 === '1';
 
@@ -212,17 +217,24 @@
 
   SKO.params(DEFAULTS, function(p){
     P = p;
+    // Anciens liens : "bgo" (opacité) devient "so", "grotesk" reste une police valide
+    if (p.bgo != null && !/[?&]so=/.test(location.search) && P === p) P.so = p.bgo;
+    SKO.theme(P);
     var root = document.documentElement.style;
-    root.setProperty('--font', SKO.useFont(P.font));
     root.setProperty('--fs', num(P.fs, 10, 72, 20) + 'px');
-    var ac = hex(P.ac, DEFAULTS.ac), c = SKO.rgb(ac);
-    root.setProperty('--ac', ac);
-    // Fond des bulles : très sombre, teinté par la couleur d'accent
-    root.setProperty('--bg', 'rgba(' + ((c[0] * .12 + 10) | 0) + ',' + ((c[1] * .12 + 9) | 0) + ',' + ((c[2] * .12 + 16) | 0) + ',' + num(P.bgo, 0, 100, 70) / 100 + ')');
+    root.setProperty('--gap', num(P.gap, 0, 150, 35) / 100 + 'em');
 
-    var theme = /^(bubble|clean|neon|card)$/.test(P.theme) ? P.theme : 'bubble';
-    var anim = /^(slide|fade|pop|none)$/.test(P.anim) ? P.anim : 'slide';
-    document.body.className = ['t-' + theme, 'a-' + anim, P.align === 'right' ? 'right' : 'left'].join(' ');
+    var layout = { bubble: 'bubble', clean: 'clean', neon: 'line', line: 'line', card: 'card', stack: 'stack' }[P.theme] || 'bubble';
+    var anim = /^(slide|fade|pop|rise|none)$/.test(P.anim) ? P.anim : 'slide';
+    document.body.className = ['l-' + layout, 'a-' + anim, P.align === 'right' ? 'right' : 'left', P.vpos === 'top' ? 'top' : '',
+      'ev-' + (P.evs === 'outline' ? 'outline' : P.evs === 'none' ? 'none' : 'accent'), P.bmono === '1' ? 'mono-badges' : ''].join(' ');
+
+    // Recolore les pseudos déjà affichés (changement de thème dans l'éditeur)
+    chatEl.querySelectorAll('.msg').forEach(function(d){
+      var c = nameColor(d.dataset.c, d.dataset.l || '');
+      d.style.setProperty('--name-color', c);
+      var n = d.querySelector('.name'); if (n) n.style.color = c;
+    });
 
     hidden = {};
     String(P.bots || '').toLowerCase().split(/[\s,;]+/).forEach(function(b){ if (b) hidden[b.replace(/^@/, '')] = 1; });
