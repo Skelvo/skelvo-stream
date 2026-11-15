@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.1';
+  SK.VERSION = '2.2';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -657,22 +657,28 @@
   window.addEventListener('pagehide', saveScroll);
   SK.savedStep = function(){ var st = ss(); var v = st && st.getItem('sk-step:' + location.pathname); return v == null ? -1 : +v; };
   SK.saveStep = function(i){ var st = ss(); if (st) try { st.setItem('sk-step:' + location.pathname, String(i)); } catch(e){} };
+  function reveal(){ document.documentElement.classList.remove('sk-restoring'); }
+  function jump(y){ window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
   function restoreScroll(){
     var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
     var type = nav ? nav.type : 'navigate';
-    if (type === 'reload' || type === 'back_forward' || location.hash) return; // le navigateur s'en occupe
+    if (type === 'reload' || type === 'back_forward' || location.hash) return reveal(); // le navigateur s'en occupe
     var st = ss(), y = st && st.getItem(SCROLL_KEY);
-    if (y == null) return;
+    if (y == null) return reveal();
     var target = +y, tries = 0;
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    // la page peut encore grandir (images, étapes) : on réessaie quelques fois
-    (function go(){
-      window.scrollTo(0, target);
-      if (Math.abs(window.scrollY - target) > 2 && tries++ < 20) setTimeout(go, 50);
+    // saut immédiat (sans défilement animé), page encore cachée ; puis on vérifie
+    // tant que la page grandit encore (étapes, images), et on l'affiche
+    jump(target);
+    (function check(){
+      if (Math.abs(window.scrollY - target) > 2 && tries++ < 15){ jump(target); return setTimeout(check, 30); }
+      reveal();
     })();
   }
-  if (document.readyState === 'complete') setTimeout(restoreScroll, 0);
-  else window.addEventListener('load', function(){ setTimeout(restoreScroll, 0); });
+  // Tout de suite (le script est en bas de page : le contenu est déjà là),
+  // puis une dernière fois quand les étapes ont été construites
+  restoreScroll();
+  setTimeout(function(){ if (document.documentElement.classList.contains('sk-restoring')) restoreScroll(); }, 0);
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

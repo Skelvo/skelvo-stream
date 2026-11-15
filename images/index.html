@@ -2,6 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>/* Retour au bon endroit : la page reste cachée le temps de se placer (voir assets/app.js) */
+try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(sessionStorage.getItem(k)&&!location.hash&&(!n||n.type==='navigate')){document.documentElement.classList.add('sk-restoring');setTimeout(function(){document.documentElement.classList.remove('sk-restoring')},1500)}}catch(e){}</script>
+<style>.sk-restoring body{visibility:hidden}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Emotes, badges, panneaux et bannières Twitch gratuits — Skelvo Stream</title>
 <meta name="description" content="Redimensionne tes emotes et badges aux tailles Twitch et Discord, crée tes panneaux de profil et ta bannière hors ligne. Gratuit, tout se fait dans ton navigateur." />
@@ -187,7 +190,7 @@
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=13"></script>
+<script src="../assets/app.js?v=14"></script>
 <script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){

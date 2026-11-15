@@ -2,6 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<script>/* Retour au bon endroit : la page reste cachée le temps de se placer (voir assets/app.js) */
+try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(sessionStorage.getItem(k)&&!location.hash&&(!n||n.type==='navigate')){document.documentElement.classList.add('sk-restoring');setTimeout(function(){document.documentElement.classList.remove('sk-restoring')},1500)}}catch(e){}</script>
+<style>.sk-restoring body{visibility:hidden}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Skelvo Stream — outils gratuits pour streamers</title>
 <meta name="description" content="Cadres caméra animés, tchat Twitch à l'écran et bien plus : des outils gratuits pour OBS et Streamlabs. Sans compte, sans filigrane." />
@@ -313,7 +316,7 @@
 </footer>
 
 <script src="assets/packs.js?v=1"></script>
-<script src="assets/app.js?v=13"></script>
+<script src="assets/app.js?v=14"></script>
 <script>
   // Miniatures des packs dans le bloc Kit
   (function(){ var box = document.getElementById('kit-packs'); if (!box || !window.SK_PACKS) return;
