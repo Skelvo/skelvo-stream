@@ -401,5 +401,44 @@
   document.querySelectorAll('input[data-image]').forEach(SK.enhanceImageField);
 
 
+  /* ======================================================================
+     Version (comme sur Tribune) : version.txt, à la racine du site, porte le
+     même numéro que SK.VERSION. Une page restée ouverte voit qu'une mise à jour
+     est sortie et propose de rafraîchir avec un bandeau en haut.
+     À chaque mise en ligne : changer les deux numéros ensemble.
+     ====================================================================== */
+  SK.VERSION = '1.2';
+  var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
+  function showInstalled(){
+    var last = SK.store.get('sk-version');
+    if (last && last !== SK.VERSION) setTimeout(function(){ SK.toast('Mise à jour installée : version ' + SK.VERSION); }, 600);
+    SK.store.set('sk-version', SK.VERSION);
+    var foot = document.querySelector('.foot .wrap');
+    if (foot && !foot.querySelector('.ver')){ var v = document.createElement('span'); v.className = 'ver'; v.textContent = 'v' + SK.VERSION; foot.appendChild(v); }
+  }
+  function checkUpdate(){
+    fetch(new URL('version.txt?t=' + Date.now(), ROOT).href, { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
+      v = String(v || '').trim();
+      if (!/^\d+\.\d{1,3}$/.test(v) || v === SK.VERSION || document.querySelector('.upd')) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'upd';
+      var t = document.createElement('span'); t.textContent = 'Version ' + v + ' disponible';
+      var go = document.createElement('b'); go.textContent = 'Rafraîchir';
+      b.appendChild(t); b.appendChild(go);
+      b.addEventListener('click', function(){
+        b.disabled = true; t.textContent = 'Mise à jour…'; go.remove();
+        // on garde les réglages de l'adresse, on force juste une page neuve
+        var u = new URL(location.href); u.searchParams.set('upd', Date.now());
+        location.replace(u.href);
+      });
+      document.body.appendChild(b);
+      requestAnimationFrame(function(){ b.classList.add('on'); });
+    }).catch(function(){});
+  }
+  if (/[?&]upd=/.test(location.search)){ var cu = new URL(location.href); cu.searchParams.delete('upd'); history.replaceState(null, '', cu.pathname + cu.search + cu.hash); }
+  showInstalled();
+  checkUpdate();
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkUpdate(); });
+  setInterval(checkUpdate, 5 * 60 * 1000);
+
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

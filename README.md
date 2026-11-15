@@ -64,4 +64,8 @@ dans l'éditeur ; pour s'en passer, créer une clé (gratuite) et la mettre dans
 `DEFAULT_KEY` en haut de `musique/overlay.html`.
 
 ## Mettre à jour
-Après une modification de `assets/`, augmenter les `?v=` dans les pages HTML.
+À chaque mise en ligne :
+- changer le numéro dans `version.txt` **et** `SK.VERSION` (en haut de la partie « Version »
+  de `assets/app.js`) : les pages restées ouvertes affichent alors le bandeau
+  « Version x disponible · Rafraîchir », comme sur Tribune ;
+- après une modification de `assets/`, augmenter les `?v=` dans les pages HTML.
