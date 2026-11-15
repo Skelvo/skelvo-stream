@@ -24,6 +24,9 @@
   #bg{ position: fixed; inset: 0; overflow: hidden; }
   #bg canvas, #bg video, #bg .img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   #bg .img{ background: center/cover no-repeat; }
+  /* Fond d'un pack : zoom très lent pour donner de la vie à l'image */
+  #bg .img.pack{ animation: kenburns calc(60s / var(--speed)) ease-in-out infinite alternate; }
+  @keyframes kenburns{ from{ transform: scale(1.02) translate(0, 0); } to{ transform: scale(1.12) translate(-1.5%, -1%); } }
   #bg .shade{ position: absolute; inset: 0; background: rgba(0,0,0,var(--dim)); }
 
   /* Dégradé maillé : grandes taches très floues qui dérivent lentement */
@@ -125,7 +128,7 @@
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     mode: 'start', title: '', sub: '', kicker: '', min: '5', at: '', endtext: '', bg: 'mesh',
-    c1: '7c6cf2', c2: '3fc8d8', c3: 'f472b6', speed: '1', grain: '35', vig: '50', bgimg: '', bgvid: '', dim: '45', logo: '',
+    c1: '7c6cf2', c2: '3fc8d8', c3: 'f472b6', speed: '1', grain: '35', vig: '50', bgimg: '', bgvid: '', dim: '45', logo: '', bgpack: '', pdim: '25',
     lay: 'center', cd: 'grad', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0',
     sk: 'glass', sf: '15131c', so: '45', rad: '70'
   });
@@ -152,6 +155,12 @@
       bgEl.appendChild(v); bgEl.appendChild(el('div', 'shade')); return;
     }
     if (img){ var d = el('div', 'img'); d.style.backgroundImage = 'url("' + img + '")'; bgEl.appendChild(d); bgEl.appendChild(el('div', 'shade')); return; }
+    var pk = /^[a-z]{2,12}$/.test(P.bgpack || '') ? P.bgpack : '';
+    if (pk){
+      var d2 = el('div', 'img pack'); d2.style.backgroundImage = 'url("../assets/bg/' + pk + '.webp")'; bgEl.appendChild(d2);
+      var sh = el('div', 'shade'); sh.style.background = 'rgba(0,0,0,' + num(P.pdim, 0, 90, 25) / 100 + ')'; bgEl.appendChild(sh);
+      return;
+    }
     if (kind === 'mesh'){ bgEl.className = 'mesh'; bgEl.innerHTML = '<i></i><i></i><i></i>'; }
     else if (kind === 'halo'){ bgEl.className = 'halo'; }
     else if (kind === 'lines'){ bgEl.className = 'lines'; }
@@ -231,7 +240,7 @@
     logo.classList.toggle('on', !!lg); if (lg) logo.src = lg;
 
     var bg = /^(mesh|halo|lines|synth|gradient|waves|particles|none|aurora)$/.test(P.bg) ? (P.bg === 'aurora' ? 'mesh' : P.bg) : 'mesh';
-    var bk = bg + '|' + P.bgimg + '|' + P.bgvid;
+    var bk = bg + '|' + P.bgimg + '|' + P.bgvid + '|' + P.bgpack + '|' + P.pdim;
     if (bk !== bgKey){ bgKey = bk; setBg(bg); }
 
     var lay = /^(center|left|bottom)$/.test(P.lay) ? P.lay : 'center';

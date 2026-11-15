@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=6">
+<link rel="stylesheet" href="../assets/app.css?v=7">
 <!--
   Atelier images : tout est dessiné dans un <canvas> du navigateur, aucune image
   n'est envoyée nulle part.
@@ -122,7 +122,8 @@
       <fieldset>
         <legend>Couleurs et fond</legend>
         <div class="field colors"><label class="color"><input type="color" id="pc1" value="#a78bfa"><span>Couleur 1</span></label><label class="color"><input type="color" id="pc2" value="#67e8f9"><span>Couleur 2</span></label><label class="color"><input type="color" id="ptx" value="#ffffff"><span>Texte</span></label><label class="color"><input type="color" id="pbg" value="#0e0d14"><span>Fond</span></label></div>
-        <div class="field"><span>Ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="pbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="pbgclr" hidden>Retirer</button><input type="file" id="pbgfile" accept="image/*" hidden></div><small>Utilisée par le modèle « Ton image » et en fond flouté du modèle « Verre ».</small></div>
+        <div class="field"><span>Fonds des packs Skelvo</span><div id="ppacks"></div><small>Assortis aux thèmes et aux contours du même nom.</small></div>
+        <div class="field"><span>Ou ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="pbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="pbgclr" hidden>Retirer</button><input type="file" id="pbgfile" accept="image/*" hidden></div><small>Utilisée par le modèle « Ton image » et en fond flouté du modèle « Verre ».</small></div>
         <label class="field"><span><span>Flou de l'image</span><output id="pblurout">0 px</output></span><input type="range" id="pblur" min="0" max="30" value="0"></label>
         <label class="field"><span><span>Assombrir l'image</span><output id="pdimout">40 %</output></span><input type="range" id="pdim" min="0" max="90" value="40"></label>
         <div class="field"><span>Ton icône (remplace les emojis)</span><div class="img-row"><button type="button" class="btn ghost small" id="picobtn">Importer une icône</button><button type="button" class="btn ghost small" id="picoclr" hidden>Retirer</button><input type="file" id="picofile" accept="image/*" hidden></div></div>
@@ -153,7 +154,8 @@
         <legend>Fond</legend>
         <div class="tpls" id="btpls"></div>
         <div class="field colors"><label class="color"><input type="color" id="bc1" value="#7c6cf2"><span>Couleur 1</span></label><label class="color"><input type="color" id="bc2" value="#3fc8d8"><span>Couleur 2</span></label><label class="color"><input type="color" id="bc3" value="#f472b6"><span>Couleur 3</span></label></div>
-        <div class="field"><span>Ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="bbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="bbgclr" hidden>Retirer</button><input type="file" id="bbgfile" accept="image/*" hidden></div></div>
+        <div class="field"><span>Fonds des packs Skelvo</span><div id="bpacks"></div></div>
+        <div class="field"><span>Ou ton image de fond</span><div class="img-row"><button type="button" class="btn ghost small" id="bbgbtn">Importer une image</button><button type="button" class="btn ghost small" id="bbgclr" hidden>Retirer</button><input type="file" id="bbgfile" accept="image/*" hidden></div></div>
         <label class="field"><span><span>Assombrir l'image</span><output id="bdimout">45 %</output></span><input type="range" id="bdim" min="0" max="90" value="45"></label>
         <label class="check"><input type="checkbox" id="bgrain" checked><span>Grain</span></label>
         <label class="check"><input type="checkbox" id="bvig" checked><span>Vignettage</span></label>
@@ -184,7 +186,8 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=8"></script>
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
 <script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){
@@ -360,7 +363,15 @@
       r.readAsDataURL(f);
     });
     load(SK.store.get(storeKey));
-    return function(){ return img; };
+    var get = function(){ return img; };
+    get.setUrl = function(url){
+      // fonds des packs : copiés en data URL pour que le canvas reste exportable
+      var i = new Image(); i.crossOrigin = 'anonymous';
+      i.onload = function(){ var c = document.createElement('canvas'); c.width = i.width; c.height = i.height; c.getContext('2d').drawImage(i, 0, 0);
+        var u = c.toDataURL('image/jpeg', .92); SK.store.set(storeKey, u); load(u); };
+      i.src = url;
+    };
+    return get;
   }
 
   /* ================= Panneaux ================= */
@@ -590,6 +601,22 @@
   })();
   $('bform').addEventListener('input', throttled(drawBanner, 140));
   $('bdl').addEventListener('click', function(){ download(bc, ($('btype').value === 'profile' ? 'banniere-profil' : 'banniere-hors-ligne') + '.png'); });
+
+  /* ---------- Fonds des packs dans les panneaux et les bannières ---------- */
+  $('ppacks').appendChild(SK.buildPackGrid(function(pk){
+    pBg.setUrl(SK.packImage(pk.id));
+    $('pc1').value = '#' + pk.c[0]; $('pc2').value = '#' + pk.c[1];
+    $('ptx').value = '#' + pk.t.tx; $('pfont').value = pk.t.font; $('pfw').value = pk.t.fw;
+    $('pdim').value = pk.light ? 0 : 20; $('pblur').value = 0;
+    ptpl = 'image'; document.querySelectorAll('#ptpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === 'image'); });
+  }));
+  $('bpacks').appendChild(SK.buildPackGrid(function(pk){
+    bBg.setUrl(SK.packImage(pk.id));
+    $('bc1').value = '#' + pk.c[0]; $('bc2').value = '#' + pk.c[1]; $('bc3').value = '#' + pk.c[2];
+    $('btx').value = '#' + pk.t.tx; $('bac').value = '#' + pk.t.ac; $('bfont').value = pk.t.font; $('bfw').value = pk.t.fw === '700' ? '700' : '800';
+    $('bup').value = pk.t.up; $('bdim').value = pk.light ? 0 : 25;
+    btpl = 'image'; document.querySelectorAll('#btpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === 'image'); });
+  }));
 
   openTab(SK.store.get('sk-images-tab') || 't-emotes');
 })();

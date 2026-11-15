@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=6">
+<link rel="stylesheet" href="../assets/app.css?v=7">
 <style>
   .sw{ display: grid; place-items: center; font-size: 18px; }
   .sw-mesh{ background: radial-gradient(circle at 15% 15%, #7c6cf2, transparent 60%), radial-gradient(circle at 85% 70%, #3fc8d8aa, transparent 60%), #060609; }
@@ -72,6 +72,8 @@
       </fieldset>
       <fieldset>
         <legend>Fond</legend>
+        <label class="field"><span>Fond d'un pack Skelvo</span><select name="bgpack"><option value="">Aucun (fond animé ci-dessous)</option><option value="lavande">Lavande</option><option value="glace">Glace</option><option value="peche">Pêche</option><option value="menthe">Menthe</option><option value="or">Or</option><option value="argent">Argent</option><option value="nuit">Nuit</option><option value="sakura">Sakura</option><option value="braise">Braise</option><option value="cyber">Cyber</option><option value="toxique">Toxique</option><option value="retro">Rétro</option></select><small>Choisi automatiquement quand tu prends un pack dans l'étape Thème.</small></label>
+        <label class="field"><span><span>Assombrir le fond du pack</span><output for="f-pdim" data-unit=" %"></output></span><input type="range" id="f-pdim" name="pdim" min="0" max="80" value="25"></label>
         <div class="choices">
           <div class="choice"><input type="radio" name="bg" id="bg-mesh" value="mesh" checked><label for="bg-mesh"><span class="sw sw-mesh"></span><span>Brume</span></label></div>
           <div class="choice"><input type="radio" name="bg" id="bg-halo" value="halo"><label for="bg-halo"><span class="sw sw-halo"></span><span>Halo</span></label></div>
@@ -149,7 +151,8 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=8"></script>
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
 <script>
 (function(){
   'use strict';

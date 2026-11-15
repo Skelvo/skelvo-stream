@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=6">
+<link rel="stylesheet" href="../assets/app.css?v=7">
 <style>
   /* Miniatures des styles */
   .sw{ background: var(--bg); position: relative; }
@@ -90,7 +90,8 @@
 
       <fieldset>
         <legend data-i18n="frame.colors">Couleurs</legend>
-        <div class="presets" id="presets" style="margin-bottom:14px"></div>
+        <p class="hint" style="margin-bottom:10px">Les packs vont avec le thème et le fond du même nom dans les autres outils.</p>
+        <div data-pack-picker></div>
         <div class="colors">
           <label class="color"><input type="color" name="c1" value="#a78bfa"><span data-i18n="color.1">Couleur 1</span></label>
           <label class="color"><input type="color" name="c2" value="#67e8f9"><span data-i18n="color.2">Couleur 2</span></label>
@@ -206,7 +207,8 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=8"></script>
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
 <script>
 (function(){
   'use strict';
@@ -235,7 +237,7 @@
   ];
   var lf = document.getElementById('lfont');
   SK.FONTS.forEach(function(f){ var o = document.createElement('option'); o.value = f[0]; o.textContent = f[1]; if (f[0] === 'grotesk') o.selected = true; lf.appendChild(o); });
-  var presetsEl = document.getElementById('presets');
+  var presetsEl = document.getElementById('presets') || document.createElement('div');
   PRESETS.forEach(function(p){
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'preset';

@@ -306,6 +306,38 @@
     return d;
   }
 
+  /* ---------- Packs assortis (assets/packs.js) ---------- */
+  var BG_ROOT = new URL('bg/', (document.currentScript && document.currentScript.src) || location.href);
+  SK.packImage = function(id, mini){ return new URL(id + (mini ? '-mini' : '') + '.webp', BG_ROOT).href; };
+  SK.buildPackGrid = function(onPick){
+    var grid = document.createElement('div'); grid.className = 'packs';
+    (window.SK_PACKS || []).forEach(function(pk){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'pack'; b.dataset.pack = pk.id;
+      b.style.backgroundImage = 'url("' + SK.packImage(pk.id, true) + '")';
+      var dots = document.createElement('span'); dots.className = 'pack-dots';
+      pk.c.forEach(function(c){ var i = document.createElement('i'); i.style.background = '#' + c; dots.appendChild(i); });
+      var l = document.createElement('span'); l.className = 'pack-name'; l.textContent = pk.label;
+      if (pk.light) b.classList.add('light');
+      b.appendChild(dots); b.appendChild(l);
+      b.addEventListener('click', function(){
+        grid.querySelectorAll('.pack').forEach(function(x){ x.classList.toggle('on', x === b); });
+        onPick(pk);
+      });
+      grid.appendChild(b);
+    });
+    return grid;
+  };
+  // Valeurs qu'un pack donne à n'importe quel éditeur (les champs absents sont ignorés)
+  SK.packValues = function(pk){
+    return Object.assign({ cf: '' }, pk.t, { lfont: pk.t.font, c1: pk.c[0], c2: pk.c[1], c3: pk.c[2], bgpack: pk.id, pdim: pk.light ? '0' : '25', bgimg: '', bgvid: '' });
+  };
+  // <div data-pack-picker></div> : sélecteur seul (ex. contour caméra, sans panneau Thème)
+  function buildPackPicker(holder){
+    var wrap = document.createElement('div'); wrap.className = 'field';
+    wrap.appendChild(SK.buildPackGrid(function(pk){ if (SK._themeTarget) SK._themeTarget.set(SK.packValues(pk)); }));
+    holder.replaceWith(wrap);
+  }
+
   SK.buildThemePanel = function(holder){
     var def = SK.THEMES.filter(function(t){ return t.name === (holder.getAttribute('data-theme-panel') || 'minimal'); })[0] || SK.THEMES[0];
     var v = def.v;
@@ -322,6 +354,9 @@
     fs.className = 'theme-panel';
     fs.innerHTML =
       '<legend>Thème</legend>' +
+      '<p class="sub-legend">Packs assortis</p><p class="hint">Tout va ensemble : le thème de tes overlays, les couleurs de ton contour caméra et le fond de tes écrans, sous le même nom.</p>' +
+      '<div class="packs-holder"></div>' +
+      '<p class="sub-legend">Ou un thème seul</p>' +
       '<div class="themes"></div>' +
       '<details class="more"><summary>Tout personnaliser</summary>' +
         '<div class="more-body">' +
@@ -347,6 +382,10 @@
         range('gl', 'Lueur de la couleur d\'accent', 0, 100, v.gl, ' %') +
         '</div>' +
       '</details>';
+    fs.querySelector('.packs-holder').replaceWith(SK.buildPackGrid(function(pk){
+      if (SK._themeTarget) SK._themeTarget.set(SK.packValues(pk));
+      fs.querySelectorAll('.th').forEach(function(x){ x.classList.remove('on'); });
+    }));
     var grid = fs.querySelector('.themes');
     SK.THEMES.forEach(function(t){
       var b = document.createElement('button'); b.type = 'button'; b.className = 'th'; b.dataset.theme = t.name;
@@ -363,6 +402,7 @@
     holder.replaceWith(fs);
   };
   document.querySelectorAll('[data-theme-panel]').forEach(SK.buildThemePanel);
+  document.querySelectorAll('[data-pack-picker]').forEach(buildPackPicker);
 
   /* ======================================================================
      Champs d'image : <input type="text" name="img" data-image="256">
@@ -425,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.6';
+  SK.VERSION = '1.7';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -466,7 +506,10 @@
      La dernière étape contient le lien à copier dans OBS.
      ====================================================================== */
   function stepSummary(fs){
-    if (fs.classList.contains('theme-panel')){ var on = fs.querySelector('.th.on span'); return on ? on.textContent : ''; }
+    if (fs.classList.contains('theme-panel') || fs.querySelector('.packs')){
+      var pk = fs.querySelector('.pack.on .pack-name'); if (pk) return 'Pack ' + pk.textContent;
+      var on = fs.querySelector('.th.on span'); if (on) return on.textContent;
+    }
     var r = fs.querySelector('input[type=radio]:checked');
     if (r){ var l = fs.querySelector('label[for="' + r.id + '"]'); if (l) return (l.querySelector('span:last-child') || l).textContent.trim(); }
     var sel = fs.querySelector('select');
