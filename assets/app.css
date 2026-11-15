@@ -210,3 +210,5 @@ textarea{ resize: vertical; min-height: 64px; }
 .btn-row{ display: flex; flex-wrap: wrap; gap: 8px; }
 .choices:not(:last-child){ margin-bottom: 14px; }
 .setup{ margin-bottom: 14px !important; }
+.cmds li{ flex-wrap: wrap; row-gap: 2px; }
+.cmds code{ white-space: normal; overflow-wrap: anywhere; flex: 0 1 auto; }

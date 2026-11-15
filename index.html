@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=1">
+<link rel="stylesheet" href="assets/app.css?v=2">
 <style>
   .hero{ position: relative; overflow: hidden; padding: 84px 0 70px; }
   .hero::before{
@@ -46,7 +46,10 @@
   .hero-demo .chat{ position: absolute; left: 3%; top: 4%; bottom: 4%; width: 40%; }
 
   .tools{ padding: 30px 0 70px; }
-  .tools h2{ font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 22px; }
+  .group-head{ margin: 34px 0 16px; }
+  .group-head:first-child{ margin-top: 0; }
+  .group-head h2{ font-size: clamp(1.5rem, 2.8vw, 2rem); }
+  .group-head p{ margin: 4px 0 0; color: var(--muted); }
   .grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
   .card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; text-decoration: none; display: flex; flex-direction: column; gap: 10px; transition: transform .2s, border-color .2s; }
   a.card:hover{ transform: translateY(-3px); border-color: var(--accent); }
@@ -74,8 +77,7 @@
   <div class="wrap">
     <a class="brand" href="./"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
     <nav class="topnav">
-      <a href="cadre/" data-i18n="nav.frame">Cadre caméra</a>
-      <a href="tchat/" data-i18n="nav.chat">Tchat</a>
+      <a href="#outils" data-i18n="nav.tools">Les outils</a>
     </nav>
   </div>
 </header>
@@ -86,10 +88,10 @@
       <div>
         <span class="kicker" data-i18n="home.kicker">Pour OBS et Streamlabs</span>
         <h1><span data-i18n="home.h1a">Tout pour ton stream,</span> <em data-i18n="home.h1b">gratuitement.</em></h1>
-        <p class="lead" data-i18n="home.lead">Cadres caméra animés, tchat Twitch à l'écran, et d'autres outils à venir. Tu règles tout en direct, tu copies un lien dans OBS, c'est fini.</p>
+        <p class="lead" data-i18n="home.lead">Cadres caméra, tchat, alertes, pluie d'emotes, compteurs, sondages, subathon, sous-titres… 15 outils que tu règles en direct, puis tu copies un lien dans OBS. C'est fini.</p>
         <div class="cta">
           <a class="btn" href="cadre/" data-i18n="home.cta1">Créer mon cadre caméra</a>
-          <a class="btn ghost" href="tchat/" data-i18n="home.cta2">Afficher mon tchat</a>
+          <a class="btn ghost" href="#outils" data-i18n="home.cta2">Voir les 15 outils</a>
         </div>
         <ul class="perks">
           <li data-i18n="perk.free">100 % gratuit</li>
@@ -109,41 +111,103 @@
     </div>
   </section>
 
-  <section class="tools">
+  <section class="tools" id="outils">
     <div class="wrap">
-      <h2 data-i18n="home.tools">Les outils</h2>
+      <div class="group-head"><h2>Sur ton stream</h2><p>Des overlays à coller dans OBS ou Streamlabs.</p></div>
       <div class="grid">
         <a class="card" href="cadre/">
           <span class="ico">🎥</span>
-          <h3 data-i18n="tool.frame">Cadre caméra animé</h3>
-          <p data-i18n="tool.frame.d">Néon, dégradé tournant, arc-en-ciel, pointillés… Tes couleurs, ton pseudo, ta forme. Masque PNG fourni pour OBS.</p>
-          <span class="go" data-i18n="tool.open">Ouvrir →</span>
+          <h3>Cadre caméra animé</h3>
+          <p>Néon, dégradé tournant, arc-en-ciel, pointillés… Tes couleurs, ton pseudo, ta forme. Masque PNG fourni.</p>
+          <span class="go">Ouvrir →</span>
         </a>
         <a class="card" href="tchat/">
           <span class="ico">💬</span>
-          <h3 data-i18n="tool.chat">Tchat Twitch à l'écran</h3>
-          <p data-i18n="tool.chat.d">4 thèmes, emotes 7TV / BTTV / FFZ, badges, abonnements et raids, bots masqués.</p>
-          <span class="go" data-i18n="tool.open">Ouvrir →</span>
+          <h3>Tchat à l'écran</h3>
+          <p>4 thèmes, emotes 7TV / BTTV / FFZ, badges, abonnements et raids, bots masqués.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="alertes/">
+          <span class="ico">🔔</span>
+          <h3>Alertes</h3>
+          <p>Abonnements, subs offerts, bits et raids, avec sons et confettis. Sans connecter ta chaîne.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="emotes/">
+          <span class="ico">🌧️</span>
+          <h3>Pluie d'emotes</h3>
+          <p>Les emotes du tchat tombent, rebondissent ou explosent sur ton stream. Explosion sur les raids.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="ecrans/">
+          <span class="ico">⏳</span>
+          <h3>Écrans d'attente</h3>
+          <p>« Ça commence bientôt », « Pause », « Fin » : fonds animés, compte à rebours, réseaux, tchat intégré.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="musique/">
+          <span class="ico">🎵</span>
+          <h3>Musique en cours</h3>
+          <p>Titre, artiste et pochette de ce que tu écoutes : Spotify, Deezer, YouTube Music, Apple Music.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="sous-titres/">
+          <span class="ico">🔤</span>
+          <h3>Sous-titres en direct</h3>
+          <p>Ce que tu dis s'affiche en sous-titres, et peut être traduit en direct dans une autre langue.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+      </div>
+      <div class="group-head"><h2>Avec ton tchat</h2><p>Tes viewers et tes modos pilotent ces outils depuis le tchat.</p></div>
+      <div class="grid">
+        <a class="card" href="compteur/">
+          <span class="ico">💀</span>
+          <h3>Compteurs</h3>
+          <p>Morts, victoires, rage-quits… Tes modos tapent !mort+ et le compteur bouge. Mémorisé entre les lives.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="sondage/">
+          <span class="ico">📊</span>
+          <h3>Sondages</h3>
+          <p>Une commande pour lancer, ton tchat vote en tapant 1, 2, 3… Résultats animés en direct.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="minuteur/">
+          <span class="ico">⏱️</span>
+          <h3>Minuteur de subathon</h3>
+          <p>Chaque abonnement, sub offert ou bit ajoute du temps tout seul. Pause et ajouts par les modos.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="objectif/">
+          <span class="ico">🎯</span>
+          <h3>Barres d'objectif</h3>
+          <p>Objectif d'abonnés, de bits ou manuel, qui se remplit tout seul. Confettis quand c'est atteint.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+      </div>
+      <div class="group-head"><h2>Pour toi</h2><p>Des outils pour le streamer, hors de l'écran du live.</p></div>
+      <div class="grid">
+        <a class="card" href="voix/">
+          <span class="ico">🗣️</span>
+          <h3>Lecture vocale du tchat</h3>
+          <p>Un seul écran ? Entends ton tchat pendant que tu joues, avec des filtres pour garder le contrôle.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="images/">
+          <span class="ico">🖼️</span>
+          <h3>Atelier images</h3>
+          <p>Emotes et badges aux bonnes tailles, panneaux de profil, bannière hors ligne. Tout dans ton navigateur.</p>
+          <span class="go">Ouvrir →</span>
         </a>
         <div class="card soon">
-          <span class="tag" data-i18n="soon">Bientôt</span>
-          <h3 data-i18n="tool.screens">Écrans d'attente</h3>
-          <p data-i18n="tool.screens.d">« Ça commence bientôt », « Pause », « Fin du live », avec compte à rebours animé.</p>
+          <span class="tag">Bientôt</span>
+          <h3>Follows et points de chaîne</h3>
+          <p>Alertes de follow et récompenses de points de chaîne, avec une connexion Twitch en un clic.</p>
         </div>
         <div class="card soon">
-          <span class="tag" data-i18n="soon">Bientôt</span>
-          <h3 data-i18n="tool.fx">Effets déclenchés par le tchat</h3>
-          <p data-i18n="tool.fx.d">Tes viewers tapent !confetti ou !pluie, et l'effet apparaît sur ton stream.</p>
-        </div>
-        <div class="card soon">
-          <span class="tag" data-i18n="soon">Bientôt</span>
-          <h3 data-i18n="tool.alerts">Alertes et objectifs</h3>
-          <p data-i18n="tool.alerts.d">Alertes de follow et d'abonnement, barres d'objectif personnalisées.</p>
-        </div>
-        <div class="card soon">
-          <span class="tag" data-i18n="soon">Bientôt</span>
-          <h3 data-i18n="tool.onescreen">Tchat sur un seul écran</h3>
-          <p data-i18n="tool.onescreen.d">Une petite fenêtre transparente toujours visible, pour lire ton tchat pendant que tu joues.</p>
+          <span class="tag">Bientôt</span>
+          <h3>Tchat sur un seul écran</h3>
+          <p>Une petite appli : ton tchat dans une fenêtre transparente, toujours visible pendant que tu joues.</p>
         </div>
       </div>
     </div>
@@ -168,6 +232,6 @@
   </div>
 </footer>
 
-<script src="assets/app.js?v=1"></script>
+<script src="assets/app.js?v=2"></script>
 </body>
 </html>
