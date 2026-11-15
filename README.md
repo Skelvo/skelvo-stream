@@ -72,9 +72,10 @@ créer `assets/lang-en.js` avec `SK.dict.en = { 'clé': 'texte', … }` (clés =
 ou `?lang=en`.
 
 ## Last.fm (musique)
-Le widget a besoin d'une clé API Last.fm. Chaque streamer peut mettre la sienne
-dans l'éditeur ; pour s'en passer, créer une clé (gratuite) et la mettre dans
-`DEFAULT_KEY` en haut de `musique/overlay.html`.
+La clé API Last.fm de Skelvo Stream est dans `DEFAULT_KEY`, en haut de
+`musique/overlay.html` (clé publique de lecture : normal qu'elle soit visible).
+Les streamers n'entrent que leur pseudo Last.fm ; ils peuvent mettre leur propre
+clé dans les réglages avancés si la clé partagée était saturée.
 
 ## Mettre à jour
 À chaque mise en ligne :
