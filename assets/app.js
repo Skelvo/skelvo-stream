@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.3';
+  SK.VERSION = '2.4';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -679,6 +679,11 @@
   // puis une dernière fois quand les étapes ont été construites
   restoreScroll();
   setTimeout(function(){ if (document.documentElement.classList.contains('sk-restoring')) restoreScroll(); }, 0);
+
+  /* Pas de zoom (comme sur Tribune) : iOS ignore parfois user-scalable=no,
+     on bloque donc aussi le pincement à la main. Le double-tap est bloqué en CSS. */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function(e){ if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

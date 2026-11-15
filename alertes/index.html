@@ -5,7 +5,7 @@
 <script>/* Retour au bon endroit : la page reste cachée le temps de se placer (voir assets/app.js) */
 try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(sessionStorage.getItem(k)&&!location.hash&&(!n||n.type==='navigate')){document.documentElement.classList.add('sk-restoring');setTimeout(function(){document.documentElement.classList.remove('sk-restoring')},1500)}}catch(e){}</script>
 <style>.sk-restoring body{visibility:hidden}</style>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Alertes Twitch gratuites (subs, bits, raids) — Skelvo Stream</title>
 <meta name="description" content="Alertes d'abonnement, de subs offerts, de bits et de raids pour ton stream, avec sons et animations. Gratuit, sans compte, pour OBS et Streamlabs." />
 <link rel="canonical" href="https://skelvo.fr/skelvo-stream/alertes/">
@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=10">
+<link rel="stylesheet" href="../assets/app.css?v=11">
 <style>
   .sw{ display: grid; place-items: center; font-size: 16px; }
   .sw-card{ background: #19171f; border-radius: 6px; }
@@ -152,7 +152,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=15"></script>
+<script src="../assets/app.js?v=16"></script>
 <script>
 (function(){
   'use strict';

@@ -350,3 +350,13 @@ details.more summary::-webkit-details-marker{ display: none; }
    la zone système, et le message en bas reste au-dessus de la barre d'accueil */
 .upd{ top: calc(env(safe-area-inset-top, 0px) + 12px); }
 .toast{ bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); }
+
+/* ---------- Ni zoom, ni glissement de gauche à droite ----------
+   - touch-action: manipulation : plus de zoom au double-tap ;
+   - overflow-x: clip (et non hidden, qui casserait les éléments collés) ;
+   - champs en 16 px sur téléphone : sinon l'iPhone zoome quand on tape dedans. */
+html{ touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body{ overflow-x: clip; overscroll-behavior-x: none; max-width: 100%; }
+@media (max-width: 920px){
+  input[type=text], input:not([type]), select, textarea{ font-size: 16px !important; }
+}
