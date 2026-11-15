@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Horloge — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Horloge et durée du live.
+  - Heure (avec ou sans secondes), date.
+  - Durée du live : démarre au premier affichage de la journée (mémorisé
+    dans OBS), ou à une heure précise. Les modos peuvent la remettre à zéro
+    avec !uptime reset.
+  - Compte à rebours jusqu'à une heure.
+-->
+<style>
+  :root{ --fs: 40px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; align-items: center; justify-content: var(--justify, center); padding: 0 .3em; box-sizing: border-box; }
+  .clock{ display: inline-flex; align-items: center; gap: .6em; padding: .25em .7em .3em; line-height: 1; }
+  .row{ display: flex; flex-direction: column; gap: .12em; }
+  .lab{ font-size: .34em; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .sk-accent .lab{ color: inherit; opacity: .8; }
+  .val{ font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .val.accent{ color: var(--ac); text-shadow: var(--glow-text); }
+  .sk-accent .val.accent{ color: inherit; text-shadow: none; }
+  .sep{ width: 1px; align-self: stretch; background: currentColor; opacity: .2; }
+  .dot{ width: .32em; height: .32em; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 0 rgba(239,68,68,.6); animation: live 1.6s infinite; }
+  @keyframes live{ 0%{ box-shadow: 0 0 0 0 rgba(239,68,68,.6); } 100%{ box-shadow: 0 0 0 .35em rgba(239,68,68,0); } }
+  .l-clean .clock.sk-surface{ background: none; border: 0; box-shadow: none; text-shadow: 0 .04em .2em rgba(0,0,0,.7); padding: 0; }
+  .l-stack .clock{ flex-direction: column; gap: .2em; align-items: flex-start; }
+  .l-stack .sep{ display: none; }
+</style>
+</head>
+<body>
+<div class="clock sk-surface" id="clock"></div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', show_time: '1', show_date: '0', show_up: '1', show_cd: '0', secs: '0', h12: '0',
+    start: '', at: '', lt: 'Heure', lu: 'En live depuis', lc: 'Début dans', ld: 'Aujourd\'hui', layout: 'row', labels: '1', dot: '1', align: 'center', fs: '40', demo: '0'
+  });
+  var num = SKO.num, el = SKO.el;
+  var box = document.getElementById('clock');
+  var P = {}, key = '', startTs = 0, source = null, sourceKey = '', parts = {};
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function today(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function computeStart(){
+    if (/^\d{1,2}[:h]\d{2}$/.test(P.start || '')){
+      var hm = P.start.split(/[:h]/), d = new Date(); d.setHours(+hm[0], +hm[1], 0, 0);
+      if (d.getTime() > Date.now()) d.setDate(d.getDate() - 1);
+      return d.getTime();
+    }
+    // sinon : premier affichage de la journée (mémorisé dans OBS)
+    var s = SKO.store.get(key);
+    if (!s || s.day !== today() || P.demo === '1'){ s = { day: today(), ts: P.demo === '1' ? Date.now() - (2 * 3600 + 14 * 60) * 1000 : Date.now() }; if (P.demo !== '1') SKO.store.set(key, s); }
+    return s.ts;
+  }
+  function build(){
+    box.textContent = ''; parts = {};
+    var items = [];
+    if (P.show_up === '1') items.push(['up', P.lu, true]);
+    if (P.show_cd === '1') items.push(['cd', P.lc, true]);
+    if (P.show_time === '1') items.push(['time', P.lt, false]);
+    if (P.show_date === '1') items.push(['date', P.ld, false]);
+    items.forEach(function(it, i){
+      if (i) box.appendChild(el('span', 'sep'));
+      if (it[0] === 'up' && P.dot === '1') box.appendChild(el('span', 'dot'));
+      var r = el('div', 'row');
+      if (P.labels === '1' && it[1]) r.appendChild(el('span', 'lab', it[1]));
+      var v = el('span', 'val' + (it[2] ? ' accent' : '')); r.appendChild(v);
+      box.appendChild(r); parts[it[0]] = v;
+    });
+    tick();
+  }
+  function tick(){
+    var now = new Date();
+    if (parts.time){
+      var h = now.getHours(), suf = '';
+      if (P.h12 === '1'){ suf = h < 12 ? ' AM' : ' PM'; h = h % 12 || 12; }
+      parts.time.textContent = (P.h12 === '1' ? h : pad(h)) + ':' + pad(now.getMinutes()) + (P.secs === '1' ? ':' + pad(now.getSeconds()) : '') + suf;
+    }
+    if (parts.date) parts.date.textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (parts.up) parts.up.textContent = SKO.clock((Date.now() - startTs) / 1000, true);
+    if (parts.cd){
+      var t = 0;
+      if (/^\d{1,2}[:h]\d{2}$/.test(P.at || '')){ var hm = P.at.split(/[:h]/), d = new Date(); d.setHours(+hm[0], +hm[1], 0, 0); if (d < now) d.setDate(d.getDate() + 1); t = (d - now) / 1000; }
+      parts.cd.textContent = SKO.clock(t, t >= 3600);
+    }
+  }
+  setInterval(tick, 500);
+
+  function onMessage(m){
+    if (m.cmd && m.isMod && m.cmd.name === 'uptime' && (m.cmd.args[0] || '').toLowerCase() === 'reset'){
+      SKO.store.set(key, { day: today(), ts: Date.now() }); startTs = Date.now(); tick();
+    }
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    var root = document.documentElement.style;
+    root.setProperty('--fs', num(P.fs, 12, 140, 40) + 'px');
+    root.setProperty('--justify', P.align === 'left' ? 'flex-start' : P.align === 'right' ? 'flex-end' : 'center');
+    document.body.className = 'l-' + (/^(row|stack|clean)$/.test(P.layout) ? P.layout : 'row');
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    key = 'sk-uptime:' + sk;
+    startTs = computeStart();
+    build();
+    // Le tchat ne sert qu'à « !uptime reset » : connexion seulement si une chaîne est donnée
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      source = sk && sk !== 'demo' ? SKT.connect(sk, { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage }) : null;
+      if (sk === 'demo') SKO.tellParent('demo');
+    }
+  });
+})();
+</script>
+</body>
+</html>

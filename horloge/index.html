@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Horloge et durée du live pour stream, gratuites — Skelvo Stream</title>
+<meta name="description" content="Affiche l'heure, la date, la durée de ton live ou un compte à rebours sur ton stream. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/horloge/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=7">
+<style>
+  .sw{ display: grid; place-items: center; font: 800 12px 'Inter', sans-serif; color: #fff; background: #19171f; border-radius: 6px; }
+  .sw-clean{ background: transparent; text-shadow: 0 0 2px #000; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="horloge.title">Horloge et durée du live</h1>
+    <p data-i18n="horloge.lead">L'heure, la date, depuis combien de temps tu es en live, ou un compte à rebours. Tu combines ce que tu veux, dans le style de ton pack.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ce qui est affiché</legend>
+        <label class="check"><input type="checkbox" name="show_up" checked><span>Durée du live (« En live depuis »)</span></label>
+        <label class="check"><input type="checkbox" name="show_time" checked><span>Heure</span></label>
+        <label class="check"><input type="checkbox" name="show_date"><span>Date</span></label>
+        <label class="check"><input type="checkbox" name="show_cd"><span>Compte à rebours jusqu'à une heure</span></label>
+        <label class="check"><input type="checkbox" name="secs"><span>Secondes dans l'heure</span></label>
+        <label class="check"><input type="checkbox" name="h12"><span>Format 12 h (AM / PM)</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Durée du live</legend>
+        <label class="field"><span>Heure de début du live</span><input type="text" name="start" value="" placeholder="Vide = au premier affichage de la journée" maxlength="5" ><small>Ex. 20:00. Sinon le compteur démarre la première fois que la source s'affiche dans la journée.</small></label>
+        <label class="field"><span>Heure visée par le compte à rebours</span><input type="text" name="at" value="" placeholder="ex. 21:30" maxlength="5" ></label>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+        <p class="hint">Avec ta chaîne, tes modos peuvent remettre la durée à zéro avec <code>!uptime reset</code>.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Textes</legend>
+        <label class="field"><span>Durée du live</span><input type="text" name="lu" value="En live depuis" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Heure</span><input type="text" name="lt" value="Heure" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Date</span><input type="text" name="ld" value="Aujourd'hui" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Compte à rebours</span><input type="text" name="lc" value="Début dans" placeholder="" maxlength="30" ></label>
+        <label class="check"><input type="checkbox" name="labels" checked><span>Afficher ces petits textes</span></label>
+        <label class="check"><input type="checkbox" name="dot" checked><span>Point rouge « en direct »</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Mise en page</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="layout" id="layout-row" value="row" checked><label for="layout-row"><span class="sw sw-row">2:14 · 20:31</span><span>En ligne</span></label></div>
+          <div class="choice"><input type="radio" name="layout" id="layout-stack" value="stack"><label for="layout-stack"><span class="sw sw-stack">2:14<br>20:31</span><span>Empilé</span></label></div>
+          <div class="choice"><input type="radio" name="layout" id="layout-clean" value="clean"><label for="layout-clean"><span class="sw sw-clean">2:14</span><span>Sans fond</span></label></div>
+        </div>
+        <label class="field"><span>Alignement</span><select name="align"><option value="center">Centré</option><option value="left">À gauche</option><option value="right">À droite</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="16" max="120" value="40"></label>
+      </fieldset>
+      <div data-theme-panel="minimal"></div>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">700 × 140</b>.</span></li>
+
+        </ol>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-horloge-size', def: { w: 700, h: 140 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-horloge',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){  }
+  });
+
+})();
+</script>
+</body>
+</html>
