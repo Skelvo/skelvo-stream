@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>/* Retour au bon endroit : la page reste cachée le temps de se placer (voir assets/app.js) */
+try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(sessionStorage.getItem(k)&&!location.hash&&(!n||n.type==='navigate')){document.documentElement.classList.add('sk-restoring');setTimeout(function(){document.documentElement.classList.remove('sk-restoring')},1500)}}catch(e){}</script>
+<style>.sk-restoring body{visibility:hidden}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Bingo du stream pour Twitch, gratuit — Skelvo Stream</title>
+<meta name="description" content="Un bingo du stream à l'écran : tes modos cochent les cases depuis le tchat, confettis à chaque ligne complète. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/bingo/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=11">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff; background: #19171f; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="bingo.title">Bingo du stream</h1>
+    <p data-i18n="bingo.lead">Une grille de situations qui arrivent pendant tes lives. Tes modos cochent les cases depuis le tchat, et chaque ligne complète déclenche un BINGO avec des confettis.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Ta grille</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="size" id="size-4" value="4" checked><label for="size-4"><span class="sw sw-">4×4</span><span>16 cases</span></label></div>
+          <div class="choice"><input type="radio" name="size" id="size-3" value="3"><label for="size-3"><span class="sw sw-">3×3</span><span>9 cases</span></label></div>
+          <div class="choice"><input type="radio" name="size" id="size-5" value="5"><label for="size-5"><span class="sw sw-">5×5</span><span>25 cases</span></label></div>
+        </div>
+        <label class="field"><span>Les cases, une par ligne</span><textarea name="cells" rows="10" spellcheck="false">Il meurt au premier boss
+Rage-quit
+« Je l'avais dit »
+Problème de micro
+Le chat passe devant la cam
+Bug du jeu
+« Une dernière et j'arrête »
+Raid surprise
+Il oublie de lancer la musique
+Gros mot
+Spoiler du tchat
+Il chante
+Victoire écrasante
+Il se perd
+Coupure internet
+Il dit « gg »
+Abonnement offert
+Il boit son café
+Musique trop forte
+Il lit mal un pseudo
+Fou rire
+Il fait un saut raté
+« C'est la faute du jeu »
+Le tchat a raison
+Il remercie un raid</textarea><small>Les premières lignes remplissent la grille. Si tu en mets moins que de cases, les cases restantes sont numérotées.</small></label>
+        <label class="field"><span>Titre</span><input type="text" name="title" value="Bingo du stream" placeholder="" maxlength="40" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Commandes</legend>
+        <label class="field"><span>Commande</span><input type="text" name="cmd" value="bingo" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Qui peut cocher ?</span><select name="who"><option value="mods">Toi et tes modos</option><option value="broadcaster">Toi seulement</option></select></label>
+        <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="10" max="36" value="18"></label>
+      </fieldset>
+      <div data-theme-panel="minimal"></div>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">640 × 640</b>.</span></li>
+          <li><span>Coche une case avec <code>!bingo 5</code> (retape-la pour la décocher), plusieurs d'un coup avec <code>!bingo 3 7 12</code>, et vide la grille avec <code>!bingo reset</code>. Les cases cochées sont mémorisées.</span></li>
+        </ol>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=17"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-bingo-size', def: { w: 640, h: 640 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-bingo',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){  }
+  });
+
+})();
+</script>
+</body>
+</html>

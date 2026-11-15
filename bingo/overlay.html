@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Bingo du stream — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Bingo du stream : une grille de situations (« il meurt au boss »…) que
+  le streamer et les modos cochent depuis le tchat :
+    !bingo 5        coche (ou décoche) la case 5
+    !bingo reset    vide la grille
+  Une ligne, une colonne ou une diagonale complète = BINGO ! et confettis.
+  Grille mémorisée dans OBS.
+-->
+<style>
+  :root{ --fs: 18px; --n: 4; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; align-items: center; justify-content: center; padding: .5em; box-sizing: border-box; }
+  .wrapb{ position: relative; width: 100%; height: 100%; max-width: 100%; display: flex; flex-direction: column; padding: .7em; box-sizing: border-box; }
+  .head{ display: flex; align-items: baseline; justify-content: space-between; margin-bottom: .5em; }
+  .title{ font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); font-size: 1.2em; }
+  .score{ font-size: .75em; color: var(--muted); font-weight: 700; }
+  .grid{ flex: 1; display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-auto-rows: 1fr; gap: .35em; min-height: 0; }
+  .cell{ position: relative; border-radius: calc(var(--rad) * .6); background: rgba(127,127,127,.16); display: flex; align-items: center; justify-content: center; text-align: center; padding: .35em; font-size: .78em; font-weight: 600; line-height: 1.15; overflow: hidden; transition: background .3s, transform .3s; }
+  .cell .num{ position: absolute; left: .35em; top: .25em; font-size: .7em; font-weight: 800; opacity: .55; }
+  .cell.on{ background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); animation: tick .5s cubic-bezier(.2,1.6,.4,1); }
+  .cell.on::after{ content: "✓"; position: absolute; right: .3em; bottom: .1em; font-size: 1.1em; font-weight: 900; opacity: .8; }
+  .cell.win{ box-shadow: 0 0 0 .14em #f5c451, 0 0 .8em #f5c451; }
+  @keyframes tick{ 40%{ transform: scale(1.12); } }
+  .banner{ position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+  .banner b{ font-size: 3.4em; font-weight: 900; letter-spacing: .04em; color: #f5c451; text-shadow: 0 .05em .3em rgba(0,0,0,.6), 0 0 .5em rgba(245,196,81,.6); animation: bingo 2.6s cubic-bezier(.2,1.5,.4,1) forwards; }
+  @keyframes bingo{ 0%{ opacity: 0; transform: scale(.3) rotate(-10deg); } 15%{ opacity: 1; transform: scale(1.1) rotate(3deg); } 80%{ opacity: 1; transform: scale(1); } 100%{ opacity: 0; transform: scale(1.2); } }
+  .confetti{ position: absolute; left: 50%; top: 50%; width: .4em; height: .6em; border-radius: .06em; animation: conf 2.2s cubic-bezier(.15,.7,.4,1) forwards; pointer-events: none; }
+  @keyframes conf{ from{ transform: translate(-50%,-50%) rotate(0); opacity: 1; } to{ transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="wrapb sk-surface" id="wrap">
+  <div class="head"><span class="title" id="title"></span><span class="score" id="score"></span></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=4"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULT_CELLS = ['Il meurt au premier boss', 'Rage-quit', '« Je l\'avais dit »', 'Problème de micro', 'Le chat passe devant la cam', 'Bug du jeu', '« Une dernière et j\'arrête »', 'Raid surprise',
+    'Il oublie de lancer la musique', 'Gros mot', 'Spoiler du tchat', 'Il chante', 'Victoire écrasante', 'Il se perd', 'Coupure internet', 'Il dit « gg »', 'Abonnement offert', 'Il boit son café', 'Musique trop forte', 'Il lit mal un pseudo',
+    'Fou rire', 'Il fait un saut raté', '« C\'est la faute du jeu »', 'Le tchat a raison', 'Il remercie un raid'];
+  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', size: '4', cells: DEFAULT_CELLS.join('|'), title: 'Bingo du stream', cmd: 'bingo', who: 'mods', fs: '18', demo: '0' });
+  var num = SKO.num, el = SKO.el;
+  var gridEl = document.getElementById('grid'), wrap = document.getElementById('wrap');
+  var P = {}, state = null, key = '', source = null, sourceKey = '', N = 4;
+
+  function cells(){ var c = String(P.cells || '').split(/\n|\|/).map(function(x){ return x.trim(); }).filter(Boolean); while (c.length < N * N) c.push('Case ' + (c.length + 1)); return c.slice(0, N * N); }
+  function lines(){
+    var L = [], i, j;
+    for (i = 0; i < N; i++){ var r = [], c = []; for (j = 0; j < N; j++){ r.push(i * N + j); c.push(j * N + i); } L.push(r, c); }
+    var d1 = [], d2 = []; for (i = 0; i < N; i++){ d1.push(i * N + i); d2.push(i * N + N - 1 - i); } L.push(d1, d2);
+    return L;
+  }
+  function complete(){ return lines().filter(function(l){ return l.every(function(k){ return state.on[k]; }); }); }
+  function render(){
+    var c = cells(); gridEl.textContent = '';
+    var wins = complete(), winSet = {}; wins.forEach(function(l){ l.forEach(function(k){ winSet[k] = 1; }); });
+    c.forEach(function(t, k){
+      var d = el('div', 'cell' + (state.on[k] ? ' on' : '') + (winSet[k] ? ' win' : ''));
+      d.appendChild(el('span', 'num', String(k + 1))); d.appendChild(document.createTextNode(t));
+      gridEl.appendChild(d);
+    });
+    document.getElementById('title').textContent = P.title || '';
+    var count = Object.keys(state.on).filter(function(k){ return state.on[k]; }).length;
+    document.getElementById('score').textContent = count + ' / ' + (N * N) + (wins.length ? ' · ' + wins.length + ' bingo' + (wins.length > 1 ? 's' : '') : '');
+  }
+  function toggle(k){
+    if (k < 0 || k >= N * N) return;
+    var before = complete().length;
+    state.on[k] = !state.on[k]; SKO.store.set(key, state); render();
+    var cellEl = gridEl.children[k]; if (cellEl && state.on[k]){ cellEl.classList.remove('on'); void cellEl.offsetWidth; cellEl.classList.add('on'); }
+    if (complete().length > before) celebrate();
+  }
+  function celebrate(){
+    var b = el('div', 'banner'); b.appendChild(el('b', '', 'BINGO !')); wrap.appendChild(b); setTimeout(function(){ b.remove(); }, 2700);
+    var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--ac'), cs.getPropertyValue('--ac2'), '#f5c451', '#fff'];
+    for (var i = 0; i < 80; i++){
+      var c = el('i', 'confetti'); c.style.background = cols[i % cols.length];
+      var a = Math.random() * Math.PI * 2, d = 5 + Math.random() * 12;
+      c.style.setProperty('--dx', Math.cos(a) * d + 'em'); c.style.setProperty('--dy', Math.sin(a) * d - 2 + 'em'); c.style.setProperty('--r', (Math.random() * 900 - 450) + 'deg');
+      wrap.appendChild(c); setTimeout(c.remove.bind(c), 2300);
+    }
+  }
+  function onMessage(m){
+    if (!m.cmd || m.cmd.name !== String(P.cmd || 'bingo').toLowerCase().replace(/^!/, '')) return;
+    if (P.who === 'broadcaster' ? !m.isBroadcaster : !m.isMod) return;
+    var a = (m.cmd.args[0] || '').toLowerCase();
+    if (a === 'reset' || a === 'vide'){ state = { on: {} }; SKO.store.set(key, state); render(); return; }
+    m.cmd.args.forEach(function(x){ var k = parseInt(x, 10); if (!isNaN(k)) toggle(k - 1); });
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    var prevSig = P.size + '|' + P.cells;
+    P = p; N = num(P.size, 3, 5, 4);
+    SKO.theme(P);
+    var r = document.documentElement.style; r.setProperty('--fs', num(P.fs, 10, 48, 18) + 'px'); r.setProperty('--n', N);
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var k = 'sk-bingo:' + sk + ':' + N;
+    if (k !== key){ key = k; state = P.demo === '1' ? { on: {} } : (SKO.store.get(key) || { on: {} }); }
+    // grille modifiée dans l'éditeur : on repart d'une grille vide
+    if (prevSig !== 'undefined|undefined' && prevSig !== P.size + '|' + P.cells && P.demo !== '1'){ state = { on: {} }; SKO.store.set(key, state); }
+    render();
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      if (sk === 'demo'){
+        var order = [5, 6, 7, 1, 11, 16, 8, 3], i = 0, mod = SKT.DEMO_USERS[2];
+        source = SKT.demo(h, { min: 1300, spread: 0, extra: function(){
+          if (i >= order.length + 4){ i = 0; return SKT.fakeMessage(mod, '!' + (P.cmd || 'bingo') + ' reset'); }
+          var x = order[i++]; return x ? SKT.fakeMessage(mod, '!' + (P.cmd || 'bingo') + ' ' + Math.min(x, N * N)) : { type: 'none' };
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>
