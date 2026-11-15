@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=13">
+<link rel="stylesheet" href="../assets/app.css?v=14">
 <!--
   Kit complet : un pack + une chaîne + une liste d'outils
   -> tous les liens des overlays, assortis,
@@ -119,7 +119,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=21"></script>
+<script src="../assets/app.js?v=22"></script>
 <script>
 (function(){
   'use strict';
@@ -185,8 +185,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     else p.ch = cleanCh();
     if (t.extra) Object.assign(p, t.extra);
     if (t.id === 'alertes' || t.id === 'derniers' || t.id === 'sons'){
-      var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
-      if (tw && tw.token) p.tk = tw.token; if (se) p.se = se;
+      var tw = SK.store.get('sk-twitch');
+      if (tw && tw.token) p.tk = tw.token;
     }
     return p;
   }

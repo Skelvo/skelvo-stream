@@ -125,7 +125,7 @@
       Object.keys(p).forEach(function(k){ u.searchParams.set(k, p[k]); });
       // Outils qui profitent des connexions (page connexion/) : on ajoute les jetons au lien OBS
       if (opts.auth){
-        var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+        var tw = SK.store.get('sk-twitch'), se = SK.seKey();
         if (tw && tw.token) u.searchParams.set('tk', tw.token);
         if (se) u.searchParams.set('se', se);
       }
@@ -473,7 +473,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.8';
+  SK.VERSION = '2.9';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -519,18 +519,39 @@
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkUpdate(); });
   setInterval(checkUpdate, 5 * 60 * 1000);
 
+  /* Clé StreamElements : jamais enregistrée. Elle vit seulement dans cette page
+     (le temps de copier le lien OBS) puis dans le lien collé dans OBS.
+     Les anciennes versions la gardaient dans le navigateur : on l'efface. */
+  SK.store.del('sk-se-jwt');
+  var seMem = '';
+  SK.seKey = function(){ return seMem; };
+
   /* Encart d'état des connexions : <div data-auth-box></div> */
   SK.authBox = function(holder){
-    var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+    var tw = SK.store.get('sk-twitch');
+    var wrap = document.createElement('div'); wrap.className = 'auth-wrap';
     var d = document.createElement('div'); d.className = 'tip auth-box';
-    var on = [];
-    if (tw && tw.token) on.push('Twitch (' + tw.login + ')');
-    if (se) on.push('StreamElements');
-    d.innerHTML = on.length
-      ? '✅ Connecté : <b></b>. Les follows, les points de chaîne' + (se ? ' et les dons' : '') + ' sont inclus dans ce lien. <a href="../connexion/">Gérer</a>'
-      : '🔌 Les follows, toutes les récompenses de points de chaîne et les dons StreamElements demandent une connexion. <a href="../connexion/">Connecter ma chaîne</a>';
-    if (on.length) d.querySelector('b').textContent = on.join(' et ');
-    holder.replaceWith(d);
+    d.innerHTML = tw && tw.token
+      ? '✅ Twitch connecté : <b></b>. Les follows et tous les points de chaîne sont inclus. <a href="../connexion/">Gérer</a>'
+      : '🔌 Les follows et toutes les récompenses de points de chaîne demandent de <a href="../connexion/">connecter ta chaîne Twitch</a>.';
+    if (tw && tw.token) d.querySelector('b').textContent = tw.login;
+    wrap.appendChild(d);
+    // Dons StreamElements : la clé se colle ici, elle n'est pas enregistrée
+    var f = document.createElement('label'); f.className = 'field se-field';
+    f.innerHTML = '<span>Dons StreamElements (facultatif, bêta)</span>'
+      + '<input type="password" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Colle ta clé JWT StreamElements">'
+      + '<small>🔒 Jamais enregistrée : elle est seulement ajoutée à ton lien OBS. Pour recopier un lien plus tard, recolle-la. <a href="../connexion/#se">Où la trouver ?</a></small>';
+    var inp = f.querySelector('input');
+    inp.addEventListener('input', function(e){
+      e.stopPropagation();
+      var v = inp.value.trim();
+      seMem = /^[\w-]+\.[\w-]+\.[\w-]+$/.test(v) ? v : '';
+      inp.classList.toggle('bad', !!v && !seMem);
+      if (SK._themeTarget) SK._themeTarget.update();
+    });
+    inp.addEventListener('change', function(e){ e.stopPropagation(); });
+    wrap.appendChild(f);
+    holder.replaceWith(wrap);
   };
   document.querySelectorAll('[data-auth-box]').forEach(SK.authBox);
 
