@@ -42,15 +42,15 @@
 <div class="list" id="list"></div>
 
 <script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=4"></script>
+<script src="../assets/twitch.js?v=5"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', i_sub: '1', i_gift: '1', i_raid: '1', i_bits: '1', i_topbits: '1', i_topgift: '1', i_topchat: '1', layout: 'rotate', every: '6', icons: '1', align: 'left', fs: '24', empty: '—', demo: '0'
+    ch: '', i_sub: '1', i_gift: '1', i_raid: '1', i_bits: '1', i_topbits: '1', i_topgift: '1', i_topchat: '1', i_follow: '0', i_tip: '0', tk: '', se: '', layout: 'rotate', every: '6', icons: '1', align: 'left', fs: '24', empty: '—', demo: '0'
   });
-  var LABELS = { sub: 'Dernier abonné', gift: 'Dernier sub offert', raid: 'Dernier raid', bits: 'Derniers bits', topbits: 'Top bits du jour', topgift: 'Top donneur du jour', topchat: 'Top tchatteur du jour' };
-  var ICONS = { sub: '⭐', gift: '🎁', raid: '🚀', bits: '💎', topbits: '👑', topgift: '🏆', topchat: '💬' };
+  var LABELS = { sub: 'Dernier abonné', gift: 'Dernier sub offert', raid: 'Dernier raid', bits: 'Derniers bits', topbits: 'Top bits du jour', topgift: 'Top donneur du jour', topchat: 'Top tchatteur du jour', follow: 'Dernier follow', tip: 'Dernier don' };
+  var ICONS = { sub: '⭐', gift: '🎁', raid: '🚀', bits: '💎', topbits: '👑', topgift: '🏆', topchat: '💬', follow: '💜', tip: '💸' };
   var num = SKO.num, el = SKO.el;
   var list = document.getElementById('list');
   var P = {}, D = null, key = '', source = null, sourceKey = '', rot = 0, rotTimer = null;
@@ -72,6 +72,8 @@
     var v = D[k]; if (!v) return null;
     if (k === 'gift' || k === 'topgift') return { n: v.n, x: v.c > 1 ? '×' + v.c : '' };
     if (k === 'raid') return { n: v.n, x: v.c + ' viewers' };
+    if (k === 'tip') return { n: v.n, x: v.c };
+    if (k === 'follow') return { n: v.n, x: '' };
     if (k === 'bits' || k === 'topbits') return { n: v.n, x: v.c + ' bits' };
     if (k === 'sub') return { n: v.n, x: v.m > 1 ? v.m + ' mois' : '' };
     return { n: v.n, x: '' };
@@ -138,12 +140,14 @@
     var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
     var k = 'sk-last:' + sk;
     if (k !== key){ key = k; load();
-      if (sk === 'demo' && !D.sub){ D.sub = { n: 'Lunaa_', m: 6 }; D.gift = { n: 'Mamie_Gameuse', c: 5 }; D.raid = { n: 'Choupette', c: 42 }; D.bits = { n: 'KevGaming', c: 500 }; D.topbits = { n: 'KevGaming', c: 1200 }; D.topgift = { n: 'Mamie_Gameuse', c: 10 }; }
+      if (sk === 'demo' && !D.sub){ D.sub = { n: 'Lunaa_', m: 6 }; D.gift = { n: 'Mamie_Gameuse', c: 5 }; D.raid = { n: 'Choupette', c: 42 }; D.bits = { n: 'KevGaming', c: 500 }; D.topbits = { n: 'KevGaming', c: 1200 }; D.topgift = { n: 'Mamie_Gameuse', c: 10 }; D.follow = { n: 'Zoé_42' }; D.tip = { n: 'BaguetteMan', c: '5 €' }; }
     }
     render();
     if (sk !== sourceKey){
       sourceKey = sk;
       if (source) source.close();
+      (window.__extra || []).forEach(function(x){ if (x) x.close(); }); window.__extra = [];
+      if (sk !== 'demo'){ if (P.tk) window.__extra.push(SKT.eventsub(P.tk, { event: onEvent })); if (P.se) window.__extra.push(SKT.streamelements(P.se, { event: onEvent })); }
       var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage, event: onEvent };
       source = sk === 'demo' ? SKT.demo(h, { events: true, min: 1200, spread: 800 }) : SKT.connect(sk, h);
     }

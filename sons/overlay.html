@@ -33,14 +33,14 @@
 <body></body>
 
 <script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=4"></script>
+<script src="../assets/twitch.js?v=5"></script>
 <script src="../assets/sounds.js?v=1"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', who: 'all', cool: '5', ucool: '30', vol: '70', minbits: '0', rewards: '1', pop: '1', hpos: 'left', fs: '22', demo: '0',
-    u1: '', u1c: '', u2: '', u2c: '', u3: '', u3c: '', u4: '', u4c: ''
+    tk: '', u1: '', u1c: '', u2: '', u2c: '', u3: '', u3c: '', u4: '', u4c: ''
   });
   SKS.list.forEach(function(s){ DEFAULTS['s_' + s.id] = s.cmd; });
   var num = SKO.num, el = SKO.el;
@@ -82,6 +82,7 @@
   function onMessage(m){
     var t = table();
     // récompense de points de chaîne : le message est le nom du son
+    if (m.rewardId && P.tk) return;
     if (m.rewardId && P.rewards === '1'){
       var r = t[String(m.text || '').toLowerCase().replace(/^!/, '').trim().split(/\s+/)[0]];
       if (r) trigger(r, m.name, m.isMod, true);
@@ -106,6 +107,16 @@
       sourceKey = sk;
       if (source) source.close();
       var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      (window.__extra || []).forEach(function(x){ if (x) x.close(); }); window.__extra = [];
+      // connexion Twitch : une récompense de points dont le titre est le nom d'un son (ou sa commande) le joue
+      if (sk !== 'demo' && P.tk) window.__extra.push(SKT.eventsub(P.tk, { event: function(e){
+        if (e.type !== 'reward' || P.rewards !== '1') return;
+        var norm = function(x){ return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^!/, '').trim(); };
+        var t = table(), title = norm(e.reward), found = null;
+        Object.keys(t).forEach(function(c){ if (!found && (norm(c) === title || norm(t[c].label) === title || title.indexOf(norm(t[c].label)) >= 0)) found = t[c]; });
+        if (!found && e.text) found = t[norm(e.text).split(/\s+/)[0]];
+        if (found) trigger(found, e.name, false, true);
+      } }));
       if (sk === 'demo'){
         // démo silencieuse : on montre juste les bulles (les sons se testent avec ▶ dans l'éditeur)
         var keys = Object.keys(table()), i = 0;

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Connexions Twitch et StreamElements — Skelvo Stream</title>
+<meta name="description" content="Relie ta chaîne Twitch et StreamElements à Skelvo Stream pour les alertes de follow, les points de chaîne et les dons." />
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=12">
+<!--
+  Connexions (sans serveur) :
+  - Twitch : flux OAuth « implicite ». Twitch renvoie un jeton dans l'adresse
+    (#access_token=…) ; il est gardé dans ce navigateur et ajouté aux liens OBS
+    des outils qui en ont besoin (alertes, derniers, sons). Les overlays
+    s'abonnent ensuite eux-mêmes aux événements (EventSub WebSocket).
+  - StreamElements : le streamer colle son jeton JWT, utilisé de la même façon.
+-->
+<style>
+  .conn{ display: grid; gap: 18px; max-width: 760px; padding-bottom: 60px; }
+  .box{ padding: 22px 24px; }
+  .box h2{ font-size: 1.25rem; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .box p{ color: #d9d3f0; margin: 6px 0; }
+  .state{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 14px 0 6px; padding: 12px 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+  .dot{ width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.ok{ background: #1fae7a; box-shadow: 0 0 0 4px rgba(31,174,122,.18); }
+  .dot.bad{ background: #ffb02e; }
+  .state .grow{ flex: 1; min-width: 180px; }
+  .state small{ display: block; color: var(--muted); }
+  .twitch-btn{ background: #9146ff; }
+  .unlocks{ margin: 10px 0 0; padding-left: 20px; color: #d9d3f0; display: grid; gap: 4px; }
+  .warn{ font-size: .9rem; color: #ffd59a; background: rgba(255,176,46,.08); border: 1px solid rgba(255,176,46,.3); border-radius: 12px; padding: 10px 12px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small>outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Connexions</h1>
+    <p>Relie ta chaîne pour débloquer les follows, toutes les récompenses de points de chaîne et les dons. Ça reste dans ton navigateur : aucun serveur ne voit tes accès.</p>
+  </div>
+
+  <div class="conn">
+    <section class="panel box">
+      <h2>🟣 Twitch</h2>
+      <p>Débloque :</p>
+      <ul class="unlocks">
+        <li><b>Alertes de follow</b> (alertes, voix, derniers et tops)</li>
+        <li><b>Toutes les récompenses de points de chaîne</b>, même sans message (alertes, voix, sons du tchat)</li>
+      </ul>
+      <div class="state" id="tw-state"><span class="dot" id="tw-dot"></span><div class="grow"><b id="tw-title">Non connecté</b><small id="tw-sub">Le tchat, les abonnements, les bits et les raids marchent déjà sans connexion.</small></div>
+        <button type="button" class="btn twitch-btn" id="tw-login">Se connecter avec Twitch</button>
+        <button type="button" class="btn ghost small" id="tw-logout" hidden>Se déconnecter</button></div>
+      <div class="warn">Une fois connecté, <b>recopie les liens</b> de tes alertes, derniers et sons dans OBS : ils contiennent maintenant ta connexion. Ne montre jamais ces liens en live. Twitch fait expirer la connexion au bout de quelques semaines : reviens ici pour te reconnecter.</div>
+    </section>
+
+    <section class="panel box">
+      <h2>💸 Dons StreamElements <small style="font-size:.7rem;color:var(--muted);font-weight:600">BÊTA</small></h2>
+      <p>Pour afficher et lire à voix haute les dons faits sur ta page de dons StreamElements.</p>
+      <ol class="unlocks">
+        <li>Sur <b>streamelements.com</b>, ouvre ton tableau de bord, puis ta photo → <b>Account</b> (Compte) → <b>Channels</b>.</li>
+        <li>Clique sur <b>Show secrets</b> et copie le <b>JWT Token</b>.</li>
+        <li>Colle-le ici :</li>
+      </ol>
+      <div class="url-row" style="margin-top:10px"><input type="text" id="se-jwt" placeholder="eyJhbGciOi…" spellcheck="false" autocapitalize="off" aria-label="Jeton StreamElements"><button type="button" class="btn" id="se-save">Enregistrer</button></div>
+      <div class="state" id="se-state"><span class="dot" id="se-dot"></span><div class="grow"><b id="se-title">Non relié</b><small id="se-sub"></small></div><button type="button" class="btn ghost small" id="se-clear" hidden>Retirer</button></div>
+      <div class="warn">Ce jeton donne accès à ton compte StreamElements : ne le partage jamais et ne montre pas tes liens OBS en live.</div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=19"></script>
+<script src="../assets/twitch.js?v=5"></script>
+<script>
+(function(){
+  'use strict';
+  function $(id){ return document.getElementById(id); }
+  var CLIENT_ID = SK.TWITCH_CLIENT_ID;
+  var SCOPES = 'moderator:read:followers channel:read:redemptions';
+  var REDIRECT = new URL('./', location.href).href.split('#')[0].split('?')[0];
+
+  /* ---------- Retour de Twitch : #access_token=… ---------- */
+  var h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('access_token')){
+    var expected = SK.store.get('sk-tw-state');
+    history.replaceState(null, '', location.pathname);
+    if (h.get('state') === expected) checkToken(h.get('access_token'), true);
+    else SK.toast('Connexion refusée (demande inconnue). Réessaie.');
+  } else if (h.get('error')){ history.replaceState(null, '', location.pathname); SK.toast('Connexion annulée'); }
+
+  function checkToken(tk, fresh){
+    fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + tk } }).then(function(r){ if (!r.ok) throw r.status; return r.json(); })
+      .then(function(v){
+        SK.store.set('sk-twitch', { token: tk, login: v.login, until: Date.now() + (v.expires_in || 0) * 1000 });
+        if (fresh) SK.toast('Connecté en tant que ' + v.login + ' ! Recopie tes liens dans OBS');
+        render();
+      }, function(){ SK.store.del('sk-twitch'); render(); if (fresh) SK.toast('Twitch a refusé la connexion'); });
+  }
+  function render(){
+    var t = SK.store.get('sk-twitch');
+    if (t && t.token){
+      $('tw-dot').className = 'dot ok'; $('tw-title').textContent = 'Connecté : ' + t.login;
+      $('tw-sub').textContent = t.until ? 'Valable jusqu\'au ' + new Date(t.until).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ' environ.' : '';
+      $('tw-login').textContent = 'Reconnecter'; $('tw-logout').hidden = false;
+    } else {
+      $('tw-dot').className = 'dot'; $('tw-title').textContent = 'Non connecté';
+      $('tw-sub').textContent = 'Le tchat, les abonnements, les bits et les raids marchent déjà sans connexion.';
+      $('tw-login').textContent = 'Se connecter avec Twitch'; $('tw-logout').hidden = true;
+    }
+    var se = SK.store.get('sk-se-jwt');
+    $('se-dot').className = 'dot' + (se ? ' ok' : ''); $('se-title').textContent = se ? 'Relié' : 'Non relié';
+    $('se-sub').textContent = se ? 'Les liens de tes alertes et de la voix incluent maintenant tes dons.' : ''; $('se-clear').hidden = !se;
+  }
+  $('tw-login').addEventListener('click', function(){
+    if (!CLIENT_ID){ SK.toast('La connexion Twitch arrive très bientôt'); return; }
+    var st = Math.random().toString(36).slice(2) + Date.now().toString(36); SK.store.set('sk-tw-state', st);
+    location.href = 'https://id.twitch.tv/oauth2/authorize?' + new URLSearchParams({ client_id: CLIENT_ID, redirect_uri: REDIRECT, response_type: 'token', scope: SCOPES, state: st, force_verify: 'true' });
+  });
+  $('tw-logout').addEventListener('click', function(){
+    var t = SK.store.get('sk-twitch');
+    if (t && CLIENT_ID) fetch('https://id.twitch.tv/oauth2/revoke', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'client_id=' + CLIENT_ID + '&token=' + t.token }).catch(function(){});
+    SK.store.del('sk-twitch'); render(); SK.toast('Déconnecté. Recopie tes liens dans OBS.');
+  });
+  $('se-save').addEventListener('click', function(){
+    var v = $('se-jwt').value.trim();
+    if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(v)){ SK.toast('Ce n\'est pas un jeton JWT valide'); return; }
+    SK.store.set('sk-se-jwt', v); $('se-jwt').value = ''; render(); SK.toast('StreamElements relié ! Recopie tes liens dans OBS');
+  });
+  $('se-clear').addEventListener('click', function(){ SK.store.del('sk-se-jwt'); render(); });
+  var cur = SK.store.get('sk-twitch'); if (cur && cur.token && !h.get('access_token')) checkToken(cur.token, false);
+  render();
+})();
+</script>
+</body>
+</html>

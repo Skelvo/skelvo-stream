@@ -24,7 +24,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=11">
+<link rel="stylesheet" href="assets/app.css?v=12">
 <style>
   .hero{ position: relative; overflow: hidden; padding: 84px 0 70px; }
   .hero::before{
@@ -114,7 +114,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       <div>
         <span class="kicker" data-i18n="home.kicker">Pour OBS et Streamlabs</span>
         <h1><span data-i18n="home.h1a">Tout pour ton stream,</span> <em data-i18n="home.h1b">gratuitement.</em></h1>
-        <p class="lead" data-i18n="home.lead">Contour caméra, tchat, alertes, tirage au sort, jeux du tchat, subathon, sous-titres… Plus de 20 outils assortis, ou un kit complet prêt à importer dans OBS.</p>
+        <p class="lead" data-i18n="home.lead">Contour caméra, tchat, alertes, tirage au sort, jeux du tchat, subathon, sous-titres… Près de 30 outils assortis, ou un kit complet prêt à importer dans OBS.</p>
         <div class="cta">
           <a class="btn" href="kit/" data-i18n="home.cta1">Créer mon kit complet</a>
           <a class="btn ghost" href="#outils" data-i18n="home.cta2">Voir tous les outils</a>
@@ -211,6 +211,18 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           <p>L'heure, la date, depuis combien de temps tu es en live, ou un compte à rebours.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="epingle/">
+          <span class="ico">📌</span>
+          <h3>Message épinglé et shoutout</h3>
+          <p>!pin pour afficher une info importante, !so @pseudo pour remercier un ami ou un raid.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="classement/">
+          <span class="ico">💬</span>
+          <h3>Top tchatteurs</h3>
+          <p>Le classement des viewers les plus actifs du jour ou du mois, avec le premier arrivé.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
       </div>
       <div class="group-head"><h2>Avec ton tchat</h2><p>Tes viewers et tes modos pilotent ces outils depuis le tchat.</p></div>
       <div class="grid">
@@ -250,6 +262,18 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           <p>Duels entre viewers et courses animées, lancés depuis le tchat.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="sons/">
+          <span class="ico">🔊</span>
+          <h3>Sons du tchat</h3>
+          <p>Tes viewers déclenchent des sons avec une commande ou tes points de chaîne : klaxon, ba-dum-tss, trombone triste…</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="bingo/">
+          <span class="ico">🎱</span>
+          <h3>Bingo du stream</h3>
+          <p>Une grille de situations que tes modos cochent depuis le tchat. BINGO et confettis à chaque ligne !</p>
+          <span class="go">Ouvrir →</span>
+        </a>
       </div>
       <div class="group-head"><h2>Pour toi</h2><p>Des outils pour le streamer, hors de l'écran du live.</p></div>
       <div class="grid">
@@ -259,10 +283,22 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           <p>Abonnements, bits, raids et récompenses de points de chaîne lus à voix haute pendant que tu joues. Tu choisis ce qui est lu.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="images/?tab=t-planning">
+          <span class="ico">📅</span>
+          <h3>Planning et « En live »</h3>
+          <p>Ton planning de la semaine et ton visuel « Je suis en live », prêts à poster sur Insta, X ou Discord.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
         <a class="card" href="images/">
           <span class="ico">🖼️</span>
           <h3>Atelier images</h3>
           <p>Emotes et badges aux bonnes tailles, panneaux de profil, bannières. Tout dans ton navigateur.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="connexion/">
+          <span class="ico">🔌</span>
+          <h3>Connexions</h3>
+          <p>Relie Twitch et StreamElements pour les follows, tous les points de chaîne et les dons.</p>
           <span class="go">Ouvrir →</span>
         </a>
         <a class="card" href="transitions/">
@@ -281,11 +317,6 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           <span class="tag">Bientôt</span>
           <h3>YouTube et Kick</h3>
           <p>Ton tchat YouTube et Kick à l'écran, en plus de Twitch.</p>
-        </div>
-        <div class="card soon">
-          <span class="tag">Bientôt</span>
-          <h3>Follows et points de chaîne</h3>
-          <p>Alertes de follow et récompenses de points de chaîne, avec une connexion Twitch en un clic.</p>
         </div>
         <div class="card soon">
           <span class="tag">Bientôt</span>
@@ -316,7 +347,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="assets/packs.js?v=1"></script>
-<script src="assets/app.js?v=17"></script>
+<script src="assets/app.js?v=19"></script>
 <script>
   // Miniatures des packs dans le bloc Kit
   (function(){ var box = document.getElementById('kit-packs'); if (!box || !window.SK_PACKS) return;

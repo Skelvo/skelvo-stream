@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=11">
+<link rel="stylesheet" href="../assets/app.css?v=12">
 <style>
   .sw{ display: grid; place-items: center; font-size: 16px; }
   .sw-card{ background: #19171f; border-radius: 6px; }
@@ -41,7 +41,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <main class="wrap">
   <div class="editor-head">
     <h1 data-i18n="alertes.title">Alertes de stream</h1>
-    <p data-i18n="alertes.lead">Abonnements, subs offerts, bits et raids : une alerte animée avec un son apparaît sur ton stream. Sans compte et sans connecter ta chaîne.</p>
+    <p data-i18n="alertes.lead">Abonnements, subs offerts, bits et raids sans rien connecter. Et avec ta chaîne reliée : follows, points de chaîne et dons. Une alerte animée avec un son, à chaque fois.</p>
   </div>
 
   <div class="editor">
@@ -57,7 +57,11 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="check"><input type="checkbox" name="bits" checked><span>Bits</span></label>
         <label class="check"><input type="checkbox" name="raid" checked><span>Raids</span></label>
         <div class="row2"><label class="field"><span>Bits minimum</span><input type="text" name="minbits" value="1" placeholder="" maxlength="7" inputmode="numeric"></label><label class="field"><span>Viewers minimum (raid)</span><input type="text" name="minraid" value="1" placeholder="" maxlength="6" inputmode="numeric"></label></div>
-        <p class="hint">Les alertes de follow arriveront avec la connexion Twitch, dans une prochaine version.</p>
+        <label class="check"><input type="checkbox" name="follow" checked><span>Follows (connexion Twitch)</span></label>
+        <label class="check"><input type="checkbox" name="reward" checked><span>Récompenses de points de chaîne (connexion Twitch)</span></label>
+        <label class="check"><input type="checkbox" name="tip" checked><span>Dons StreamElements (connexion StreamElements)</span></label>
+        <label class="field"><span>Don minimum</span><input type="text" name="mintip" value="0" placeholder="" maxlength="7" inputmode="decimal"></label>
+        <div data-auth-box></div>
       </fieldset>
       <fieldset>
         <legend>Textes</legend>
@@ -68,6 +72,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="field"><span>Plusieurs subs offerts</span><input type="text" name="tbomb" value="{name} offre {count} abonnements !" placeholder="" maxlength="90" ></label>
         <label class="field"><span>Bits</span><input type="text" name="tbits" value="{name} envoie {amount} bits !" placeholder="" maxlength="90" ></label>
         <label class="field"><span>Raid</span><input type="text" name="traid" value="Raid de {name} avec {count} viewers !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Follow</span><input type="text" name="tfollow" value="{name} suit la chaîne !" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Points de chaîne (mot en plus : {reward})</span><input type="text" name="treward" value="{name} utilise « {reward} »" placeholder="" maxlength="90" ></label>
+        <label class="field"><span>Don</span><input type="text" name="ttip" value="{name} fait un don de {amount} !" placeholder="" maxlength="90" ></label>
         <label class="check"><input type="checkbox" name="showmsg" checked><span>Afficher le message du viewer sous l'alerte</span></label>
       </fieldset>
       <fieldset>
@@ -91,6 +98,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <p class="hint">Un emoji par type d'alerte, ou tes propres images (PNG, GIF animé…).</p>
         <div class="row2"><label class="field"><span>Abonnement</span><input type="text" name="isub" value="⭐" placeholder="" maxlength="8" ></label><label class="field"><span>Sub offert</span><input type="text" name="igift" value="🎁" placeholder="" maxlength="8" ></label></div>
         <div class="row2"><label class="field"><span>Bits</span><input type="text" name="ibits" value="💎" placeholder="" maxlength="8" ></label><label class="field"><span>Raid</span><input type="text" name="iraid" value="🚀" placeholder="" maxlength="8" ></label></div>
+        <div class="row2"><label class="field"><span>Follow</span><input type="text" name="ifollow" value="💜" placeholder="" maxlength="8" ></label><label class="field"><span>Don</span><input type="text" name="itip" value="💸" placeholder="" maxlength="8" ></label></div>
+        <label class="field"><span>Points de chaîne</span><input type="text" name="ireward" value="✨" placeholder="" maxlength="8" ></label>
         <div class="field"><span>Une image pour toutes les alertes</span><input type="text" name="img" value="" placeholder="Lien https ou Importer" data-image="320" spellcheck="false"><small>Importée (petite image) ou lien https. Remplace les emojis.</small></div>
         <label class="field"><span>Image ou GIF pour les abonnements (lien)</span><input type="text" name="img_sub" value="" placeholder="https://…" maxlength="400" ></label>
         <label class="field"><span>Image ou GIF pour les subs offerts (lien)</span><input type="text" name="img_gift" value="" placeholder="https://…" maxlength="400" ></label>
@@ -152,7 +161,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=17"></script>
+<script src="../assets/app.js?v=19"></script>
 <script>
 (function(){
   'use strict';
@@ -171,6 +180,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     copyBtn: document.getElementById('copy'),
     resetBtn: document.getElementById('reset'),
     previewParams: function(p){ return withDemo(p); },
+    auth: true,
     onChange: function(p){  }
   });
   var iframe = document.getElementById('preview');
@@ -180,7 +190,10 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     ['Réabonnement', { type: 'resub', tier: 1, months: 14, name: 'Tonton_Raclette', text: 'Toujours là SeemsGood' }],
     ['Subs offerts', { type: 'giftbomb', count: 5, name: 'Mamie_Gameuse', text: '' }],
     ['Bits', { type: 'bits', amount: 500, name: 'KevGaming', text: 'Cheer500 GG !' }],
-    ['Raid', { type: 'raid', count: 42, name: 'Choupette', text: '' }]
+    ['Raid', { type: 'raid', count: 42, name: 'Choupette', text: '' }],
+    ['Follow', { type: 'follow', name: 'Zoé_42', text: '' }],
+    ['Points', { type: 'reward', name: 'Lunaa_', reward: 'Hydrate-toi', text: '' }],
+    ['Don', { type: 'tip', amount: 5, currency: 'EUR', name: 'BaguetteMan', text: 'Merci pour les lives !' }]
   ];
   var tests = document.getElementById('tests');
   TESTS.forEach(function(t){

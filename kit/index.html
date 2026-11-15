@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=11">
+<link rel="stylesheet" href="../assets/app.css?v=12">
 <!--
   Kit complet : un pack + une chaîne + une liste d'outils
   -> tous les liens des overlays, assortis,
@@ -119,7 +119,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=17"></script>
+<script src="../assets/app.js?v=19"></script>
 <script>
 (function(){
   'use strict';
@@ -140,7 +140,11 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     { id: 'minuteur', name: 'Minuteur subathon',  x: 610,  y: 160, w: 700,  h: 260, on: false, theme: true },
     { id: 'sondage',  name: 'Sondage',            x: 1300, y: 170, w: 600,  h: 420, on: true,  theme: true },
     { id: 'giveaway', name: 'Tirage au sort',     x: 610,  y: 280, w: 700,  h: 520, on: true,  theme: true },
-    { id: 'jeux',     name: 'Jeux du tchat',      x: 610,  y: 310, w: 700,  h: 460, on: true,  theme: true }
+    { id: 'jeux',     name: 'Jeux du tchat',      x: 610,  y: 310, w: 700,  h: 460, on: true,  theme: true },
+    { id: 'epingle',  name: 'Message épinglé',    x: 510,  y: 780, w: 900,  h: 300, on: true,  theme: true },
+    { id: 'sons',     name: 'Sons du tchat',      x: 20,   y: 180, w: 600,  h: 220, on: false, theme: true, audio: true },
+    { id: 'classement', name: 'Top tchatteurs',   x: 1440, y: 170, w: 460,  h: 420, on: false, theme: true },
+    { id: 'bingo',    name: 'Bingo',              x: 1340, y: 170, w: 560,  h: 520, on: false, theme: true }
   ];
   var SCREENS = [ { id: 'start', name: 'Début' }, { id: 'brb', name: 'Pause' }, { id: 'end', name: 'Fin' } ];
 
@@ -180,6 +184,10 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     if (t.id === 'cadre') Object.assign(p, { style: 'gradient', c1: pack.c[0], c2: pack.c[1], c3: pack.c[2], glow: '14', label: labelIn.value, lpos: 'bc', lfont: pack.t.font, lstyle: 'fill' });
     else p.ch = cleanCh();
     if (t.extra) Object.assign(p, t.extra);
+    if (t.id === 'alertes' || t.id === 'derniers' || t.id === 'sons'){
+      var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+      if (tw && tw.token) p.tk = tw.token; if (se) p.se = se;
+    }
     return p;
   }
   function screenParams(mode){
@@ -210,7 +218,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     TOOLS.forEach(function(t){
       if (!enabled[t.id]) return;
       // En aperçu : démo pour tout le monde ; les jeux / tirages / sondages apparaissent tour à tour
-      var quiet = t.id === 'sondage' || t.id === 'giveaway' || t.id === 'jeux'; // invisibles tant qu'on ne les lance pas
+      var quiet = t.id === 'sondage' || t.id === 'giveaway' || t.id === 'jeux' || t.id === 'epingle' || t.id === 'sons' || t.id === 'bingo'; // discrets en aperçu
       var extra = quiet ? { ch: '' } : { demo: '1' };
       if (t.id === 'emotes') extra.max = '18';
       frame(url(t.id, Object.assign(toolParams(t), extra)), t.x, t.y, t.w, t.h);
@@ -267,7 +275,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       sources.push(src); screenScenes[s.id] = sceneSource(s.name, [{ src: src, x: 0, y: 0 }]);
     });
     // Live : les overlays cochés, du bas vers le haut de la liste OBS
-    var order = ['cadre', 'derniers', 'horloge', 'compteur', 'objectif', 'tchat', 'sondage', 'minuteur', 'jeux', 'giveaway', 'alertes', 'emotes'];
+    var order = ['cadre', 'derniers', 'horloge', 'compteur', 'objectif', 'classement', 'bingo', 'tchat', 'epingle', 'sondage', 'minuteur', 'jeux', 'giveaway', 'sons', 'alertes', 'emotes'];
     var items = [];
     order.forEach(function(id){
       var t = TOOLS.filter(function(x){ return x.id === id; })[0];

@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=11">
+<link rel="stylesheet" href="../assets/app.css?v=12">
 <style>
   .sw{ display: flex; flex-direction: column; gap: 3px; justify-content: center; padding: 5px; }
   .sw i{ display: block; height: 5px; border-radius: 3px; background: #a78bfa; width: 80%; }
@@ -59,6 +59,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="check"><input type="checkbox" name="i_topbits" checked><span>Top bits du jour</span></label>
         <label class="check"><input type="checkbox" name="i_topgift" checked><span>Top donneur de subs du jour</span></label>
         <label class="check"><input type="checkbox" name="i_topchat" checked><span>Top tchatteur du jour</span></label>
+        <label class="check"><input type="checkbox" name="i_follow"><span>Dernier follow (connexion Twitch)</span></label>
+        <label class="check"><input type="checkbox" name="i_tip"><span>Dernier don (connexion StreamElements)</span></label>
+        <div data-auth-box></div>
         <label class="field"><span>Texte quand il n'y a encore personne</span><input type="text" name="empty" value="—" placeholder="" maxlength="30" ></label>
       </fieldset>
       <fieldset>
@@ -121,7 +124,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=17"></script>
+<script src="../assets/app.js?v=19"></script>
 <script>
 (function(){
   'use strict';
@@ -140,6 +143,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     copyBtn: document.getElementById('copy'),
     resetBtn: document.getElementById('reset'),
     previewParams: function(p){ return withDemo(p); },
+    auth: true,
     onChange: function(p){  }
   });
 

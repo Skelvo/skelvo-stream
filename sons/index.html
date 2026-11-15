@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=11">
+<link rel="stylesheet" href="../assets/app.css?v=12">
 <style>
   .sw{ display: grid; place-items: center; font-size: 18px; background: #19171f; border-radius: 6px; }
   .snds{ display: grid; gap: 6px; }
@@ -126,7 +126,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
           <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">600 × 300</b>.</span></li>
           <li><span>Pour que ton stream entende les sons, coche <b>Contrôler l'audio via OBS</b> dans les propriétés de la source.</span></li>
-          <li><span>Points de chaîne : crée sur Twitch une récompense « Jouer un son » avec un <b>texte obligatoire</b>. Le viewer tape le nom du son (ex. klaxon) en l'utilisant.</span></li>
+          <li><span>Points de chaîne : avec ta chaîne connectée, crée une récompense par son (ex. « Klaxon ») et c'est tout. Sans connexion : une récompense « Jouer un son » avec un <b>texte obligatoire</b>, où le viewer tape le nom du son.</span></li>
         </ol>
 
       </div>
@@ -142,7 +142,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=17"></script>
+<script src="../assets/app.js?v=19"></script>
 <script>
 (function(){
   'use strict';
@@ -162,6 +162,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     copyBtn: document.getElementById('copy'),
     resetBtn: document.getElementById('reset'),
     previewParams: function(p){ return withDemo(p); },
+    auth: true,
     onChange: function(p){  }
   });
 

@@ -175,6 +175,82 @@
     };
   };
 
+  /* ---------- Connexion Twitch (EventSub) : follows et récompenses ----------
+     Avec un jeton obtenu sur la page connexion/ (« Se connecter avec Twitch »),
+     l'overlay s'abonne directement aux événements de la chaîne, sans serveur.
+     L'identifiant d'appli (Client-Id) est retrouvé à partir du jeton. */
+  T.eventsub = function(token, h){
+    h = h || {};
+    token = String(token || '').replace(/^oauth:/, '').trim();
+    if (!/^[a-z0-9]{20,40}$/i.test(token)) return null;
+    var ws = null, closed = false, info = null, retry = 0;
+    function status(st, extra){ if (h.authStatus) h.authStatus(st, extra); }
+    function validate(){
+      return fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + token } })
+        .then(function(r){ if (!r.ok) throw r.status; return r.json(); });
+    }
+    function sub(type, version, condition, session){
+      return fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
+        method: 'POST',
+        headers: { 'Client-Id': info.client_id, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: type, version: version, condition: condition, transport: { method: 'websocket', session_id: session } })
+      }).then(function(r){ return r.ok; }).catch(function(){ return false; });
+    }
+    function open(url){
+      if (closed) return;
+      ws = new WebSocket(url || 'wss://eventsub.wss.twitch.tv/ws');
+      var sock = ws;
+      sock.onmessage = function(e){
+        var d; try { d = JSON.parse(e.data); } catch(err){ return; }
+        var mt = d.metadata && d.metadata.message_type;
+        if (mt === 'session_welcome'){
+          retry = 0;
+          if (url) return; // reconnexion demandée par Twitch : les abonnements suivent
+          var sid = d.payload.session.id, uid = info.user_id, scopes = info.scopes || [];
+          var jobs = [];
+          if (scopes.indexOf('moderator:read:followers') >= 0) jobs.push(sub('channel.follow', '2', { broadcaster_user_id: uid, moderator_user_id: uid }, sid));
+          if (scopes.indexOf('channel:read:redemptions') >= 0) jobs.push(sub('channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: uid }, sid));
+          Promise.all(jobs).then(function(ok){ status(ok.every(Boolean) ? 'ok' : 'partial', { login: info.login }); });
+        } else if (mt === 'session_reconnect'){
+          var old = sock; open(d.payload.session.reconnect_url); setTimeout(function(){ try { old.close(); } catch(err){} }, 1500);
+        } else if (mt === 'notification' && h.event){
+          var t = d.payload.subscription.type, ev = d.payload.event;
+          if (t === 'channel.follow') h.event({ type: 'follow', id: 'f:' + ev.user_id + ':' + (ev.followed_at || ''), name: ev.user_name, login: ev.user_login, text: '' });
+          else if (t === 'channel.channel_points_custom_reward_redemption.add') h.event({ type: 'reward', id: 'r:' + ev.id, rewardId: ev.reward && ev.reward.id, name: ev.user_name, login: ev.user_login, reward: ev.reward && ev.reward.title, cost: ev.reward && ev.reward.cost, text: ev.user_input || '' });
+        }
+      };
+      sock.onclose = function(){ if (sock !== ws || closed) return; retry = Math.min(retry + 1, 6); setTimeout(function(){ open(); }, 1000 * Math.pow(2, retry)); };
+    }
+    validate().then(function(v){ info = v; open(); }, function(){ status('invalid'); });
+    return { close: function(){ closed = true; if (ws) try { ws.close(); } catch(e){} } };
+  };
+
+  /* ---------- Dons StreamElements (bêta) ----------
+     Le streamer colle son « JWT Token » (tableau de bord StreamElements >
+     Mon compte > Chaînes > Afficher les secrets). */
+  T.streamelements = function(jwt, h){
+    jwt = String(jwt || '').trim();
+    if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(jwt)) return null;
+    var ws = null, closed = false, retry = 0;
+    function open(){
+      if (closed) return;
+      ws = new WebSocket('wss://astro.streamelements.com');
+      var sock = ws;
+      sock.onopen = function(){ sock.send(JSON.stringify({ type: 'subscribe', nonce: String(Date.now()), data: { topic: 'channel.tips', token: jwt, token_type: 'jwt' } })); };
+      sock.onmessage = function(e){
+        var d; try { d = JSON.parse(e.data); } catch(err){ return; }
+        if (d.type === 'response' && h.authStatus) h.authStatus(d.error ? 'se-invalid' : 'se-ok');
+        if (d.type !== 'message' || !d.data) return;
+        var don = d.data.donation || d.data, u = don.user || {};
+        if (h.event) h.event({ type: 'tip', id: 'se:' + (d.data._id || d.id || Date.now()), name: u.username || u.name || don.username || 'Quelqu\'un',
+          amount: don.amount, currency: don.currency || '€', text: don.message || '' });
+      };
+      sock.onclose = function(){ if (sock !== ws || closed) return; retry = Math.min(retry + 1, 6); setTimeout(open, 1000 * Math.pow(2, retry)); };
+    }
+    open();
+    return { close: function(){ closed = true; if (ws) try { ws.close(); } catch(e){} } };
+  };
+
   /* ---------- Statistiques du live (top tchatteurs, récap) ----------
      Tout overlay connecté compte pendant le live ; plusieurs sources dans OBS
      partagent le même stockage (même site), d'où l'anti-doublon par

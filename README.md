@@ -26,6 +26,20 @@ En ligne : https://skelvo.fr/skelvo-stream/
 - `jeux/` : duels (`!duel @pseudo`, `!accepte`) et courses (`!course`).
 - `horloge/` : heure, date, durée du live (`!uptime reset`), compte à rebours.
 
+- `epingle/` : message épinglé (`!pin`, `!unpin`) et shoutout (`!so @pseudo`, automatique sur raid).
+- `classement/` : top tchatteurs du jour ou du mois (`!classement reset`).
+- `bingo/` : bingo du stream (`!bingo 5`, `!bingo reset`).
+- `sons/` : sons du tchat (banque synthétisée `assets/sounds.js` + sons perso).
+
+**Statistiques** : `SKT.stats` (assets/twitch.js) compte messages, subs, bits et raids pendant le live,
+partagé entre tous les overlays d'OBS avec anti-doublon ; utilisé par le classement, Derniers et tops
+et le récap de l'écran de fin.
+
+**Connexions** (`connexion/`, sans serveur) : jeton Twitch (OAuth implicite) -> `SKT.eventsub`
+(follows, toutes les récompenses) ; jeton JWT StreamElements -> `SKT.streamelements` (dons, bêta).
+Les éditeurs avec `auth` ajoutent `tk` / `se` aux liens OBS. Identifiant d'appli Twitch : `SK.TWITCH_CLIENT_ID`
+dans `assets/app.js` (redirection autorisée : https://skelvo.fr/skelvo-stream/connexion/).
+
 **Kit et outils du streamer** :
 - `kit/` : un pack + une chaîne -> tous les liens et une collection de scènes OBS à importer (Début, Live, Pause, Fin).
 - `transitions/` : vidéo Stinger avec cache (track matte) générée dans le navigateur.
@@ -35,7 +49,7 @@ En ligne : https://skelvo.fr/skelvo-stream/
 
 **Pour le streamer** :
 - `voix/` : lecture vocale du tchat (page à garder ouverte dans un onglet).
-- `images/` : emotes et badges redimensionnés, panneaux de profil, bannières.
+- `images/` : emotes et badges, panneaux de profil, bannières, planning de la semaine, visuel « En live » (`?tab=t-planning` / `t-live`).
 
 À venir : follows et points de chaîne (connexion Twitch), application de bureau pour lire le tchat sur un seul écran.
 

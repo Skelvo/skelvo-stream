@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=11">
+<link rel="stylesheet" href="../assets/app.css?v=12">
 <!--
   Lecture vocale du tchat : page à laisser ouverte dans un onglet pendant le live
   (pas une source OBS). Utilise la synthèse vocale du navigateur (speechSynthesis),
@@ -81,6 +81,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <label class="check"><input type="checkbox" name="ev_bits" checked><span>Bits</span></label>
         <label class="field" style="margin:-2px 0 12px 28px"><span>À partir de combien de bits ?</span><input type="text" name="minbits" value="100" maxlength="7" inputmode="numeric"></label>
         <label class="check"><input type="checkbox" name="ev_raid" checked><span>Raids</span></label>
+        <label class="check"><input type="checkbox" name="ev_follow" checked><span>Follows (connexion Twitch)</span></label>
+        <label class="check"><input type="checkbox" name="ev_tip" checked><span>Dons StreamElements (connexion StreamElements)</span></label>
+        <div data-auth-box></div>
         <label class="check"><input type="checkbox" name="ev_reward" checked><span>Récompenses de points de chaîne avec un message</span></label>
         <div class="field" style="margin:-2px 0 12px 28px">
           <span>Seulement cette récompense</span>
@@ -93,14 +96,17 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       </fieldset>
       <fieldset>
         <legend>Phrases lues</legend>
-        <p class="hint">Mots remplacés : <code>{name}</code> <code>{months}</code> <code>{count}</code> <code>{amount}</code> <code>{recipient}</code> <code>{message}</code></p>
+        <p class="hint">Mots remplacés : <code>{name}</code> <code>{months}</code> <code>{count}</code> <code>{amount}</code> <code>{recipient}</code> <code>{reward}</code> <code>{message}</code></p>
         <label class="field"><span>Abonnement</span><input type="text" name="tsub" value="{name} s'abonne !" maxlength="120"></label>
         <label class="field"><span>Réabonnement</span><input type="text" name="tresub" value="{name} se réabonne, {months} mois !" maxlength="120"></label>
         <label class="field"><span>Sub offert</span><input type="text" name="tgift" value="{name} offre un abonnement à {recipient} !" maxlength="120"></label>
         <label class="field"><span>Plusieurs subs offerts</span><input type="text" name="tbomb" value="{name} offre {count} abonnements !" maxlength="120"></label>
         <label class="field"><span>Bits</span><input type="text" name="tbits" value="{name} envoie {amount} bits !" maxlength="120"></label>
         <label class="field"><span>Raid</span><input type="text" name="traid" value="Raid de {name} avec {count} viewers !" maxlength="120"></label>
-        <label class="field"><span>Récompense de points</span><input type="text" name="treward" value="{name} : {message}" maxlength="120"></label>
+        <label class="field"><span>Récompense de points avec message</span><input type="text" name="treward" value="{name} : {message}" maxlength="120"></label>
+        <label class="field"><span>Récompense de points sans message (connexion Twitch)</span><input type="text" name="trewardn" value="{name} utilise {reward} !" maxlength="120"></label>
+        <label class="field"><span>Follow</span><input type="text" name="tfollow" value="Merci {name} pour le follow !" maxlength="120"></label>
+        <label class="field"><span>Don</span><input type="text" name="ttip" value="{name} fait un don de {amount} !" maxlength="120"></label>
         <label class="field"><span>Message du tchat</span><input type="text" name="tchat" value="{name} dit : {message}" maxlength="120"></label>
       </fieldset>
       <fieldset>
@@ -160,8 +166,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=17"></script>
-<script src="../assets/twitch.js?v=4"></script>
+<script src="../assets/app.js?v=19"></script>
+<script src="../assets/twitch.js?v=5"></script>
 <script>
 (function(){
   'use strict';
@@ -259,6 +265,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function onMessage(m){
     if (bots()[m.login]) return;
     // Récompense de points de chaîne avec un texte
+    if (m.rewardId && extraConn.length && SK.store.get('sk-twitch')) return;
     if (m.rewardId){
       if (learning){ learning = false; ed.set({ reward: m.rewardId }); document.getElementById('learn').textContent = 'Détecter'; SK.toast('Récompense enregistrée !'); }
       if (P.ev_reward !== '1' || (P.reward && P.reward !== m.rewardId)) return;
@@ -282,6 +289,19 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     enqueue({ name: m.name, text: text, say: m.action ? speakName(m.name) + ' ' + text : phrase(P.tchat, { name: speakName(m.name), message: text }, false) });
   }
   function onEvent(e){
+    if (e.type === 'follow'){ if (P.ev_follow === '1'){ var f = phrase(P.tfollow, { name: speakName(e.name) }, false); enqueue({ name: '💜', text: f, say: f }); } return; }
+    if (e.type === 'tip'){
+      if (P.ev_tip !== '1') return;
+      var amt = (Number(e.amount) || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (e.currency === 'USD' ? 'dollars' : 'euros');
+      var tm = P.readmsg === '1' ? clean({ text: e.text || '', emotes: '' }) : '';
+      var ts = phrase(P.ttip, { name: speakName(e.name), amount: amt, message: tm }, true); enqueue({ name: '💸', text: ts, say: ts }); return;
+    }
+    if (e.type === 'reward'){
+      if (P.ev_reward !== '1' || (P.reward && P.reward !== e.rewardId)) return;
+      var rm = e.text ? clean({ text: e.text, emotes: '' }) : '';
+      var rs = rm ? phrase(P.treward, { name: speakName(e.name), message: rm, reward: e.reward }, false) : phrase(P.trewardn, { name: speakName(e.name), reward: e.reward }, false);
+      enqueue({ name: '🎟️ ' + e.name, text: rs, say: rs }); return;
+    }
     var tpl = null, on = false;
     if (e.type === 'sub'){ tpl = P.tsub; on = P.ev_sub === '1'; }
     else if (e.type === 'resub'){ tpl = e.months > 1 ? P.tresub : P.tsub; on = P.ev_sub === '1'; }
@@ -300,7 +320,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   }
 
   /* ---------- Démarrer / arrêter ---------- */
+  var extraConn = [];
   function stop(){
+    extraConn.forEach(function(x){ if (x) x.close(); }); extraConn = [];
     if (conn){ conn.close(); conn = null; }
     queue = []; updateQ(); if (synth) synth.cancel();
     goBtn.textContent = '▶ Démarrer'; goBtn.classList.remove('stop');
@@ -323,6 +345,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       message: onMessage, event: onEvent
     });
     SKT.loadGlobalEmotes();
+    var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+    if (tw && tw.token) extraConn.push(SKT.eventsub(tw.token, { event: onEvent }));
+    if (se) extraConn.push(SKT.streamelements(se, { event: onEvent }));
   });
   chInput.value = SK.store.get('sk-voix-ch') || '';
   chInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') goBtn.click(); });

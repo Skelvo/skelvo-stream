@@ -14,6 +14,8 @@
   'use strict';
 
   var SK = window.SK = window.SK || {};
+  /* Identifiant de l'appli Twitch de Skelvo Stream (dev.twitch.tv), pour « Se connecter avec Twitch » */
+  SK.TWITCH_CLIENT_ID = '';
   SK.dict = SK.dict || {};
 
   /* ---------- Stockage local (protégé : navigation privée, OBS…) ---------- */
@@ -121,6 +123,12 @@
     function buildUrl(p){
       var u = new URL(base.href);
       Object.keys(p).forEach(function(k){ u.searchParams.set(k, p[k]); });
+      // Outils qui profitent des connexions (page connexion/) : on ajoute les jetons au lien OBS
+      if (opts.auth){
+        var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+        if (tw && tw.token) u.searchParams.set('tk', tw.token);
+        if (se) u.searchParams.set('se', se);
+      }
       return u.href;
     }
 
@@ -465,7 +473,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.5';
+  SK.VERSION = '2.6';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -476,8 +484,8 @@
   }
   // Toutes les pages du site : à chaque mise à jour, on force leur téléchargement
   // pour qu'aucune ne reste sur une ancienne copie (GitHub Pages les garde 10 min).
-  var PAGES = ['', 'kit/', 'debuter/', 'cadre/', 'tchat/', 'alertes/', 'emotes/', 'ecrans/', 'musique/', 'sous-titres/', 'compteur/', 'sondage/',
-    'minuteur/', 'objectif/', 'giveaway/', 'derniers/', 'jeux/', 'horloge/', 'voix/', 'images/', 'transitions/'];
+  var PAGES = ['', 'kit/', 'debuter/', 'connexion/', 'cadre/', 'tchat/', 'alertes/', 'emotes/', 'ecrans/', 'musique/', 'sous-titres/', 'compteur/', 'sondage/',
+    'minuteur/', 'objectif/', 'giveaway/', 'derniers/', 'jeux/', 'horloge/', 'voix/', 'images/', 'transitions/', 'epingle/', 'classement/', 'bingo/', 'sons/'];
   function refreshAll(){
     var jobs = PAGES.map(function(u){ return fetch(new URL(u, ROOT).href, { cache: 'reload' }).catch(function(){}); });
     return Promise.race([Promise.all(jobs), new Promise(function(r){ setTimeout(r, 5000); })]);
@@ -520,6 +528,21 @@
   checkUpdate();
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkUpdate(); });
   setInterval(checkUpdate, 5 * 60 * 1000);
+
+  /* Encart d'état des connexions : <div data-auth-box></div> */
+  SK.authBox = function(holder){
+    var tw = SK.store.get('sk-twitch'), se = SK.store.get('sk-se-jwt');
+    var d = document.createElement('div'); d.className = 'tip auth-box';
+    var on = [];
+    if (tw && tw.token) on.push('Twitch (' + tw.login + ')');
+    if (se) on.push('StreamElements');
+    d.innerHTML = on.length
+      ? '✅ Connecté : <b></b>. Les follows, les points de chaîne' + (se ? ' et les dons' : '') + ' sont inclus dans ce lien. <a href="../connexion/">Gérer</a>'
+      : '🔌 Les follows, toutes les récompenses de points de chaîne et les dons StreamElements demandent une connexion. <a href="../connexion/">Connecter ma chaîne</a>';
+    if (on.length) d.querySelector('b').textContent = on.join(' et ');
+    holder.replaceWith(d);
+  };
+  document.querySelectorAll('[data-auth-box]').forEach(SK.authBox);
 
   /* ======================================================================
      Étapes : chaque bloc de réglages (fieldset avec un titre) devient une étape.
