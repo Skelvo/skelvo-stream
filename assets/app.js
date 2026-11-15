@@ -473,7 +473,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.7';
+  SK.VERSION = '2.8';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -496,20 +496,10 @@
   }
   function ssGet(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
   function ssSet(k, v){ try { sessionStorage.setItem(k, v); } catch(e){} }
-  var firstCheck = true;
   function checkUpdate(){
-    var isFirst = firstCheck; firstCheck = false;
     fetch(new URL('version.txt?t=' + Date.now(), ROOT).href, { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
       v = String(v || '').trim();
       if (!/^\d+\.\d{1,3}$/.test(v) || v === SK.VERSION || document.querySelector('.upd')) return;
-      // Page ouverte depuis une ancienne copie (relance de l'appli, retour au menu) :
-      // on met tout à jour sans rien demander, une seule fois par version.
-      if (isFirst && ssGet('sk-autoupd') !== v){
-        ssSet('sk-autoupd', v);
-        document.documentElement.style.opacity = '.4';
-        refreshAll().then(reloadFresh);
-        return;
-      }
       var b = document.createElement('button'); b.type = 'button'; b.className = 'upd';
       var t = document.createElement('span'); t.textContent = 'Version ' + v + ' disponible';
       var go = document.createElement('b'); go.textContent = 'Rafraîchir';

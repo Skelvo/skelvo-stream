@@ -54,7 +54,8 @@ img,svg,video{ display: block; max-width: 100%; }
 .topnav{ display: flex; gap: 6px; align-items: center; }
 .topnav a{ text-decoration: none; color: var(--muted); font-size: .94rem; padding: 8px 12px; border-radius: 10px; }
 .topnav a:hover, .topnav a[aria-current="page"]{ color: var(--text); background: var(--panel); }
-@media (max-width: 640px){ .topnav a.hide-sm{ display: none; } .brand small{ display: none; } }
+.topnav a, .brand{ white-space: nowrap; }
+@media (max-width: 640px){ .topnav a.hide-sm, .topnav .hide-sm{ display: none; } .brand small{ display: none; } .topnav{ gap: 2px; } .topnav a{ padding: 8px 8px; font-size: .9rem; } }
 
 /* ---------- Boutons ---------- */
 .btn{
