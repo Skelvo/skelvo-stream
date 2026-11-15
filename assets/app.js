@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.9';
+  SK.VERSION = '2.0';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -592,6 +592,7 @@
     }
     function go(i, user){
       seen[cur] = true; cur = Math.max(0, Math.min(steps.length - 1, i));
+      if (box === document.querySelector('.editor, .tool-grid:not([hidden])') || box.classList.contains('editor')) SK.saveStep(cur);
       steps.forEach(function(fs, k){ fs.classList.toggle('active', k === cur); });
       refresh();
       var chip = chips[cur]; if (chip.scrollIntoView) nav.scrollTo({ left: chip.offsetLeft - nav.clientWidth / 2 + chip.clientWidth / 2, behavior: 'smooth' });
@@ -606,7 +607,9 @@
     var rt; function later(){ clearTimeout(rt); rt = setTimeout(refresh, 250); }
     settings.addEventListener('input', later); settings.addEventListener('change', later);
     settings.addEventListener('click', function(){ setTimeout(refresh, 0); });
-    go(0, false);
+    var back = box.classList.contains('editor') ? SK.savedStep() : -1;
+    if (back > 0){ for (var k = 0; k < back; k++) seen[k] = true; }
+    go(back > 0 ? back : 0, false);
   };
   function initSteps(){ document.querySelectorAll('.editor, .tool-grid').forEach(SK.makeSteps); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSteps); else setTimeout(initSteps, 0);
@@ -615,6 +618,38 @@
   function topbarH(){ var t = document.querySelector('.topbar'); if (t) document.documentElement.style.setProperty('--topbar-h', t.offsetHeight + 'px'); }
   topbarH(); window.addEventListener('resize', topbarH); window.addEventListener('orientationchange', function(){ setTimeout(topbarH, 300); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', topbarH);
+
+  /* ======================================================================
+     Retour au bon endroit : chaque page retient (pour cet onglet) où on en
+     était. En revenant sur une page par un lien (menu, « Tous les outils »),
+     on retrouve la même position, et la même étape dans les outils.
+     Un lien vers une ancre (#outils) ou un rechargement gardent leur
+     comportement normal.
+     ====================================================================== */
+  var SCROLL_KEY = 'sk-scroll:' + location.pathname;
+  function ss(){ try { return window.sessionStorage; } catch(e){ return null; } }
+  var saveTimer = null;
+  function saveScroll(){ var st = ss(); if (st) try { st.setItem(SCROLL_KEY, String(Math.round(window.scrollY))); } catch(e){} }
+  window.addEventListener('scroll', function(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveScroll, 150); }, { passive: true });
+  window.addEventListener('pagehide', saveScroll);
+  SK.savedStep = function(){ var st = ss(); var v = st && st.getItem('sk-step:' + location.pathname); return v == null ? -1 : +v; };
+  SK.saveStep = function(i){ var st = ss(); if (st) try { st.setItem('sk-step:' + location.pathname, String(i)); } catch(e){} };
+  function restoreScroll(){
+    var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    var type = nav ? nav.type : 'navigate';
+    if (type === 'reload' || type === 'back_forward' || location.hash) return; // le navigateur s'en occupe
+    var st = ss(), y = st && st.getItem(SCROLL_KEY);
+    if (y == null) return;
+    var target = +y, tries = 0;
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // la page peut encore grandir (images, étapes) : on réessaie quelques fois
+    (function go(){
+      window.scrollTo(0, target);
+      if (Math.abs(window.scrollY - target) > 2 && tries++ < 20) setTimeout(go, 50);
+    })();
+  }
+  if (document.readyState === 'complete') setTimeout(restoreScroll, 0);
+  else window.addEventListener('load', function(){ setTimeout(restoreScroll, 0); });
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();
