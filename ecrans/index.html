@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Écrans « Ça commence bientôt » et « Pause » gratuits — Skelvo Stream</title>
-<meta name="description" content="Écrans d'attente animés gratuits pour ton stream : Ça commence bientôt, Pause, Fin du live. Compte à rebours, réseaux sociaux, tchat intégré. Pour OBS et Streamlabs." />
+<meta name="description" content="Écrans d'attente animés gratuits pour ton stream : Ça commence bientôt, Pause, Fin du live. Compte à rebours, ton logo, ton fond, tes réseaux, tchat intégré. Pour OBS et Streamlabs." />
 <link rel="canonical" href="https://skelvo.fr/skelvo-stream/ecrans/">
 <meta name="theme-color" content="#0c0b14">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
@@ -17,16 +17,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
   .sw{ display: grid; place-items: center; font-size: 18px; }
-  .sw-aurora{ background: radial-gradient(circle at 20% 20%, #9b5cff, transparent 60%), radial-gradient(circle at 80% 70%, #4be1c3, transparent 60%), #07060d; }
-  .sw-synth{ background: linear-gradient(#2a0c3d 50%, #05020b 50%); position: relative; }
-  .sw-synth::after{ content: ""; position: absolute; left: 30%; top: 15%; width: 40%; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(#ff5c8a, #9b5cff); }
-  .sw-gradient{ background: linear-gradient(120deg, #9b5cff, #4be1c3, #ff5c8a); }
-  .sw-waves{ background: linear-gradient(#0a0816 60%, #4be1c3 60%); }
-  .sw-particles{ background: radial-gradient(#4be1c3 1.5px, transparent 2px) 0 0/9px 9px, #120e24; }
+  .sw-mesh{ background: radial-gradient(circle at 15% 15%, #7c6cf2, transparent 60%), radial-gradient(circle at 85% 70%, #3fc8d8aa, transparent 60%), #060609; }
+  .sw-halo{ background: radial-gradient(circle at 50% 50%, #7c6cf2, transparent 65%), #060609; }
+  .sw-lines{ background: repeating-linear-gradient(115deg, #0c0b12 0 5px, #24222f 5px 6px); }
+  .sw-synth{ background: linear-gradient(#1b0a2e 50%, #030208 50%); position: relative; }
+  .sw-synth::after{ content: ""; position: absolute; left: 32%; top: 15%; width: 36%; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(#f472b6, #7c6cf2); opacity: .85; }
+  .sw-particles{ background: radial-gradient(#3fc8d8 1.2px, transparent 1.6px) 0 0/9px 9px, #0f0d18; }
+  .sw-waves{ background: linear-gradient(#08080d 62%, #3fc8d866 62%); }
+  .sw-gradient{ background: linear-gradient(120deg, #7c6cf2aa, #3fc8d8aa, #f472b6aa), #000; }
   .sw-none{ background: repeating-conic-gradient(#2a2545 0 25%, #1b1830 0 50%) 0 0/10px 10px; }
+  .sw-lay{ background: #19171f; display: flex; flex-direction: column; gap: 3px; padding: 5px; }
+  .sw-lay i{ height: 4px; width: 60%; background: #a78bfa; border-radius: 2px; display: block; } .sw-lay i + i{ width: 40%; background: #5b5580; }
+  .sw-lay.c{ align-items: center; justify-content: center; } .sw-lay.l{ align-items: flex-start; justify-content: center; } .sw-lay.b{ align-items: flex-start; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -40,8 +45,8 @@
 
 <main class="wrap">
   <div class="editor-head">
-    <h1 data-i18n="ecrans.title">Écrans d'attente animés</h1>
-    <p data-i18n="ecrans.lead">« Ça commence bientôt », « Pause », « Fin du live » : fonds animés, compte à rebours, tes réseaux et même ton tchat intégré. Crée un écran par scène.</p>
+    <h1 data-i18n="ecrans.title">Écrans d'attente</h1>
+    <p data-i18n="ecrans.lead">« Ça commence bientôt », « Pause », « Fin du live » : fonds animés ou ton image, compte à rebours, ton logo, tes réseaux et même ton tchat. Crée un écran par scène.</p>
   </div>
 
   <div class="editor">
@@ -49,28 +54,41 @@
       <fieldset>
         <legend>Quel écran ?</legend>
         <label class="field"><span>Type d'écran</span><select name="mode"><option value="start">Ça commence bientôt</option><option value="brb">Pause / Je reviens</option><option value="end">Fin du live</option></select></label>
-        <label class="field"><span>Petit texte au-dessus</span><input type="text" name="kicker" value="" placeholder="Automatique" maxlength="40" ></label>
+        <label class="field"><span>Petit texte au-dessus</span><input type="text" name="kicker" value="" placeholder="Automatique (tape - pour le cacher)" maxlength="40" ></label>
         <label class="field"><span>Titre</span><input type="text" name="title" value="" placeholder="Automatique selon le type" maxlength="60" ></label>
         <label class="field"><span>Sous-titre</span><input type="text" name="sub" value="" placeholder="ex. Ce soir : Elden Ring en hardcore" maxlength="90" ></label>
+        <div class="field"><span>Ton logo (facultatif)</span><input type="text" name="logo" value="" placeholder="Lien https ou Importer" data-image="360" spellcheck="false"><small>PNG transparent conseillé.</small></div>
+      </fieldset>
+      <fieldset>
+        <legend>Mise en page</legend>
+        <div class="choices"><div class="choice"><input type="radio" name="lay" id="lay-center" value="center" checked><label for="lay-center"><span class="sw sw-lay c"><i></i><i></i></span><span>Centré</span></label></div><div class="choice"><input type="radio" name="lay" id="lay-left" value="left"><label for="lay-left"><span class="sw sw-lay l"><i></i><i></i></span><span>À gauche</span></label></div><div class="choice"><input type="radio" name="lay" id="lay-bottom" value="bottom"><label for="lay-bottom"><span class="sw sw-lay b"><i></i><i></i></span><span>En bas</span></label></div></div>
       </fieldset>
       <fieldset>
         <legend>Compte à rebours</legend>
         <label class="field"><span><span>Durée</span><output for="f-min" data-unit=" min"></output></span><input type="range" id="f-min" name="min" min="0" max="60" value="5"><small>0 = pas de compte à rebours.</small></label>
         <label class="field"><span>Ou une heure précise</span><input type="text" name="at" value="" placeholder="ex. 20:30" maxlength="5" ><small>Prioritaire sur la durée si elle est remplie.</small></label>
-        <label class="field"><span>Texte quand c'est fini</span><input type="text" name="endtext" value="Ça commence !" placeholder="" maxlength="40" ></label>
+        <label class="field"><span>Style</span><select name="cd"><option value="grad">Dégradé des couleurs d'accent</option><option value="plain">Couleur du texte</option><option value="box">Dans une carte (thème)</option></select></label>
+        <label class="field"><span>Texte quand c'est fini</span><input type="text" name="endtext" value="" placeholder="Automatique" maxlength="40" ></label>
       </fieldset>
       <fieldset>
-        <legend>Fond animé</legend>
+        <legend>Fond</legend>
         <div class="choices">
-          <div class="choice"><input type="radio" name="bg" id="bg-aurora" value="aurora" checked><label for="bg-aurora"><span class="sw sw-aurora"></span><span>Aurore</span></label></div>
-          <div class="choice"><input type="radio" name="bg" id="bg-synth" value="synth"><label for="bg-synth"><span class="sw sw-synth"></span><span>Synthwave</span></label></div>
-          <div class="choice"><input type="radio" name="bg" id="bg-particles" value="particles"><label for="bg-particles"><span class="sw sw-particles"></span><span>Particules</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-mesh" value="mesh" checked><label for="bg-mesh"><span class="sw sw-mesh"></span><span>Brume</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-halo" value="halo"><label for="bg-halo"><span class="sw sw-halo"></span><span>Halo</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-lines" value="lines"><label for="bg-lines"><span class="sw sw-lines"></span><span>Lignes</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-particles" value="particles"><label for="bg-particles"><span class="sw sw-particles"></span><span>Constellation</span></label></div>
           <div class="choice"><input type="radio" name="bg" id="bg-waves" value="waves"><label for="bg-waves"><span class="sw sw-waves"></span><span>Vagues</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-synth" value="synth"><label for="bg-synth"><span class="sw sw-synth"></span><span>Synthwave</span></label></div>
           <div class="choice"><input type="radio" name="bg" id="bg-gradient" value="gradient"><label for="bg-gradient"><span class="sw sw-gradient"></span><span>Dégradé</span></label></div>
           <div class="choice"><input type="radio" name="bg" id="bg-none" value="none"><label for="bg-none"><span class="sw sw-none"></span><span>Transparent</span></label></div>
         </div>
-        <div class="field colors"><label class="color"><input type="color" name="c1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" name="c2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" name="c3" value="#ff5c8a"><span>Couleur 3</span></label></div>
-        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <div class="field colors"><label class="color"><input type="color" name="c1" value="#7c6cf2"><span>Couleur 1</span></label><label class="color"><input type="color" name="c2" value="#3fc8d8"><span>Couleur 2</span></label><label class="color"><input type="color" name="c3" value="#f472b6"><span>Couleur 3</span></label></div>
+        <label class="field"><span><span>Vitesse d'animation</span><output for="f-speed" data-unit=" ×"></output></span><input type="range" id="f-speed" name="speed" min="0.2" max="3" value="1" step="0.1"></label>
+        <label class="field"><span><span>Grain (effet pellicule)</span><output for="f-grain" data-unit=" %"></output></span><input type="range" id="f-grain" name="grain" min="0" max="100" value="35"></label>
+        <label class="field"><span><span>Vignettage (bords assombris)</span><output for="f-vig" data-unit=" %"></output></span><input type="range" id="f-vig" name="vig" min="0" max="100" value="50"></label>
+        <div class="field"><span>Ton image de fond</span><input type="text" name="bgimg" value="" placeholder="Lien https ou Importer" data-image="900" spellcheck="false"><small>Remplace le fond animé. Pour une image en haute qualité, colle un lien https (ex. imgur).</small></div>
+        <label class="field"><span>Ou ta vidéo de fond (lien .mp4 ou .webm)</span><input type="text" name="bgvid" value="" placeholder="https://…/fond.mp4" maxlength="400" ><small>En boucle et sans le son.</small></label>
+        <label class="field"><span><span>Assombrir ton image ou ta vidéo</span><output for="f-dim" data-unit=" %"></output></span><input type="range" id="f-dim" name="dim" min="0" max="90" value="45"></label>
       </fieldset>
       <fieldset>
         <legend>Tes réseaux</legend>
@@ -84,6 +102,7 @@
         <label class="check"><input type="checkbox" name="chat"><span>Afficher mon tchat sur la droite de l'écran</span></label>
         <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
       </fieldset>
+      <div data-theme-panel="verre"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -117,7 +136,7 @@
           <li><span>Crée une <b>scène</b> par écran (Début, Pause, Fin) et ajoute la source dedans, en plein écran.</span></li>
           <li><span>Si tu recharges la source, le compte à rebours ne repart pas de zéro.</span></li>
         </ol>
-        <div class="tip">Astuce : dans les propriétés de la source, coche « Contrôler l'audio via OBS » si tu ajoutes de la musique par-dessus, pour garder la main sur le volume.</div>
+        <div class="tip">Le thème règle la police, les couleurs du texte et le style des cartes (réseaux, compte à rebours). Les couleurs du fond se règlent dans « Fond ».</div>
       </div>
     </div>
   </div>
@@ -130,7 +149,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';

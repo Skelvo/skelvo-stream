@@ -7,95 +7,136 @@
 <title>Écran d'attente — Skelvo Stream</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
 <!--
   Écran plein « Ça commence bientôt » / « Pause » / « Fin du live ».
-  Fond animé, compte à rebours (durée ou heure précise), réseaux sociaux,
-  tchat intégré en option (réutilise ../tchat/overlay.html).
-  Conçu pour 1920×1080 mais s'adapte à toute taille (unités relatives).
+  Fond animé (ou image / vidéo du streamer), grain, vignettage, logo,
+  compte à rebours (durée ou heure précise), réseaux, tchat intégré.
+  Le texte suit le thème commun (police, couleurs, surfaces).
+  Unités en vmin : s'adapte à toutes les tailles de source.
 -->
 <style>
-  :root{ --c1: #9b5cff; --c2: #4be1c3; --c3: #ff5c8a; --font: 'Space Grotesk', system-ui, sans-serif; }
-  html, body{ margin: 0; height: 100%; overflow: hidden; background: #07060d; }
+  :root{ --c1: #7c6cf2; --c2: #3fc8d8; --c3: #f472b6; --speed: 1; --dim: .45; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ background: #060609; font-size: 1.55vmin; }
   body.bg-none{ background: transparent; }
-  body{ font-family: var(--font); color: #fff; font-size: 1.6vmin; }
 
   #bg{ position: fixed; inset: 0; overflow: hidden; }
-  canvas{ position: absolute; inset: 0; width: 100%; height: 100%; }
+  #bg canvas, #bg video, #bg .img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #bg .img{ background: center/cover no-repeat; }
+  #bg .shade{ position: absolute; inset: 0; background: rgba(0,0,0,var(--dim)); }
 
-  /* Aurore */
-  .aurora i{ position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; filter: blur(8vmax); opacity: .55; animation: drift 18s ease-in-out infinite alternate; }
-  .aurora i:nth-child(1){ background: var(--c1); left: -15vmax; top: -20vmax; }
-  .aurora i:nth-child(2){ background: var(--c2); right: -20vmax; top: 10vmax; animation-duration: 22s; animation-delay: -6s; }
-  .aurora i:nth-child(3){ background: var(--c3); left: 20vmax; bottom: -35vmax; animation-duration: 26s; animation-delay: -12s; }
-  @keyframes drift{ 0%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(12vmax, 6vmax) scale(1.15); } 100%{ transform: translate(-8vmax, 10vmax) scale(.9); } }
+  /* Dégradé maillé : grandes taches très floues qui dérivent lentement */
+  .mesh i{ position: absolute; width: 75vmax; height: 75vmax; border-radius: 50%; filter: blur(9vmax); opacity: .5; animation: drift calc(30s / var(--speed)) ease-in-out infinite alternate; }
+  .mesh i:nth-child(1){ background: var(--c1); left: -25vmax; top: -30vmax; }
+  .mesh i:nth-child(2){ background: var(--c2); right: -30vmax; top: 5vmax; animation-duration: calc(38s / var(--speed)); animation-delay: -10s; opacity: .35; }
+  .mesh i:nth-child(3){ background: var(--c3); left: 15vmax; bottom: -45vmax; animation-duration: calc(44s / var(--speed)); animation-delay: -20s; opacity: .3; }
+  @keyframes drift{ 0%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(10vmax, 6vmax) scale(1.12); } 100%{ transform: translate(-8vmax, 9vmax) scale(.92); } }
+
+  /* Halo : une seule lumière douce derrière le texte */
+  .halo{ background: radial-gradient(60% 55% at 50% 45%, var(--c1), transparent 70%), #060609; animation: breathe calc(10s / var(--speed)) ease-in-out infinite; }
+  .halo::after{ content: ""; position: absolute; inset: 0; background: radial-gradient(35% 30% at 50% 45%, var(--c2), transparent 70%); opacity: .45; mix-blend-mode: screen; }
+  @keyframes breathe{ 50%{ filter: brightness(1.18) saturate(1.1); } }
+
+  /* Lignes : traits fins qui défilent */
+  .lines{ background: linear-gradient(180deg, #08080d, #0d0c14); }
+  .lines::before{ content: ""; position: absolute; inset: -50%; background: repeating-linear-gradient(115deg, transparent 0 3.2vmin, rgba(255,255,255,.045) 3.2vmin 3.32vmin); animation: lines calc(40s / var(--speed)) linear infinite; }
+  .lines::after{ content: ""; position: absolute; inset: 0; background: radial-gradient(50% 60% at 70% 30%, var(--c1), transparent 70%), radial-gradient(40% 50% at 20% 85%, var(--c2), transparent 70%); opacity: .35; }
+  @keyframes lines{ to{ transform: translate(10vmin, -4vmin); } }
 
   /* Synthwave */
-  .synth{ background: linear-gradient(#0b0518 0%, #2a0c3d 45%, #12051f 55%, #05020b 100%); }
-  .synth .sun{ position: absolute; left: 50%; top: 18%; width: 34vmin; height: 34vmin; transform: translateX(-50%); border-radius: 50%; background: linear-gradient(var(--c3), var(--c1)); box-shadow: 0 0 8vmin color-mix(in srgb, var(--c3) 60%, transparent);
+  .synth{ background: linear-gradient(#07040f 0%, #1b0a2e 46%, #0d0518 54%, #030208 100%); }
+  .synth .sun{ position: absolute; left: 50%; top: 14%; width: 30vmin; height: 30vmin; transform: translateX(-50%); border-radius: 50%; background: linear-gradient(var(--c3), var(--c1)); box-shadow: 0 0 8vmin rgba(255,255,255,.08);
     --stripes: linear-gradient(#000 0 58%, transparent 58% 62%, #000 62% 70%, transparent 70% 75%, #000 75% 82%, transparent 82% 88%, #000 88% 93%, transparent 93% 100%);
-    -webkit-mask: var(--stripes); mask: var(--stripes); }
-  .synth .floor{ position: absolute; left: -50%; right: -50%; bottom: -10%; height: 60%; transform-origin: top; transform: perspective(40vh) rotateX(62deg);
-    background-image: linear-gradient(var(--c2) .25vmin, transparent .25vmin), linear-gradient(90deg, var(--c2) .25vmin, transparent .25vmin); background-size: 8vmin 8vmin; animation: grid 1.6s linear infinite; opacity: .8; }
-  .synth .floor::after{ content: ""; position: absolute; inset: 0; background: linear-gradient(#12051f, transparent 40%); }
+    -webkit-mask: var(--stripes); mask: var(--stripes); opacity: .85; }
+  .synth .floor{ position: absolute; left: -50%; right: -50%; bottom: -10%; height: 58%; transform-origin: top; transform: perspective(40vh) rotateX(62deg);
+    background-image: linear-gradient(var(--c2) .2vmin, transparent .2vmin), linear-gradient(90deg, var(--c2) .2vmin, transparent .2vmin); background-size: 8vmin 8vmin; animation: grid calc(2s / var(--speed)) linear infinite; opacity: .55; }
+  .synth .floor::after{ content: ""; position: absolute; inset: 0; background: linear-gradient(#0d0518, transparent 45%); }
   @keyframes grid{ to{ background-position: 0 8vmin; } }
 
-  /* Dégradé animé */
-  .gradient{ background: linear-gradient(120deg, var(--c1), var(--c2), var(--c3), var(--c1)); background-size: 300% 300%; animation: grad 16s ease infinite; }
-  .gradient::after{ content: ""; position: absolute; inset: 0; background: rgba(5,4,12,.45); }
+  /* Dégradé animé, assombri */
+  .gradient{ background: linear-gradient(120deg, var(--c1), var(--c2), var(--c3), var(--c1)); background-size: 300% 300%; animation: grad calc(24s / var(--speed)) ease infinite; }
+  .gradient::after{ content: ""; position: absolute; inset: 0; background: rgba(4,4,8,.55); }
   @keyframes grad{ 0%{ background-position: 0% 50%; } 50%{ background-position: 100% 50%; } 100%{ background-position: 0% 50%; } }
 
   /* Vagues */
-  .waves{ background: linear-gradient(#0a0816, #140f2a); }
-  .waves svg{ position: absolute; left: 0; bottom: 0; width: 200%; height: 40%; }
-  .waves svg:nth-child(1){ animation: wave 14s linear infinite; opacity: .5; }
-  .waves svg:nth-child(2){ animation: wave 9s linear infinite reverse; opacity: .6; height: 30%; }
-  .waves svg:nth-child(3){ animation: wave 6s linear infinite; opacity: .8; height: 20%; }
+  .waves{ background: linear-gradient(#07070c, #0e0c18); }
+  .waves svg{ position: absolute; left: 0; bottom: 0; width: 200%; height: 34%; }
+  .waves svg:nth-child(1){ animation: wave calc(20s / var(--speed)) linear infinite; opacity: .25; }
+  .waves svg:nth-child(2){ animation: wave calc(14s / var(--speed)) linear infinite reverse; opacity: .3; height: 26%; }
+  .waves svg:nth-child(3){ animation: wave calc(9s / var(--speed)) linear infinite; opacity: .4; height: 17%; }
   @keyframes wave{ to{ transform: translateX(-50%); } }
 
-  /* Contenu */
-  #content{ position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6vmin; box-sizing: border-box; }
-  body.with-chat #content{ right: 30%; }
-  .kicker{ font-size: 1.5em; font-weight: 700; letter-spacing: .35em; text-transform: uppercase; color: var(--c2); text-shadow: 0 0 1.2em color-mix(in srgb, var(--c2) 60%, transparent); margin-bottom: 1.2em; }
-  h1{ margin: 0; font-size: 6.4em; line-height: 1; font-weight: 800; letter-spacing: -.02em; max-width: 14ch; text-shadow: 0 .06em .4em rgba(0,0,0,.5); animation: float 6s ease-in-out infinite; }
-  .sub{ margin-top: .9em; font-size: 2em; opacity: .85; max-width: 40ch; }
-  .count{ margin-top: .7em; font-size: 7em; font-weight: 800; font-variant-numeric: tabular-nums; background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .03em .1em rgba(0,0,0,.4)); }
-  .count.done{ font-size: 4em; }
-  @keyframes float{ 50%{ transform: translateY(-.08em); } }
+  /* Grain et vignettage : la touche « pro » */
+  .grain{ position: fixed; inset: -50%; pointer-events: none; opacity: var(--grain, 0); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); animation: grain .9s steps(6) infinite; }
+  @keyframes grain{ 0%{ transform: translate(0,0); } 20%{ transform: translate(-3%,2%); } 40%{ transform: translate(2%,-3%); } 60%{ transform: translate(-2%,-1%); } 80%{ transform: translate(3%,3%); } }
+  .vignette{ position: fixed; inset: 0; pointer-events: none; background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.65)); opacity: var(--vig, 0); }
 
-  .socials{ position: fixed; left: 0; right: 0; bottom: 4.5vmin; display: flex; justify-content: center; flex-wrap: wrap; gap: 1.2em; font-size: 1.6em; }
+  /* ---------- Contenu ---------- */
+  #content{ position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8vmin; box-sizing: border-box; }
+  body.with-chat #content{ right: 30%; }
+  .lay-left #content{ align-items: flex-start; text-align: left; padding-left: 10vmin; }
+  .lay-bottom #content{ align-items: flex-start; justify-content: flex-end; text-align: left; padding: 9vmin 10vmin 16vmin; }
+  .logo{ max-height: 14vmin; max-width: 40vmin; margin-bottom: 3vmin; display: none; filter: drop-shadow(0 .4vmin 1.6vmin rgba(0,0,0,.4)); }
+  .logo.on{ display: block; }
+  .kicker{ display: inline-flex; align-items: center; gap: .7em; font-size: 1.35em; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; color: var(--ac); margin-bottom: 1.4em; }
+  .kicker::before, .kicker::after{ content: ""; width: 3em; height: 1px; background: currentColor; opacity: .5; }
+  .lay-left .kicker::before, .lay-bottom .kicker::before{ display: none; }
+  h1{ margin: 0; font-size: 6.6em; line-height: .98; font-weight: var(--fw); text-transform: var(--up); letter-spacing: calc(var(--ls) - .02em); max-width: 15ch; color: var(--tx); text-shadow: 0 .05em .5em rgba(0,0,0,.35); }
+  .sub{ margin-top: 1em; font-size: 1.9em; color: var(--muted); max-width: 42ch; font-weight: 500; }
+  .count{ margin-top: .75em; font-size: 6em; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1; }
+  .cd-grad .count{ background: linear-gradient(90deg, var(--ac), var(--ac2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .cd-plain .count{ color: var(--tx); }
+  .cd-box .count{ font-size: 4.6em; padding: .22em .5em .26em; }
+  .count.done{ font-size: 3.4em; }
+  .count:empty{ display: none; }
+
+  .socials{ position: fixed; left: 0; right: 0; bottom: 5vmin; display: flex; justify-content: center; flex-wrap: wrap; gap: 1em; font-size: 1.5em; padding: 0 6vmin; }
+  .lay-left .socials, .lay-bottom .socials{ justify-content: flex-start; padding-left: 10vmin; }
   body.with-chat .socials{ right: 30%; }
-  .social{ display: inline-flex; align-items: center; gap: .5em; background: rgba(10,8,20,.55); border: 1px solid rgba(255,255,255,.14); padding: .45em .9em; border-radius: 999px; backdrop-filter: blur(6px); }
-  .social b{ color: var(--c2); font-weight: 700; }
+  .social{ display: inline-flex; align-items: center; gap: .55em; padding: .5em 1em; font-weight: 500; }
+  .social b{ color: var(--ac); font-weight: 700; font-size: .8em; letter-spacing: .06em; text-transform: uppercase; }
+  .sk-accent .social b{ color: inherit; opacity: .75; }
 
   #chat{ position: fixed; top: 4vmin; right: 3vmin; width: calc(30% - 4vmin); height: calc(100% - 8vmin); border: 0; background: transparent; }
-  .dots::after{ content: ""; animation: dots 1.6s steps(4) infinite; display: inline-block; width: 1.2em; text-align: left; }
-  @keyframes dots{ 0%{ content: ""; } 25%{ content: "."; } 50%{ content: ".."; } 75%{ content: "..."; } }
+  .rise{ animation: rise 1.2s cubic-bezier(.16,1,.3,1) both; }
+  .rise.d1{ animation-delay: .1s; } .rise.d2{ animation-delay: .2s; } .rise.d3{ animation-delay: .3s; }
+  @keyframes rise{ from{ opacity: 0; transform: translateY(1.2em); filter: blur(8px); } }
+  .float h1{ animation: float 7s ease-in-out infinite; }
+  @keyframes float{ 50%{ transform: translateY(-.06em); } }
 </style>
 </head>
 <body>
 <div id="bg"></div>
+<div class="vignette"></div>
+<div class="grain"></div>
 <div id="content">
-  <div class="kicker" id="kicker"></div>
-  <h1 id="title"></h1>
-  <div class="sub" id="sub"></div>
-  <div class="count" id="count"></div>
+  <img class="logo rise" id="logo" alt="">
+  <div class="kicker rise" id="kicker"></div>
+  <h1 class="rise d1" id="title"></h1>
+  <div class="sub rise d2" id="sub"></div>
+  <div class="count rise d3" id="count"></div>
 </div>
 <div class="socials" id="socials"></div>
 
-<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = { mode: 'start', title: '', sub: '', kicker: '', min: '5', at: '', endtext: 'Ça commence !', bg: 'aurora',
-    c1: '9b5cff', c2: '4be1c3', c3: 'ff5c8a', font: 'grotesk', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0' };
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    mode: 'start', title: '', sub: '', kicker: '', min: '5', at: '', endtext: '', bg: 'mesh',
+    c1: '7c6cf2', c2: '3fc8d8', c3: 'f472b6', speed: '1', grain: '35', vig: '50', bgimg: '', bgvid: '', dim: '45', logo: '',
+    lay: 'center', cd: 'grad', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0',
+    sk: 'glass', sf: '15131c', so: '45', rad: '70'
+  });
   var TEXTS = {
-    start: { k: 'Bienvenue', t: 'Le live commence bientôt', e: 'Ça commence !' },
+    start: { k: 'Bienvenue', t: 'Le live commence bientôt', e: 'C\'est parti !' },
     brb:   { k: 'Pause',     t: 'Je reviens tout de suite', e: 'Ça reprend !' },
-    end:   { k: 'Fin du live', t: 'Merci d\'avoir regardé !', e: 'À bientôt !' }
+    end:   { k: 'Fin du live', t: 'Merci d\'avoir regardé', e: 'À bientôt !' }
   };
   var num = SKO.num, el = SKO.el;
   var bgEl = document.getElementById('bg'), countEl = document.getElementById('count');
-  var P = {}, bgKind = '', target = 0, particles = null, chatFrame = null, chatKey = '';
+  var P = {}, bgKey = '', target = 0, particles = null, chatFrame = null, chatKey = '';
 
   /* ---------- Fonds ---------- */
   function waveSvg(color){
@@ -103,33 +144,41 @@
   }
   function setBg(kind){
     if (particles){ particles.stop(); particles = null; }
-    bgEl.className = ''; bgEl.innerHTML = '';
+    bgEl.className = ''; bgEl.textContent = ''; bgEl.style.background = '';
     document.body.classList.toggle('bg-none', kind === 'none');
-    if (kind === 'aurora'){ bgEl.className = 'aurora'; bgEl.innerHTML = '<i></i><i></i><i></i>'; }
+    var img = SKO.safeImage(P.bgimg), vid = /^https:\/\/\S+\.(mp4|webm)(\?\S*)?$/i.test(P.bgvid || '') ? P.bgvid : '';
+    if (vid){
+      var v = document.createElement('video'); v.src = vid; v.autoplay = true; v.loop = true; v.muted = true; v.playsInline = true;
+      bgEl.appendChild(v); bgEl.appendChild(el('div', 'shade')); return;
+    }
+    if (img){ var d = el('div', 'img'); d.style.backgroundImage = 'url("' + img + '")'; bgEl.appendChild(d); bgEl.appendChild(el('div', 'shade')); return; }
+    if (kind === 'mesh'){ bgEl.className = 'mesh'; bgEl.innerHTML = '<i></i><i></i><i></i>'; }
+    else if (kind === 'halo'){ bgEl.className = 'halo'; }
+    else if (kind === 'lines'){ bgEl.className = 'lines'; }
     else if (kind === 'synth'){ bgEl.className = 'synth'; bgEl.innerHTML = '<div class="sun"></div><div class="floor"></div>'; }
     else if (kind === 'gradient'){ bgEl.className = 'gradient'; }
     else if (kind === 'waves'){ bgEl.className = 'waves'; bgEl.innerHTML = waveSvg('var(--c1)') + waveSvg('var(--c2)') + waveSvg('var(--c3)'); }
-    else if (kind === 'particles'){ bgEl.style.background = 'radial-gradient(120% 100% at 50% 0%, #1a1433, #07060d)'; particles = startParticles(); }
-    if (kind !== 'particles') bgEl.style.background = '';
+    else if (kind === 'particles'){ bgEl.style.background = 'radial-gradient(120% 100% at 50% 0%, #14121f, #060609)'; particles = startParticles(); }
   }
   function startParticles(){
     var c = document.createElement('canvas'); bgEl.appendChild(c);
     var ctx = c.getContext('2d'), pts = [], raf, w, h;
     function size(){ w = c.width = innerWidth; h = c.height = innerHeight; }
     size(); addEventListener('resize', size);
-    for (var i = 0; i < 90; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4, r: 1 + Math.random() * 2.5, c: i % 3 });
+    for (var i = 0; i < 70; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3, r: .8 + Math.random() * 1.8, c: i % 3 });
     function loop(){
       var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--c1'), cs.getPropertyValue('--c2'), cs.getPropertyValue('--c3')];
+      var sp = num(P.speed, .2, 4, 1);
       ctx.clearRect(0, 0, w, h);
-      var link = Math.min(w, h) * .14;
+      var link = Math.min(w, h) * .13;
       for (var i = 0; i < pts.length; i++){
-        var p = pts[i]; p.x += p.vx; p.y += p.vy;
+        var p = pts[i]; p.x += p.vx * sp; p.y += p.vy * sp;
         if (p.x < 0 || p.x > w) p.vx *= -1; if (p.y < 0 || p.y > h) p.vy *= -1;
         for (var j = i + 1; j < pts.length; j++){
           var q = pts[j], d = Math.hypot(p.x - q.x, p.y - q.y);
-          if (d < link){ ctx.globalAlpha = (1 - d / link) * .35; ctx.strokeStyle = cols[p.c]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+          if (d < link){ ctx.globalAlpha = (1 - d / link) * .22; ctx.strokeStyle = cols[p.c]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
         }
-        ctx.globalAlpha = .9; ctx.fillStyle = cols[p.c]; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+        ctx.globalAlpha = .75; ctx.fillStyle = cols[p.c]; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
       }
       raf = requestAnimationFrame(loop);
     }
@@ -165,17 +214,31 @@
   SKO.params(DEFAULTS, function(p){
     var prev = P; P = p;
     if (!TEXTS[P.mode]) P.mode = 'start';
+    SKO.theme(P);
     var root = document.documentElement.style;
     ['c1', 'c2', 'c3'].forEach(function(k){ root.setProperty('--' + k, SKO.hex(P[k], DEFAULTS[k])); });
-    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--speed', num(P.speed, .2, 4, 1));
+    root.setProperty('--grain', num(P.grain, 0, 100, 35) / 100 * .22);
+    root.setProperty('--vig', num(P.vig, 0, 100, 50) / 100);
+    root.setProperty('--dim', num(P.dim, 0, 95, 45) / 100);
 
     var tx = TEXTS[P.mode];
     document.getElementById('kicker').textContent = P.kicker || tx.k;
-    var t = document.getElementById('title'); t.textContent = P.title || tx.t;
+    document.getElementById('kicker').style.display = P.kicker === '-' ? 'none' : '';
+    document.getElementById('title').textContent = P.title || tx.t;
     document.getElementById('sub').textContent = P.sub;
+    var logo = document.getElementById('logo'), lg = SKO.safeImage(P.logo);
+    logo.classList.toggle('on', !!lg); if (lg) logo.src = lg;
 
-    var bg = /^(aurora|synth|gradient|waves|particles|none)$/.test(P.bg) ? P.bg : 'aurora';
-    if (bg !== bgKind){ bgKind = bg; setBg(bg); }
+    var bg = /^(mesh|halo|lines|synth|gradient|waves|particles|none|aurora)$/.test(P.bg) ? (P.bg === 'aurora' ? 'mesh' : P.bg) : 'mesh';
+    var bk = bg + '|' + P.bgimg + '|' + P.bgvid;
+    if (bk !== bgKey){ bgKey = bk; setBg(bg); }
+
+    var lay = /^(center|left|bottom)$/.test(P.lay) ? P.lay : 'center';
+    var cd = /^(grad|plain|box)$/.test(P.cd) ? P.cd : 'grad';
+    document.body.classList.remove('lay-center', 'lay-left', 'lay-bottom', 'cd-grad', 'cd-plain', 'cd-box');
+    document.body.classList.add('lay-' + lay, 'cd-' + cd, 'float');
+    countEl.classList.toggle('sk-surface', cd === 'box');
 
     if (prev.mode !== P.mode || prev.min !== P.min || prev.at !== P.at) target = computeTarget();
     tick();
@@ -183,24 +246,25 @@
     var so = document.getElementById('socials'); so.textContent = '';
     [['tw', 'X'], ['ig', 'Instagram'], ['tt', 'TikTok'], ['yt', 'YouTube'], ['dc', 'Discord']].forEach(function(s){
       var v = String(P[s[0]] || '').trim(); if (!v) return;
-      var d = el('span', 'social'); d.appendChild(el('b', '', s[1])); d.appendChild(document.createTextNode(v)); so.appendChild(d);
+      var d = el('span', 'social sk-surface'); d.appendChild(el('b', '', s[1])); d.appendChild(document.createTextNode(v)); so.appendChild(d);
     });
 
-    // Tchat intégré
+    // Tchat intégré : même thème que l'écran
     var wantChat = P.chat === '1' && (P.ch || P.demo === '1');
     document.body.classList.toggle('with-chat', !!wantChat);
-    var ck = wantChat ? (P.demo === '1' ? 'demo' : SKT_clean(P.ch)) : '';
-    if (ck !== chatKey){
-      chatKey = ck;
+    var clean = String(P.ch || '').toLowerCase().replace(/^[#@]/, '').replace(/[^a-z0-9_]/g, '').slice(0, 25);
+    var ck = wantChat ? (P.demo === '1' ? 'demo' : clean) : '';
+    var themeQs = Object.keys(SKO.THEME).map(function(k){ return k + '=' + encodeURIComponent(P[k] == null ? '' : P[k]); }).join('&');
+    if (ck + themeQs !== chatKey){
+      chatKey = ck + themeQs;
       if (chatFrame){ chatFrame.remove(); chatFrame = null; }
       if (ck){
         chatFrame = document.createElement('iframe'); chatFrame.id = 'chat';
-        chatFrame.src = '../tchat/overlay.html?theme=bubble&fs=22&max=14&ac=' + encodeURIComponent(P.c1) + (ck === 'demo' ? '&demo=1' : '&ch=' + encodeURIComponent(ck));
+        chatFrame.src = '../tchat/overlay.html?theme=bubble&fs=22&max=14&' + themeQs + (ck === 'demo' ? '&demo=1' : '&ch=' + encodeURIComponent(ck));
         document.body.appendChild(chatFrame);
       }
     }
   });
-  function SKT_clean(ch){ return String(ch || '').toLowerCase().replace(/^[#@]/, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); }
 })();
 </script>
 </body>

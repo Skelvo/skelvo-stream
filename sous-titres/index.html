@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <!--
   Page « micro » : reconnaissance vocale du navigateur (Chrome / Edge),
   traduction locale avec l'API Translator de Chrome si disponible, puis envoi
@@ -71,13 +71,10 @@
         <label class="field"><span>Position</span><select name="pos"><option value="bottom">En bas de la source</option><option value="top">En haut de la source</option></select></label>
       </fieldset>
       <fieldset>
-        <legend>Style</legend>
-        <label class="field"><span>Fond</span><select name="style"><option value="box">Bandeau sombre</option><option value="outline">Contour (sans fond)</option></select></label>
-        <label class="field"><span><span>Opacité du bandeau</span><output for="s-bgo" data-unit=" %"></output></span><input type="range" id="s-bgo" name="bgo" min="0" max="100" value="65"></label>
-        <div class="field colors"><label class="color"><input type="color" name="tx" value="#ffffff"><span>Texte</span></label><label class="color"><input type="color" name="ac" value="#4be1c3"><span>Traduction</span></label></div>
-        <label class="field"><span>Police</span><select name="font"><option value="grotesk">Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="system">Police du système</option></select></label>
+        <legend>Taille</legend>
         <label class="field"><span><span>Taille du texte</span><output for="s-fs" data-unit=" px"></output></span><input type="range" id="s-fs" name="fs" min="16" max="90" value="40"></label>
       </fieldset>
+      <div data-theme-panel="minimal"></div>
       <fieldset><button type="button" class="btn ghost small" id="reset">Tout remettre par défaut</button></fieldset>
     </form>
 
@@ -135,7 +132,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script src="../assets/vendor/peerjs-1.5.4.min.js"></script>
 <script>
 (function(){

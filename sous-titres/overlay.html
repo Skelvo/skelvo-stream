@@ -14,29 +14,30 @@
   s'y connecte et réessaie tout seul s'il la perd.
   Dans l'aperçu de l'éditeur (preview=1), les textes arrivent par postMessage.
 -->
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
 <style>
-  :root{ --fs: 40px; --font: 'Space Grotesk', system-ui, sans-serif; --tx: #fff; --bg: rgba(0,0,0,.65); --ac: #4be1c3; }
-  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
-  body{ font-family: var(--font); font-size: var(--fs); color: var(--tx); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: .4em; box-sizing: border-box; }
+  :root{ --fs: 40px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: .4em; box-sizing: border-box; }
   body.top{ justify-content: flex-start; }
   #box{ max-width: 100%; text-align: center; transition: opacity .6s; }
   #box.hidden{ opacity: 0; }
-  .line{ display: inline; line-height: 1.45; font-weight: 700; padding: .08em .35em; -webkit-box-decoration-break: clone; box-decoration-break: clone; background: var(--bg); border-radius: .2em; }
-  .s-outline .line{ background: none; text-shadow: 0 0 .06em #000, 0 0 .1em #000, .04em .04em .1em #000, -.04em -.04em .1em #000; }
-  .row{ margin-top: .2em; }
+  .line{ display: inline; line-height: 1.5; font-weight: var(--fw); padding: .1em .4em; -webkit-box-decoration-break: clone; box-decoration-break: clone; border-radius: calc(var(--rad) * .5); }
+  .row{ margin-top: .18em; }
   .row.tr .line{ color: var(--ac); }
+  .sk-accent .row.tr .line{ color: inherit; opacity: .85; }
   .interim{ opacity: .7; }
 </style>
 </head>
 <body>
 <div id="box" class="hidden"></div>
 
-<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/overlay.js?v=3"></script>
 <script src="../assets/vendor/peerjs-1.5.4.min.js"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = { room: '', show: 'orig', lines: '2', fade: '6', style: 'box', pos: 'bottom', fs: '40', font: 'grotesk', tx: 'ffffff', ac: '4be1c3', bgo: '65', preview: '0' };
+  var DEFAULTS = Object.assign({}, SKO.THEME, { room: '', show: 'orig', lines: '2', fade: '6', pos: 'bottom', fs: '40', sh: '0', preview: '0' });
   var num = SKO.num, el = SKO.el;
   var box = document.getElementById('box');
   var P = {}, finals = [], interim = '', fadeTimer = null, peer = null, conn = null, room = '';
@@ -47,10 +48,10 @@
     var items = finals.slice(-max);
     var showOrig = P.show !== 'trans', showTr = P.show !== 'orig';
     items.forEach(function(f){
-      if (showOrig || !f.tr){ var r = el('div', 'row'); r.appendChild(el('span', 'line', f.text)); box.appendChild(r); }
-      if (showTr && f.tr){ var t = el('div', 'row tr'); t.appendChild(el('span', 'line', f.tr)); box.appendChild(t); }
+      if (showOrig || !f.tr){ var r = el('div', 'row'); r.appendChild(el('span', 'line sk-surface', f.text)); box.appendChild(r); }
+      if (showTr && f.tr){ var t = el('div', 'row tr'); t.appendChild(el('span', 'line sk-surface', f.tr)); box.appendChild(t); }
     });
-    if (interim && showOrig){ var i = el('div', 'row interim'); i.appendChild(el('span', 'line', interim)); box.appendChild(i); }
+    if (interim && showOrig){ var i = el('div', 'row interim'); i.appendChild(el('span', 'line sk-surface', interim)); box.appendChild(i); }
     box.classList.toggle('hidden', !box.childNodes.length);
     clearTimeout(fadeTimer);
     var fade = num(P.fade, 0, 120, 6);
@@ -98,13 +99,12 @@
 
   SKO.params(DEFAULTS, function(p){
     P = p;
-    var root = document.documentElement.style;
-    root.setProperty('--font', SKO.useFont(P.font));
-    root.setProperty('--fs', num(P.fs, 14, 120, 40) + 'px');
-    root.setProperty('--tx', SKO.hex(P.tx, DEFAULTS.tx));
-    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
-    root.setProperty('--bg', 'rgba(0,0,0,' + num(P.bgo, 0, 100, 65) / 100 + ')');
-    document.body.className = 's-' + (P.style === 'outline' ? 'outline' : 'box') + (P.pos === 'top' ? ' top' : '');
+    // Anciens liens : style=outline -> sans fond, bgo -> opacité du fond
+    if (P.style === 'outline') P.sk = 'none';
+    if (P.bgo != null && !/[?&]so=/.test(location.search)) P.so = P.bgo;
+    SKO.theme(P);
+    document.documentElement.style.setProperty('--fs', num(P.fs, 14, 120, 40) + 'px');
+    document.body.className = P.pos === 'top' ? 'top' : '';
     render();
     var r = String(P.room || '').replace(/[^a-z0-9]/gi, '').slice(0, 24);
     if (r !== room){ room = r; if (conn){ try { conn.close(); } catch(e){} conn = null; } connectPeer(); }
