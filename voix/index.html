@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lecture vocale du tchat Twitch, gratuite — Skelvo Stream</title>
-<meta name="description" content="Entends ton tchat Twitch pendant que tu joues, même avec un seul écran : les messages sont lus à voix haute. Gratuit, sans compte, dans ton navigateur." />
+<title>Lecture vocale des subs, bits et du tchat Twitch, gratuite — Skelvo Stream</title>
+<meta name="description" content="Abonnements, subs offerts, bits, raids et récompenses de points de chaîne lus à voix haute pendant ton live. Gratuit, sans compte, dans ton navigateur." />
 <link rel="canonical" href="https://skelvo.fr/skelvo-stream/voix/">
 <meta name="theme-color" content="#0c0b14">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
@@ -58,8 +58,8 @@
 
 <main class="wrap">
   <div class="editor-head">
-    <h1 data-i18n="voix.title">Lecture vocale du tchat</h1>
-    <p data-i18n="voix.lead">Un seul écran ? Entends ton tchat pendant que tu joues. Laisse cette page ouverte dans un onglet : les messages sont lus à voix haute, avec les filtres que tu veux.</p>
+    <h1 data-i18n="voix.title">Lecture vocale</h1>
+    <p data-i18n="voix.lead">Abonnements, subs offerts, bits, raids, messages des récompenses de points de chaîne… lus à voix haute pendant que tu joues. Toi seul choisis ce qui est lu.</p>
   </div>
 
   <div class="editor">
@@ -72,8 +72,37 @@
         <label class="field"><span><span>Volume</span><output for="v-vol" data-unit=" %"></output></span><input type="range" id="v-vol" name="vol" min="0" max="100" value="80"></label>
       </fieldset>
       <fieldset>
-        <legend>Quels messages lire ?</legend>
-        <label class="field"><span>Messages de</span>
+        <legend>Ce qui est lu</legend>
+        <label class="check"><input type="checkbox" name="ev_sub" checked><span>Abonnements et réabonnements</span></label>
+        <label class="check"><input type="checkbox" name="ev_gift" checked><span>Subs offerts</span></label>
+        <label class="check"><input type="checkbox" name="ev_bits" checked><span>Bits</span></label>
+        <label class="field" style="margin:-2px 0 12px 28px"><span>À partir de combien de bits ?</span><input type="text" name="minbits" value="100" maxlength="7" inputmode="numeric"></label>
+        <label class="check"><input type="checkbox" name="ev_raid" checked><span>Raids</span></label>
+        <label class="check"><input type="checkbox" name="ev_reward" checked><span>Récompenses de points de chaîne avec un message</span></label>
+        <div class="field" style="margin:-2px 0 12px 28px">
+          <span>Seulement cette récompense</span>
+          <div class="url-row"><input type="text" name="reward" placeholder="Toutes les récompenses" spellcheck="false" readonly><button type="button" class="btn ghost small" id="learn">Détecter</button></div>
+          <small>Crée sur Twitch une récompense « Message lu à voix haute » avec un texte obligatoire, clique sur Détecter, puis utilise-la une fois.</small>
+        </div>
+        <label class="check"><input type="checkbox" name="readmsg" checked><span>Lire le message joint aux abonnements et aux bits</span></label>
+        <label class="check"><input type="checkbox" name="ev_chat"><span>Tous les messages du tchat</span></label>
+        <label class="field"><span>Et les messages qui commencent par</span><input type="text" name="prefix" maxlength="20" placeholder="ex. !tts (vide = aucun)" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Phrases lues</legend>
+        <p class="hint">Mots remplacés : <code>{name}</code> <code>{months}</code> <code>{count}</code> <code>{amount}</code> <code>{recipient}</code> <code>{message}</code></p>
+        <label class="field"><span>Abonnement</span><input type="text" name="tsub" value="{name} s'abonne !" maxlength="120"></label>
+        <label class="field"><span>Réabonnement</span><input type="text" name="tresub" value="{name} se réabonne, {months} mois !" maxlength="120"></label>
+        <label class="field"><span>Sub offert</span><input type="text" name="tgift" value="{name} offre un abonnement à {recipient} !" maxlength="120"></label>
+        <label class="field"><span>Plusieurs subs offerts</span><input type="text" name="tbomb" value="{name} offre {count} abonnements !" maxlength="120"></label>
+        <label class="field"><span>Bits</span><input type="text" name="tbits" value="{name} envoie {amount} bits !" maxlength="120"></label>
+        <label class="field"><span>Raid</span><input type="text" name="traid" value="Raid de {name} avec {count} viewers !" maxlength="120"></label>
+        <label class="field"><span>Récompense de points</span><input type="text" name="treward" value="{name} : {message}" maxlength="120"></label>
+        <label class="field"><span>Message du tchat</span><input type="text" name="tchat" value="{name} dit : {message}" maxlength="120"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Filtres</legend>
+        <label class="field"><span>Messages du tchat de</span>
           <select name="who">
             <option value="all">Tout le monde</option>
             <option value="subs">Abonnés, VIP et modos</option>
@@ -81,14 +110,11 @@
             <option value="mods">Modos seulement</option>
           </select>
         </label>
-        <label class="field"><span>Lire seulement les messages qui commencent par</span><input type="text" name="prefix" maxlength="20" placeholder="Vide = tous les messages (ex. !tts)" spellcheck="false" autocapitalize="off"></label>
-        <label class="check"><input type="checkbox" name="names" checked><span>Dire le pseudo (« Lunaa dit : … »)</span></label>
-        <label class="check"><input type="checkbox" name="events" checked><span>Annoncer les abonnements, subs offerts, bits et raids</span></label>
         <label class="check"><input type="checkbox" name="nocmd" checked><span>Ignorer les commandes (messages avec !)</span></label>
         <label class="check"><input type="checkbox" name="nolinks" checked><span>Remplacer les liens par « un lien »</span></label>
         <label class="check"><input type="checkbox" name="noemotes" checked><span>Ne pas lire les noms des emotes</span></label>
-        <label class="field"><span><span>Longueur maximum lue</span><output for="v-max" data-unit=" caractères"></output></span><input type="range" id="v-max" name="maxlen" min="30" max="400" step="10" value="200"></label>
-        <label class="field"><span><span>Messages en attente maximum</span><output for="v-queue"></output></span><input type="range" id="v-queue" name="queue" min="1" max="30" value="8"><small>Si le tchat va trop vite, les plus vieux messages sont sautés.</small></label>
+        <label class="field"><span><span>Longueur maximum d'un message</span><output for="v-max" data-unit=" caractères"></output></span><input type="range" id="v-max" name="maxlen" min="30" max="400" step="10" value="200"></label>
+        <label class="field"><span><span>Phrases en attente maximum</span><output for="v-queue"></output></span><input type="range" id="v-queue" name="queue" min="1" max="30" value="8"><small>Si ça va trop vite, les plus vieilles sont sautées.</small></label>
         <label class="field"><span>Comptes à ignorer</span><textarea name="bots" spellcheck="false">nightbot,streamelements,streamlabs,moobot,fossabot,wizebot,sery_bot</textarea></label>
       </fieldset>
       <fieldset><button type="button" class="btn ghost small" id="reset">Tout remettre par défaut</button></fieldset>
@@ -210,31 +236,63 @@
   }
 
   function bots(){ var o = {}; String(P.bots || '').toLowerCase().split(/[\s,;]+/).forEach(function(b){ if (b) o[b.replace(/^@/, '')] = 1; }); return o; }
+  function speakName(n){ return String(n || '').replace(/_/g, ' ').replace(/\d+$/, '').trim() || n; }
+  // "{name} offre {count}…" -> phrase ; {message} est ajouté à la fin s'il n'est pas dans le modèle
+  function phrase(tpl, v, withMsg){
+    var used = false;
+    var out = String(tpl || '').replace(/\{(\w+)\}/g, function(_, k){ if (k === 'message') used = true; return v[k] != null ? v[k] : ''; });
+    if (withMsg && !used && v.message) out = out.replace(/\s+$/, '') + (/[.!?…:]$/.test(out.trim()) ? ' ' : '. ') + v.message;
+    return out.replace(/\s+/g, ' ').trim();
+  }
+
+  var learning = false;
+  document.getElementById('learn').addEventListener('click', function(){
+    if (!conn){ SK.toast('Clique d\'abord sur Démarrer'); return; }
+    learning = true; this.textContent = 'En attente…';
+    SK.toast('Utilise ta récompense une fois sur ta chaîne');
+  });
 
   function onMessage(m){
-    var who = P.who;
     if (bots()[m.login]) return;
+    // Récompense de points de chaîne avec un texte
+    if (m.rewardId){
+      if (learning){ learning = false; ed.set({ reward: m.rewardId }); document.getElementById('learn').textContent = 'Détecter'; SK.toast('Récompense enregistrée !'); }
+      if (P.ev_reward !== '1' || (P.reward && P.reward !== m.rewardId)) return;
+      var rt = clean(m);
+      if (rt) enqueue({ name: '🎟️ ' + m.name, text: rt, say: phrase(P.treward, { name: speakName(m.name), message: rt }, false) });
+      return;
+    }
+    var who = P.who;
     if (who === 'mods' && !m.isMod) return;
     if (who === 'vip' && !m.isMod && !m.isVip) return;
     if (who === 'subs' && !m.isMod && !m.isVip && !m.isSub) return;
     var raw = m.text;
-    if (P.prefix){
-      if (raw.toLowerCase().indexOf(P.prefix.toLowerCase()) !== 0) return;
+    if (P.prefix && raw.toLowerCase().indexOf(P.prefix.toLowerCase()) === 0){
       m = Object.assign({}, m, { text: raw.slice(P.prefix.length).trim(), emotes: '' });
-    } else if (P.nocmd === '1' && raw.charAt(0) === '!') return;
+    } else {
+      if (P.ev_chat !== '1') return;
+      if (P.nocmd === '1' && raw.charAt(0) === '!') return;
+    }
     var text = clean(m);
     if (!text || !/[\p{L}\p{N}]/u.test(text)) return;
-    enqueue({ name: m.name, text: text, say: (P.names === '1' ? m.name.replace(/_/g, ' ').replace(/\d+$/, '') + (m.action ? ' ' : ' dit : ') : '') + text });
+    enqueue({ name: m.name, text: text, say: m.action ? speakName(m.name) + ' ' + text : phrase(P.tchat, { name: speakName(m.name), message: text }, false) });
   }
   function onEvent(e){
-    if (P.events !== '1') return;
-    var s = e.type === 'sub' ? e.name + ' s\'abonne !'
-      : e.type === 'resub' ? e.name + ' se réabonne, ' + e.months + ' mois !'
-      : e.type === 'giftbomb' ? e.name + ' offre ' + e.count + ' abonnements !'
-      : e.type === 'subgift' && !e.fromBomb ? e.name + ' offre un abonnement à ' + e.recipient + ' !'
-      : e.type === 'bits' ? e.name + ' envoie ' + e.amount + ' bits !'
-      : e.type === 'raid' ? 'Raid de ' + e.name + ' avec ' + e.count + ' viewers !' : '';
-    if (s) enqueue({ name: '🎉', text: s, say: s });
+    var tpl = null, on = false;
+    if (e.type === 'sub'){ tpl = P.tsub; on = P.ev_sub === '1'; }
+    else if (e.type === 'resub'){ tpl = e.months > 1 ? P.tresub : P.tsub; on = P.ev_sub === '1'; }
+    else if (e.type === 'subgift' && !e.fromBomb){ tpl = P.tgift; on = P.ev_gift === '1'; }
+    else if (e.type === 'giftbomb'){ tpl = P.tbomb; on = P.ev_gift === '1'; }
+    else if (e.type === 'bits'){ tpl = P.tbits; on = P.ev_bits === '1' && e.amount >= (parseInt(P.minbits, 10) || 1); }
+    else if (e.type === 'raid'){ tpl = P.traid; on = P.ev_raid === '1'; }
+    if (!on || !tpl) return;
+    var msg = '';
+    if (P.readmsg === '1' && e.text && (e.type === 'sub' || e.type === 'resub' || e.type === 'bits')){
+      var t = e.type === 'bits' ? e.text.replace(/\b[a-z]+\d+\b/gi, ' ') : e.text;
+      msg = clean({ text: t, emotes: e.type === 'bits' ? '' : e.emotes });
+    }
+    var say = phrase(tpl, { name: speakName(e.name), months: e.months, count: e.count, amount: e.amount, recipient: speakName(e.recipient), message: msg }, true);
+    if (say) enqueue({ name: '🎉', text: say, say: say });
   }
 
   /* ---------- Démarrer / arrêter ---------- */
