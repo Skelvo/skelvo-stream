@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Objectif — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  Barre d'objectif : abonnements (subs + subs offerts), bits, ou manuel.
+  Commandes (streamer et modos) : !objectif +5 | -2 | = 20 | reset
+  Progression mémorisée dans OBS (localStorage).
+-->
+<style>
+  :root{ --ac: #9b5cff; --ac2: #4be1c3; --fs: 26px; --font: 'Space Grotesk', system-ui, sans-serif; --p: 0%; }
+  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body{ display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: var(--fs); color: #fff; padding: 0 .6em; box-sizing: border-box; }
+
+  .goal{ width: 100%; position: relative; }
+  .head{ display: flex; justify-content: space-between; align-items: baseline; gap: 1em; margin-bottom: .35em; text-shadow: 0 .05em .2em rgba(0,0,0,.7); }
+  .title{ font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .count{ font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .count small{ font-weight: 600; opacity: .75; font-size: .75em; }
+  .track{ position: relative; height: 1.15em; border-radius: 999px; background: rgba(10,8,20,.72); overflow: hidden; box-shadow: inset 0 0 0 .07em rgba(255,255,255,.12), 0 .1em .4em rgba(0,0,0,.35); }
+  .fill{ position: absolute; inset: 0 auto 0 0; width: var(--p); border-radius: inherit; background: linear-gradient(90deg, var(--ac), var(--ac2)); transition: width 1.2s cubic-bezier(.2,.9,.2,1); }
+  .fill::after{ content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.45) 45%, transparent 70%); background-size: 200% 100%; animation: sweep 2.8s linear infinite; border-radius: inherit; }
+  @keyframes sweep{ from{ background-position: 150% 0; } to{ background-position: -50% 0; } }
+  .pct{ position: absolute; inset: 0; display: grid; place-items: center; font-size: .6em; font-weight: 800; text-shadow: 0 0 .3em rgba(0,0,0,.8); }
+
+  /* Variante fine */
+  .s-thin .track{ height: .45em; }
+  .s-thin .pct{ display: none; }
+  /* Variante néon */
+  .s-neon .track{ background: rgba(5,4,12,.6); box-shadow: 0 0 0 .07em var(--ac), 0 0 .5em var(--ac); }
+  .s-neon .fill{ box-shadow: 0 0 .6em var(--ac2); }
+  .s-neon .title{ text-shadow: 0 0 .4em var(--ac); }
+  /* Variante carte */
+  .s-card .goal{ background: rgba(12,10,22,.82); padding: .55em .7em .7em; border-radius: .5em; box-shadow: 0 .15em .6em rgba(0,0,0,.4); }
+
+  .bump .count{ animation: bump .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes bump{ 40%{ transform: scale(1.25); } }
+  .done .fill{ background: linear-gradient(90deg, #ffd700, #fff1b0, #ffb300); }
+  .done .title::after{ content: " ✓"; color: #ffd700; }
+
+  .confetti{ position: absolute; width: .3em; height: .5em; top: 50%; border-radius: .08em; animation: conf 1.6s cubic-bezier(.2,.8,.4,1) forwards; pointer-events: none; }
+  @keyframes conf{ from{ transform: translate(0,0) rotate(0); opacity: 1; } to{ transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="goal" id="goal">
+  <div class="head"><span class="title" id="title"></span><span class="count" id="count"></span></div>
+  <div class="track"><div class="fill"></div><div class="pct" id="pct"></div></div>
+</div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/twitch.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = { ch: '', type: 'subs', target: '50', start: '0', label: 'Objectif abonnés', cmd: 'objectif',
+    style: 'bar', ac: '9b5cff', ac2: '4be1c3', font: 'grotesk', fs: '26', pct: '1', demo: '0' };
+  var num = SKO.num;
+  var goal = document.getElementById('goal'), titleEl = document.getElementById('title'), countEl = document.getElementById('count'), pctEl = document.getElementById('pct');
+  var P = {}, value = 0, key = '', source = null, sourceKey = '', wasDone = false;
+
+  function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+  function draw(anim){
+    var target = num(P.target, 1, 10000000, 50);
+    var p = Math.min(100, value / target * 100);
+    document.documentElement.style.setProperty('--p', p + '%');
+    titleEl.textContent = P.label || '';
+    countEl.textContent = fmt(value) + ' ';
+    countEl.appendChild(SKO.el('small', '', '/ ' + fmt(target)));
+    pctEl.textContent = P.pct === '1' ? Math.floor(p) + ' %' : '';
+    var done = value >= target;
+    document.body.classList.toggle('done', done);
+    if (anim){ document.body.classList.remove('bump'); void document.body.offsetWidth; document.body.classList.add('bump'); }
+    if (done && !wasDone && anim) confetti();
+    wasDone = done;
+  }
+  function confetti(){
+    var cols = [getComputedStyle(document.documentElement).getPropertyValue('--ac'), getComputedStyle(document.documentElement).getPropertyValue('--ac2'), '#ffd700', '#fff'];
+    for (var i = 0; i < 40; i++){
+      var c = SKO.el('i', 'confetti');
+      c.style.left = (10 + Math.random() * 80) + '%';
+      c.style.background = cols[i % cols.length];
+      c.style.setProperty('--dx', (Math.random() * 6 - 3) + 'em');
+      c.style.setProperty('--dy', (-2 - Math.random() * 3) + 'em');
+      c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+      goal.appendChild(c);
+      setTimeout(c.remove.bind(c), 1700);
+    }
+  }
+  function setValue(v){ value = Math.max(0, Math.round(v * 100) / 100); SKO.store.set(key, value); draw(true); }
+
+  function onEvent(e){
+    if (P.type === 'subs' && (e.type === 'sub' || e.type === 'resub' || e.type === 'subgift')) setValue(value + 1);
+    else if (P.type === 'bits' && e.type === 'bits') setValue(value + e.amount);
+  }
+  function onMessage(m){
+    if (!m.cmd || !m.isMod || m.cmd.name !== String(P.cmd || 'objectif').toLowerCase().replace(/^!/, '')) return;
+    var a = m.cmd.rest.replace(/\s+/g, '');
+    if (a === 'reset') return setValue(num(P.start, 0, 1e7, 0));
+    var mm = /^([+=-])?(\d+(?:[.,]\d+)?)$/.exec(a);
+    if (!mm) return;
+    var n = parseFloat(mm[2].replace(',', '.'));
+    if (mm[1] === '=') setValue(n); else if (mm[1] === '-') setValue(value - n); else setValue(value + n);
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    var root = document.documentElement.style;
+    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--fs', num(P.fs, 12, 90, 26) + 'px');
+    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
+    root.setProperty('--ac2', SKO.hex(P.ac2, DEFAULTS.ac2));
+    document.body.className = 's-' + (/^(bar|thin|neon|card)$/.test(P.style) ? P.style : 'bar');
+
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var k = 'sk-goal:' + sk + ':' + P.type + ':' + String(P.cmd).toLowerCase();
+    if (k !== key){
+      key = k;
+      var saved = SKO.store.get(key);
+      value = typeof saved === 'number' ? saved : num(P.start, 0, 1e7, 0);
+      if (P.demo === '1') value = Math.round(num(P.target, 1, 1e7, 50) * .6);
+      wasDone = value >= num(P.target, 1, 1e7, 50);
+    }
+    draw(false);
+
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage, event: onEvent };
+      source = sk === 'demo'
+        ? SKT.demo(h, { min: 1200, spread: 800, extra: function(i){
+            if (i % 3) return null;
+            if (P.type === 'bits') return { type: 'bits', amount: 100 * (1 + Math.floor(Math.random() * 5)), name: 'KevGaming' };
+            if (P.type === 'subs') return { type: 'sub', tier: 1, months: 1, name: 'Lunaa_' };
+            return SKT.fakeMessage(SKT.DEMO_USERS[2], '!' + P.cmd + ' +1');
+          } })
+        : SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>

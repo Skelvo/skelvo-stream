@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Barre d'objectif gratuite pour Twitch (subs, bits) — Skelvo Stream</title>
+<meta name="description" content="Barre d'objectif animée pour ton stream : abonnements, bits ou objectif manuel. Se met à jour toute seule. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/objectif/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: flex; align-items: center; padding: 0 5px; }
+  .sw i{ display: block; height: 8px; width: 100%; border-radius: 9px; background: linear-gradient(90deg, #9b5cff 60%, #2a2347 60%); }
+  .sw-thin i{ height: 3px; }
+  .sw-neon i{ box-shadow: 0 0 0 1px #9b5cff, 0 0 6px #9b5cff; }
+  .sw-card{ background: #2a2347; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="objectif.title">Barre d'objectif</h1>
+    <p data-i18n="objectif.lead">Objectif d'abonnés, de bits ou n'importe quoi d'autre : la barre se remplit toute seule pendant ton live, avec des confettis quand c'est atteint.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ton objectif</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Ce qui fait avancer la barre</span><select name="type"><option value="subs">Abonnements (y compris les subs offerts)</option><option value="bits">Bits</option><option value="manual">Manuel (commandes des modos)</option></select></label>
+        <label class="field"><span>Titre</span><input type="text" name="label" value="Objectif abonnés" placeholder="" maxlength="40" ></label>
+        <div class="row2"><label class="field"><span>Objectif</span><input type="text" name="target" value="50" placeholder="" maxlength="9" inputmode="numeric"></label><label class="field"><span>Déjà atteint</span><input type="text" name="start" value="0" placeholder="" maxlength="9" inputmode="numeric"></label></div>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="style-bar" value="bar" checked><label for="style-bar"><span class="sw sw-bar"><i></i></span><span>Barre</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-thin" value="thin"><label for="style-thin"><span class="sw sw-thin"><i></i></span><span>Fine</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon"><i></i></span><span>Néon</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card"><label for="style-card"><span class="sw sw-card"><i></i></span><span>Carte</span></label></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Apparence</legend>
+        <div class="field colors"><label class="color"><input type="color" name="ac" value="#9b5cff"><span>Début</span></label><label class="color"><input type="color" name="ac2" value="#4be1c3"><span>Fin</span></label></div>
+        <label class="check"><input type="checkbox" name="pct" checked><span>Afficher le pourcentage</span></label>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="60" value="26"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Commande</legend>
+        <label class="field"><span>Nom de la commande</span><input type="text" name="cmd" value="objectif" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">800 × 160</b>.</span></li>
+          <li><span>La progression est mémorisée dans OBS et repart d'où elle en était au prochain live.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+        <div class="tip">Pour suivre deux objectifs (abonnés et bits par exemple), crée deux sources avec des commandes différentes.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-objectif-size', def: { w: 800, h: 160 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    var n = '!' + (p.cmd || 'objectif').toLowerCase().replace(/^!/, '');
+    cmds.textContent = '';
+    [[n + ' +5', 'ajoute 5'], [n + ' -2', 'retire 2'], [n + ' = 20', 'règle la progression à 20'], [n + ' reset', 'revient à la valeur de départ']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-objectif',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>

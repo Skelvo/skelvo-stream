@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minuteur de subathon gratuit pour Twitch — Skelvo Stream</title>
+<meta name="description" content="Minuteur de subathon gratuit : chaque abonnement, sub offert ou bit ajoute du temps automatiquement. Pour OBS et Streamlabs, sans compte." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/minuteur/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: grid; place-items: center; font: 800 14px 'Space Grotesk', sans-serif; color: #fff; }
+  .sw-card{ background: #17132a; border-bottom: 2px solid #4be1c3; }
+  .sw-neon{ background: #0d0a18; text-shadow: 0 0 6px #4be1c3, 0 0 12px #4be1c3; }
+  .sw-gradient{ background: transparent; color: #4be1c3; }
+  .sw-clean{ background: transparent; text-shadow: 0 0 2px #000; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="minuteur.title">Minuteur de subathon</h1>
+    <p data-i18n="minuteur.lead">Chaque abonnement, sub offert ou bit ajoute du temps tout seul. Tes modos peuvent mettre en pause, ajouter ou retirer du temps depuis le tchat.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Durées</legend>
+        <label class="field"><span>Durée de départ (minutes)</span><input type="text" name="start" value="120" placeholder="" maxlength="6" inputmode="numeric"><small>Ex. 120 = 2 heures.</small></label>
+        <p class="hint">Minutes ajoutées pour chaque…</p>
+        <div class="row2"><label class="field"><span>Abonnement niveau 1 / Prime</span><input type="text" name="t1" value="5" placeholder="" maxlength="4" inputmode="decimal"></label><label class="field"><span>Sub offert</span><input type="text" name="gift" value="5" placeholder="" maxlength="4" inputmode="decimal"></label></div>
+        <div class="row2"><label class="field"><span>Niveau 2</span><input type="text" name="t2" value="10" placeholder="" maxlength="4" inputmode="decimal"></label><label class="field"><span>Niveau 3</span><input type="text" name="t3" value="20" placeholder="" maxlength="4" inputmode="decimal"></label></div>
+        <div class="row2"><label class="field"><span>100 bits</span><input type="text" name="bits" value="1" placeholder="" maxlength="4" inputmode="decimal"></label><label class="field"><span>Raid (secondes par viewer)</span><input type="text" name="raid" value="0" placeholder="" maxlength="4" inputmode="decimal"></label></div>
+        <label class="field"><span>Temps restant maximum (minutes)</span><input type="text" name="max" value="0" placeholder="" maxlength="6" inputmode="numeric"><small>0 = pas de limite.</small></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card">2:14:09</span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon">2:14:09</span><span>Néon</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-gradient" value="gradient"><label for="style-gradient"><span class="sw sw-gradient">2:14:09</span><span>Brillant</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean">2:14:09</span><span>Texte seul</span></label></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Apparence</legend>
+        <label class="field"><span>Titre au-dessus</span><input type="text" name="label" value="Subathon" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Texte à la fin</span><input type="text" name="endtext" value="Terminé !" placeholder="" maxlength="30" ></label>
+        <div class="field colors"><label class="color"><input type="color" name="ac" value="#4be1c3"><span>Accent</span></label></div>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="30" max="180" value="72"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Commande</legend>
+        <label class="field"><span>Nom de la commande</span><input type="text" name="cmd" value="timer" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">700 × 260</b>.</span></li>
+          <li><span>Le minuteur démarre <b>en pause</b> : lance-le en tapant <code>!timer start</code> dans ton tchat.</span></li>
+          <li><span>Le temps restant est mémorisé dans OBS : si OBS plante ou redémarre, il reprend là où il en était.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+        <div class="tip">Ces commandes marchent pour toi et tes modos. Le temps continue de s'écouler même si OBS est fermé, comme un vrai subathon.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-minuteur-size', def: { w: 700, h: 260 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    var n = '!' + (p.cmd || 'timer').toLowerCase().replace(/^!/, '');
+    cmds.textContent = '';
+    [[n + ' start', 'lance ou relance le minuteur'], [n + ' pause', 'met en pause'], [n + ' +10m', 'ajoute 10 minutes (ou +1h, +30s…)'],
+     [n + ' -5m', 'retire 5 minutes'], [n + ' set 2h', 'règle le temps restant'], [n + ' reset', 'revient à la durée de départ']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-minuteur',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>

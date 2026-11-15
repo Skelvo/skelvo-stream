@@ -192,3 +192,19 @@ kbd, code{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-siz
   *{ transition-duration: .001ms !important; }
   .live-dot{ animation: none; }
 }
+
+/* ---------- Aperçu à l'échelle (commun à tous les éditeurs) ---------- */
+.stage{ background: #08070d; margin: 0 auto; }
+.stage .canvas{ position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+.stage .canvas iframe{ width: 100%; height: 100%; }
+.status{ font-size: .84rem; color: var(--muted); padding: 0 18px 14px; display: flex; align-items: center; gap: 8px; min-height: 22px; }
+.status:empty{ display: none; }
+.status::before{ content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.status.ok::before{ background: #1fae7a; } .status.warn::before{ background: #ffb02e; } .status.demo::before{ background: var(--accent); }
+textarea{ resize: vertical; min-height: 64px; }
+.row2{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hint{ color: var(--muted); font-size: .84rem; margin: 0 0 12px; }
+.cmds{ display: grid; gap: 6px; font-size: .88rem; margin: 10px 0 0; padding: 0; list-style: none; }
+.cmds li{ display: flex; gap: 10px; align-items: baseline; color: #d9d3f0; }
+.cmds code{ flex: none; }
+.btn-row{ display: flex; flex-wrap: wrap; gap: 8px; }

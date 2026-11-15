@@ -162,5 +162,79 @@
     iframe.contentWindow.postMessage({ type: 'sk-params', params: params }, location.origin);
   };
 
+  /**
+   * Aperçu à la vraie taille de la source OBS, réduit pour tenir dans la page.
+   * opts = { stage, canvas, buttons (NodeList avec data-w / data-h), sizeTxt, storageKey, def: {w,h}, onSize }
+   */
+  SK.stage = function(opts){
+    var size = SK.store.get(opts.storageKey) || opts.def;
+    function fit(){ opts.canvas.style.transform = 'scale(' + (opts.stage.clientWidth / size.w) + ')'; }
+    function set(w, h){
+      size = { w: w, h: h };
+      SK.store.set(opts.storageKey, size);
+      if (opts.buttons) opts.buttons.forEach(function(b){ b.setAttribute('aria-pressed', String(+b.dataset.w === w && +b.dataset.h === h)); });
+      opts.stage.style.aspectRatio = w + ' / ' + h;
+      opts.stage.style.maxWidth = h > w ? '400px' : '';
+      opts.canvas.style.width = w + 'px'; opts.canvas.style.height = h + 'px';
+      if (opts.sizeTxt) opts.sizeTxt.textContent = w + ' × ' + h;
+      fit();
+      if (opts.onSize) opts.onSize(size);
+    }
+    if (opts.buttons) opts.buttons.forEach(function(b){ b.addEventListener('click', function(){ set(+b.dataset.w, +b.dataset.h); }); });
+    new ResizeObserver(fit).observe(opts.stage);
+    set(size.w, size.h);
+    return { size: function(){ return size; }, set: set };
+  };
+
+  /* Affiche l'état de connexion renvoyé par un overlay en aperçu */
+  SK.watchStatus = function(statusEl){
+    function setStatus(cls, text){ statusEl.className = 'status ' + cls; statusEl.textContent = text; }
+    window.addEventListener('message', function(e){
+      if (e.origin !== location.origin || !e.data || e.data.type !== 'sk-status') return;
+      var ch = e.data.channel ? '#' + e.data.channel : '';
+      switch (e.data.state){
+        case 'demo':       setStatus('demo', SK.t('st.demo', 'Démonstration avec un faux tchat. Passe sur « Ma chaîne » pour tester en vrai.')); break;
+        case 'connecting': setStatus('', SK.t('st.connecting', 'Connexion à') + ' ' + ch + '…'); break;
+        case 'connected':  setStatus('ok', SK.t('st.connected', 'Connecté à') + ' ' + ch + '.'); break;
+        case 'notfound':   setStatus('warn', SK.t('st.notfound', 'Pas de réponse de') + ' ' + ch + SK.t('st.notfound2', ' : vérifie le nom de la chaîne.')); break;
+        case 'retry':      setStatus('warn', SK.t('st.retry', 'Connexion perdue, nouvelle tentative…')); break;
+        case 'idle':       setStatus('warn', SK.t('st.idle', 'Entre le nom de ta chaîne pour tester en vrai.')); break;
+      }
+    });
+  };
+
+  /**
+   * Bouton Démo / Ma chaîne : renvoie une fonction qui ajoute demo=1|0 aux réglages de l'aperçu
+   */
+  SK.demoSwitch = function(buttons, onChange){
+    var mode = 'demo';
+    buttons.forEach(function(b){ b.addEventListener('click', function(){
+      mode = b.dataset.mode;
+      buttons.forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      onChange();
+    }); });
+    return function(p){ return Object.assign({}, p, { demo: mode === 'demo' ? '1' : '0' }); };
+  };
+
+  /**
+   * Raccourci pour un éditeur d'overlay classique : formulaire + aperçu iframe + lien.
+   * opts = SK.editor(opts) + { iframe, previewParams(p) }
+   */
+  SK.overlayEditor = function(opts){
+    var iframe = opts.iframe, latest = null, ed;
+    var userChange = opts.onChange;
+    opts.onChange = function(p, url){
+      latest = opts.previewParams ? opts.previewParams(p) : p;
+      if (!iframe.src){
+        var u = new URL(url); Object.keys(latest).forEach(function(k){ u.searchParams.set(k, latest[k]); });
+        iframe.src = u.href;
+      } else SK.sendToPreview(iframe, latest);
+      if (userChange) userChange(p, url);
+    };
+    iframe.addEventListener('load', function(){ if (latest) SK.sendToPreview(iframe, latest); });
+    ed = SK.editor(opts);
+    return ed;
+  };
+
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

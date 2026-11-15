@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Compteur — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  Compteur piloté par le tchat (morts, victoires…). Commandes, pour les modos
+  et le streamer (ou tout le monde si choisi) :
+    !mort+   !mort+ 3   !mort-   !mort= 12
+  La valeur est mémorisée dans OBS (localStorage) : elle survit aux redémarrages.
+-->
+<style>
+  :root{ --ac: #ff5c8a; --fs: 64px; --font: 'Space Grotesk', system-ui, sans-serif; --tx: #fff; }
+  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body{ display: flex; align-items: center; justify-content: var(--justify, center); font-family: var(--font); font-size: var(--fs); color: #fff; padding: 0 .3em; box-sizing: border-box; }
+
+  .counter{ position: relative; display: inline-flex; align-items: center; gap: .3em; line-height: 1; white-space: nowrap; }
+  .icon{ font-size: .9em; }
+  .label{ font-size: .5em; font-weight: 700; opacity: .9; letter-spacing: .02em; }
+  .value{ font-weight: 800; font-variant-numeric: tabular-nums; display: inline-block; }
+
+  .s-pill .counter{ background: rgba(12,10,22,.78); padding: .22em .5em .26em .4em; border-radius: 999px; border: .05em solid color-mix(in srgb, var(--ac) 70%, transparent); box-shadow: 0 0 .4em color-mix(in srgb, var(--ac) 45%, transparent); }
+  .s-pill .value{ color: var(--ac); }
+
+  .s-big .counter{ flex-direction: column; gap: .05em; text-shadow: 0 .05em .2em rgba(0,0,0,.6); }
+  .s-big .value{ font-size: 1.6em; color: #fff; }
+  .s-big .top{ display: inline-flex; gap: .25em; align-items: center; }
+
+  .s-minimal .counter{ text-shadow: 0 0 .06em #000, 0 0 .1em #000, .03em .03em .08em #000; }
+  .s-minimal .value{ color: var(--ac); }
+
+  .s-neon .counter{ padding: .18em .5em .22em; border-radius: .25em; border: .06em solid var(--ac); box-shadow: 0 0 .25em var(--ac), inset 0 0 .2em var(--ac); background: rgba(5,4,12,.55); }
+  .s-neon .value{ color: #fff; text-shadow: 0 0 .1em #fff, 0 0 .3em var(--ac), 0 0 .6em var(--ac); }
+  .s-neon .label{ color: var(--ac); text-shadow: 0 0 .3em var(--ac); }
+
+  .s-badge .counter{ background: linear-gradient(135deg, var(--ac), color-mix(in srgb, var(--ac) 50%, #000)); color: var(--tx); padding: .2em .55em .24em .45em; border-radius: .3em; box-shadow: 0 .1em .4em rgba(0,0,0,.35); }
+
+  .bump{ animation: bump .45s cubic-bezier(.2,1.6,.4,1); }
+  .down{ animation: down .45s ease; }
+  @keyframes bump{ 0%{ transform: scale(1); } 35%{ transform: scale(1.35) rotate(-4deg); } 100%{ transform: scale(1); } }
+  @keyframes down{ 0%{ transform: translateY(0); } 40%{ transform: translateY(.12em); opacity: .5; } 100%{ transform: none; } }
+
+  .float{ position: absolute; right: -.2em; top: -.1em; font-size: .45em; font-weight: 800; color: var(--ac); animation: float 1.1s ease-out forwards; pointer-events: none; text-shadow: 0 0 .2em rgba(0,0,0,.6); }
+  @keyframes float{ from{ opacity: 1; transform: translateY(0); } to{ opacity: 0; transform: translateY(-1.4em); } }
+</style>
+</head>
+<body>
+<div class="counter" id="counter"></div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/twitch.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = {
+    ch: '', name: 'mort', label: 'Morts', icon: '💀', start: '0', who: 'mods',
+    style: 'pill', ac: 'ff5c8a', font: 'grotesk', fs: '64', align: 'center', demo: '0'
+  };
+  var num = SKO.num, el = SKO.el;
+  var box = document.getElementById('counter');
+  var P = {}, value = 0, key = '', source = null, sourceKey = '';
+  var valueEl;
+  var lastAll = {}; // anti-spam quand tout le monde peut modifier
+
+  function storageKey(){ return 'sk-count:' + (P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch)) + ':' + cmdName(); }
+  function cmdName(){ return String(P.name || 'mort').toLowerCase().replace(/^!/, '').replace(/[^a-z0-9éèàùç_]/g, '') || 'mort'; }
+
+  function build(){
+    box.textContent = '';
+    var icon = P.icon ? el('span', 'icon', P.icon) : null;
+    var label = P.label ? el('span', 'label', P.label) : null;
+    valueEl = el('span', 'value', String(value));
+    if (P.style === 'big'){
+      var top = el('span', 'top'); if (icon) top.appendChild(icon); if (label) top.appendChild(label);
+      if (top.childNodes.length) box.appendChild(top);
+      box.appendChild(valueEl);
+    } else {
+      if (icon) box.appendChild(icon);
+      if (label) box.appendChild(label);
+      box.appendChild(valueEl);
+    }
+  }
+
+  function setValue(v, delta){
+    v = Math.max(-999999, Math.min(999999, Math.round(v)));
+    if (v === value && !delta) return;
+    var up = v > value;
+    value = v;
+    SKO.store.set(key, value);
+    valueEl.textContent = String(value);
+    valueEl.classList.remove('bump', 'down'); void valueEl.offsetWidth;
+    valueEl.classList.add(up ? 'bump' : 'down');
+    if (delta){
+      var f = el('span', 'float', (delta > 0 ? '+' : '') + delta);
+      box.appendChild(f); setTimeout(function(){ f.remove(); }, 1200);
+    }
+  }
+
+  function allowed(m){
+    if (P.who === 'all'){
+      if (m.isMod) return true;
+      var now = Date.now();
+      if (lastAll[m.login] && now - lastAll[m.login] < 10000) return false; // 1 commande / 10 s par viewer
+      lastAll[m.login] = now; return true;
+    }
+    if (P.who === 'broadcaster') return m.isBroadcaster;
+    return m.isMod;
+  }
+
+  function onMessage(m){
+    if (!m.cmd) return;
+    var n = cmdName(), c = m.cmd.name, arg = parseInt(m.cmd.args[0], 10);
+    if (c !== n + '+' && c !== n + '-' && c !== n + '=') return;
+    if (!allowed(m)) return;
+    if (c === n + '='){ if (!isNaN(arg) && (m.isMod || P.who !== 'all')) setValue(arg, 0); return; } // fixer la valeur : jamais par un simple viewer
+    var step = isNaN(arg) ? 1 : Math.min(Math.abs(arg), m.isMod ? 1000 : 1);
+    var d = c === n + '+' ? step : -step;
+    setValue(value + d, d);
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    var root = document.documentElement.style;
+    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--fs', num(P.fs, 16, 200, 64) + 'px');
+    var ac = SKO.hex(P.ac, DEFAULTS.ac);
+    root.setProperty('--ac', ac); root.setProperty('--tx', SKO.textOn(ac));
+    root.setProperty('--justify', P.align === 'left' ? 'flex-start' : P.align === 'right' ? 'flex-end' : 'center');
+    document.body.className = 's-' + (/^(pill|big|minimal|neon|badge)$/.test(P.style) ? P.style : 'pill');
+
+    var k = storageKey();
+    if (k !== key){
+      key = k;
+      var saved = SKO.store.get(key);
+      value = typeof saved === 'number' ? saved : num(P.start, -999999, 999999, 0);
+    }
+    build();
+
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      source = sk === 'demo'
+        ? SKT.demo(h, { min: 1500, spread: 1200, extra: function(i){
+            if (i % 2) return null;
+            var mod = SKT.DEMO_USERS[2];
+            return SKT.fakeMessage(mod, '!' + cmdName() + (Math.random() < .85 ? '+' : '-'));
+          } })
+        : SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>

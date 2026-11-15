@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Minuteur subathon — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  Minuteur de subathon : chaque abonnement, sub offert ou bit ajoute du temps.
+  Commandes (streamer et modos) :  !timer start | pause | +10m | -5m | set 2h
+  L'état est mémorisé dans OBS (localStorage) : rien n'est perdu si OBS redémarre,
+  et le temps continue de s'écouler pendant qu'OBS est fermé (fin = date précise).
+-->
+<style>
+  :root{ --ac: #4be1c3; --fs: 72px; --font: 'Space Grotesk', system-ui, sans-serif; }
+  html, body{ margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body{ display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: var(--fs); color: #fff; }
+
+  .box{ position: relative; display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+  .label{ font-size: .3em; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin-bottom: .3em; }
+  .time{ font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+  .state{ font-size: .22em; margin-top: .45em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ac); min-height: 1em; }
+
+  .s-card .box{ background: rgba(12,10,22,.8); padding: .3em .55em .32em; border-radius: .22em; border-bottom: .06em solid var(--ac); box-shadow: 0 .1em .5em rgba(0,0,0,.4); }
+  .s-neon .time{ text-shadow: 0 0 .06em #fff, 0 0 .2em var(--ac), 0 0 .5em var(--ac); }
+  .s-neon .label{ color: var(--ac); text-shadow: 0 0 .3em var(--ac); }
+  .s-clean .box{ text-shadow: 0 0 .04em #000, 0 0 .08em #000, .03em .03em .06em #000; }
+  .s-gradient .time{ background: linear-gradient(90deg, var(--ac), #fff, var(--ac)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 4s linear infinite; filter: drop-shadow(0 .03em .06em rgba(0,0,0,.6)); }
+  @keyframes shine{ to{ background-position: -200% 0; } }
+
+  .paused .time{ opacity: .55; }
+  .low .time{ color: #ff5c8a; animation: blink 1s steps(2) infinite; -webkit-text-fill-color: #ff5c8a; }
+  @keyframes blink{ 50%{ opacity: .55; } }
+
+  .add{ position: absolute; left: 50%; top: 0; font-size: .38em; font-weight: 800; color: var(--ac); white-space: nowrap; text-shadow: 0 0 .25em rgba(0,0,0,.8); animation: add 2.2s ease-out forwards; pointer-events: none; }
+  .add small{ display: block; font-size: .55em; font-weight: 600; color: #fff; text-align: center; }
+  .add.neg{ color: #ff5c8a; }
+  @keyframes add{ 0%{ opacity: 0; transform: translate(-50%, .4em) scale(.7); } 15%{ opacity: 1; transform: translate(-50%, -.6em) scale(1.05); } 75%{ opacity: 1; transform: translate(-50%, -1.1em); } 100%{ opacity: 0; transform: translate(-50%, -1.6em); } }
+</style>
+</head>
+<body>
+<div class="box" id="box"><div class="label" id="label"></div><div class="time" id="time">0:00</div><div class="state" id="state"></div></div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script src="../assets/twitch.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = {
+    ch: '', start: '120', t1: '5', t2: '10', t3: '20', gift: '5', bits: '1', raid: '0', max: '0',
+    label: 'Subathon', cmd: 'timer', endtext: 'Terminé !', style: 'card', ac: '4be1c3', font: 'grotesk', fs: '72', demo: '0'
+  };
+  var num = SKO.num;
+  var timeEl = document.getElementById('time'), stateEl = document.getElementById('state'), labelEl = document.getElementById('label'), box = document.getElementById('box');
+  var P = {}, S = null, key = '', source = null, sourceKey = '';
+
+  // État : { running, end (ms, si en cours), left (s, si en pause) }
+  function remaining(){ return S.running ? Math.max(0, (S.end - Date.now()) / 1000) : S.left; }
+  function save(){ SKO.store.set(key, S); }
+  function load(){
+    var startSec = num(P.start, 0, 100000, 120) * 60;
+    S = SKO.store.get(key);
+    if (!S || typeof S.left !== 'number'){ S = { running: P.demo === '1', end: Date.now() + startSec * 1000, left: startSec }; save(); }
+  }
+  function setLeft(sec){
+    var cap = num(P.max, 0, 100000, 0) * 60;
+    sec = Math.max(0, cap ? Math.min(sec, cap) : sec);
+    if (S.running) S.end = Date.now() + sec * 1000; else S.left = sec;
+    save(); draw();
+  }
+
+  function add(sec, why){
+    if (!sec) return;
+    var before = remaining();
+    setLeft(before + sec);
+    var real = Math.round(remaining() - before);
+    if (!real) return;
+    var a = SKO.el('div', 'add' + (real < 0 ? ' neg' : ''), (real > 0 ? '+' : '−') + SKO.clock(Math.abs(real)));
+    if (why) a.appendChild(SKO.el('small', '', why));
+    box.appendChild(a); setTimeout(function(){ a.remove(); }, 2300);
+  }
+
+  function draw(){
+    var left = remaining();
+    document.body.classList.toggle('paused', !S.running && left > 0);
+    document.body.classList.toggle('low', S.running && left > 0 && left <= 60);
+    if (left <= 0 && S.running){ S.running = false; S.left = 0; save(); }
+    timeEl.textContent = left <= 0 ? (P.endtext || '0:00') : SKO.clock(left);
+    stateEl.textContent = (!S.running && left > 0) ? 'En pause' : '';
+  }
+  setInterval(function(){ if (S) draw(); }, 250);
+
+  function onEvent(e){
+    var m = 60, sec = 0, why = '';
+    if (e.type === 'sub' || e.type === 'resub'){
+      sec = num(e.tier === 3 ? P.t3 : e.tier === 2 ? P.t2 : P.t1, 0, 600, 5) * m; why = e.name;
+    } else if (e.type === 'subgift'){
+      sec = num(P.gift, 0, 600, 5) * m; why = e.fromBomb ? '' : e.name + ' → ' + e.recipient;
+    } else if (e.type === 'giftbomb'){
+      // le temps arrive avec chaque subgift : on affiche juste le total d'un coup
+      var t = num(P.gift, 0, 600, 5) * m * e.count;
+      if (t){ var a = SKO.el('div', 'add', '+' + SKO.clock(Math.min(t, 360000))); a.appendChild(SKO.el('small', '', e.name + ' × ' + e.count)); box.appendChild(a); setTimeout(function(){ a.remove(); }, 2300); }
+      return;
+    } else if (e.type === 'bits'){
+      sec = num(P.bits, 0, 600, 1) * m * e.amount / 100; why = e.name + ' · ' + e.amount + ' bits';
+    } else if (e.type === 'raid'){
+      sec = num(P.raid, 0, 60, 0) * e.count; why = 'Raid ' + e.name;
+    }
+    if (e.type === 'subgift' && e.fromBomb){ setLeft(remaining() + sec); return; }
+    add(sec, why);
+  }
+
+  function onMessage(msg){
+    if (!msg.cmd || !msg.isMod) return;
+    if (msg.cmd.name !== String(P.cmd || 'timer').toLowerCase().replace(/^!/, '')) return;
+    var a = (msg.cmd.args[0] || '').toLowerCase(), rest = msg.cmd.args.slice(1).join('');
+    if (a === 'start' || a === 'play' || a === 'go' || a === 'reprendre'){
+      if (!S.running && S.left > 0){ S.running = true; S.end = Date.now() + S.left * 1000; save(); draw(); }
+    } else if (a === 'pause' || a === 'stop'){
+      if (S.running){ S.left = remaining(); S.running = false; save(); draw(); }
+    } else if (a === 'set' || a === 'reset'){
+      var v = a === 'reset' ? num(P.start, 0, 100000, 120) * 60 : SKO.parseDuration(rest);
+      if (!isNaN(v)) setLeft(v);
+    } else if (/^[+-]/.test(a)){
+      var d = SKO.parseDuration(a.slice(1) + rest);
+      if (!isNaN(d)) add(a[0] === '-' ? -d : d, msg.name);
+    }
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    var prevStart = P.start;
+    P = p;
+    var root = document.documentElement.style;
+    root.setProperty('--font', SKO.useFont(P.font));
+    root.setProperty('--fs', num(P.fs, 20, 220, 72) + 'px');
+    root.setProperty('--ac', SKO.hex(P.ac, DEFAULTS.ac));
+    document.body.className = 's-' + (/^(card|neon|clean|gradient)$/.test(P.style) ? P.style : 'card');
+    labelEl.textContent = P.label || '';
+    labelEl.style.display = P.label ? '' : 'none';
+
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var k = 'sk-timer:' + sk;
+    if (k !== key){ key = k; load(); }
+    // Dans l'éditeur : la durée de départ modifiée remet le minuteur de démo à zéro
+    if (P.demo === '1' && prevStart && prevStart !== P.start){ S = null; SKO.store.del(key); load(); }
+    draw();
+
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage, event: onEvent };
+      source = sk === 'demo' ? SKT.demo(h, { events: true, min: 700, spread: 600 }) : SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>
