@@ -15,7 +15,7 @@
 
   var SK = window.SK = window.SK || {};
   /* Identifiant de l'appli Twitch de Skelvo Stream (dev.twitch.tv), pour « Se connecter avec Twitch » */
-  SK.TWITCH_CLIENT_ID = '';
+  SK.TWITCH_CLIENT_ID = 'ev6zqsqwllocia5kuutcvlv4960ow7';
   SK.dict = SK.dict || {};
 
   /* ---------- Stockage local (protégé : navigation privée, OBS…) ---------- */
@@ -473,7 +473,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.6';
+  SK.VERSION = '2.7';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
