@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Écran d'attente — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  Écran plein « Ça commence bientôt » / « Pause » / « Fin du live ».
+  Fond animé, compte à rebours (durée ou heure précise), réseaux sociaux,
+  tchat intégré en option (réutilise ../tchat/overlay.html).
+  Conçu pour 1920×1080 mais s'adapte à toute taille (unités relatives).
+-->
+<style>
+  :root{ --c1: #9b5cff; --c2: #4be1c3; --c3: #ff5c8a; --font: 'Space Grotesk', system-ui, sans-serif; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; background: #07060d; }
+  body.bg-none{ background: transparent; }
+  body{ font-family: var(--font); color: #fff; font-size: 1.6vmin; }
+
+  #bg{ position: fixed; inset: 0; overflow: hidden; }
+  canvas{ position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Aurore */
+  .aurora i{ position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; filter: blur(8vmax); opacity: .55; animation: drift 18s ease-in-out infinite alternate; }
+  .aurora i:nth-child(1){ background: var(--c1); left: -15vmax; top: -20vmax; }
+  .aurora i:nth-child(2){ background: var(--c2); right: -20vmax; top: 10vmax; animation-duration: 22s; animation-delay: -6s; }
+  .aurora i:nth-child(3){ background: var(--c3); left: 20vmax; bottom: -35vmax; animation-duration: 26s; animation-delay: -12s; }
+  @keyframes drift{ 0%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(12vmax, 6vmax) scale(1.15); } 100%{ transform: translate(-8vmax, 10vmax) scale(.9); } }
+
+  /* Synthwave */
+  .synth{ background: linear-gradient(#0b0518 0%, #2a0c3d 45%, #12051f 55%, #05020b 100%); }
+  .synth .sun{ position: absolute; left: 50%; top: 18%; width: 34vmin; height: 34vmin; transform: translateX(-50%); border-radius: 50%; background: linear-gradient(var(--c3), var(--c1)); box-shadow: 0 0 8vmin color-mix(in srgb, var(--c3) 60%, transparent);
+    --stripes: linear-gradient(#000 0 58%, transparent 58% 62%, #000 62% 70%, transparent 70% 75%, #000 75% 82%, transparent 82% 88%, #000 88% 93%, transparent 93% 100%);
+    -webkit-mask: var(--stripes); mask: var(--stripes); }
+  .synth .floor{ position: absolute; left: -50%; right: -50%; bottom: -10%; height: 60%; transform-origin: top; transform: perspective(40vh) rotateX(62deg);
+    background-image: linear-gradient(var(--c2) .25vmin, transparent .25vmin), linear-gradient(90deg, var(--c2) .25vmin, transparent .25vmin); background-size: 8vmin 8vmin; animation: grid 1.6s linear infinite; opacity: .8; }
+  .synth .floor::after{ content: ""; position: absolute; inset: 0; background: linear-gradient(#12051f, transparent 40%); }
+  @keyframes grid{ to{ background-position: 0 8vmin; } }
+
+  /* Dégradé animé */
+  .gradient{ background: linear-gradient(120deg, var(--c1), var(--c2), var(--c3), var(--c1)); background-size: 300% 300%; animation: grad 16s ease infinite; }
+  .gradient::after{ content: ""; position: absolute; inset: 0; background: rgba(5,4,12,.45); }
+  @keyframes grad{ 0%{ background-position: 0% 50%; } 50%{ background-position: 100% 50%; } 100%{ background-position: 0% 50%; } }
+
+  /* Vagues */
+  .waves{ background: linear-gradient(#0a0816, #140f2a); }
+  .waves svg{ position: absolute; left: 0; bottom: 0; width: 200%; height: 40%; }
+  .waves svg:nth-child(1){ animation: wave 14s linear infinite; opacity: .5; }
+  .waves svg:nth-child(2){ animation: wave 9s linear infinite reverse; opacity: .6; height: 30%; }
+  .waves svg:nth-child(3){ animation: wave 6s linear infinite; opacity: .8; height: 20%; }
+  @keyframes wave{ to{ transform: translateX(-50%); } }
+
+  /* Contenu */
+  #content{ position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6vmin; box-sizing: border-box; }
+  body.with-chat #content{ right: 30%; }
+  .kicker{ font-size: 1.5em; font-weight: 700; letter-spacing: .35em; text-transform: uppercase; color: var(--c2); text-shadow: 0 0 1.2em color-mix(in srgb, var(--c2) 60%, transparent); margin-bottom: 1.2em; }
+  h1{ margin: 0; font-size: 6.4em; line-height: 1; font-weight: 800; letter-spacing: -.02em; max-width: 14ch; text-shadow: 0 .06em .4em rgba(0,0,0,.5); animation: float 6s ease-in-out infinite; }
+  .sub{ margin-top: .9em; font-size: 2em; opacity: .85; max-width: 40ch; }
+  .count{ margin-top: .7em; font-size: 7em; font-weight: 800; font-variant-numeric: tabular-nums; background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .03em .1em rgba(0,0,0,.4)); }
+  .count.done{ font-size: 4em; }
+  @keyframes float{ 50%{ transform: translateY(-.08em); } }
+
+  .socials{ position: fixed; left: 0; right: 0; bottom: 4.5vmin; display: flex; justify-content: center; flex-wrap: wrap; gap: 1.2em; font-size: 1.6em; }
+  body.with-chat .socials{ right: 30%; }
+  .social{ display: inline-flex; align-items: center; gap: .5em; background: rgba(10,8,20,.55); border: 1px solid rgba(255,255,255,.14); padding: .45em .9em; border-radius: 999px; backdrop-filter: blur(6px); }
+  .social b{ color: var(--c2); font-weight: 700; }
+
+  #chat{ position: fixed; top: 4vmin; right: 3vmin; width: calc(30% - 4vmin); height: calc(100% - 8vmin); border: 0; background: transparent; }
+  .dots::after{ content: ""; animation: dots 1.6s steps(4) infinite; display: inline-block; width: 1.2em; text-align: left; }
+  @keyframes dots{ 0%{ content: ""; } 25%{ content: "."; } 50%{ content: ".."; } 75%{ content: "..."; } }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="content">
+  <div class="kicker" id="kicker"></div>
+  <h1 id="title"></h1>
+  <div class="sub" id="sub"></div>
+  <div class="count" id="count"></div>
+</div>
+<div class="socials" id="socials"></div>
+
+<script src="../assets/overlay.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = { mode: 'start', title: '', sub: '', kicker: '', min: '5', at: '', endtext: 'Ça commence !', bg: 'aurora',
+    c1: '9b5cff', c2: '4be1c3', c3: 'ff5c8a', font: 'grotesk', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0' };
+  var TEXTS = {
+    start: { k: 'Bienvenue', t: 'Le live commence bientôt', e: 'Ça commence !' },
+    brb:   { k: 'Pause',     t: 'Je reviens tout de suite', e: 'Ça reprend !' },
+    end:   { k: 'Fin du live', t: 'Merci d\'avoir regardé !', e: 'À bientôt !' }
+  };
+  var num = SKO.num, el = SKO.el;
+  var bgEl = document.getElementById('bg'), countEl = document.getElementById('count');
+  var P = {}, bgKind = '', target = 0, particles = null, chatFrame = null, chatKey = '';
+
+  /* ---------- Fonds ---------- */
+  function waveSvg(color){
+    return '<svg viewBox="0 0 2400 200" preserveAspectRatio="none"><path fill="' + color + '" d="M0 100 C 200 40 400 160 600 100 S 1000 40 1200 100 S 1600 160 1800 100 S 2200 40 2400 100 V200 H0Z"/></svg>';
+  }
+  function setBg(kind){
+    if (particles){ particles.stop(); particles = null; }
+    bgEl.className = ''; bgEl.innerHTML = '';
+    document.body.classList.toggle('bg-none', kind === 'none');
+    if (kind === 'aurora'){ bgEl.className = 'aurora'; bgEl.innerHTML = '<i></i><i></i><i></i>'; }
+    else if (kind === 'synth'){ bgEl.className = 'synth'; bgEl.innerHTML = '<div class="sun"></div><div class="floor"></div>'; }
+    else if (kind === 'gradient'){ bgEl.className = 'gradient'; }
+    else if (kind === 'waves'){ bgEl.className = 'waves'; bgEl.innerHTML = waveSvg('var(--c1)') + waveSvg('var(--c2)') + waveSvg('var(--c3)'); }
+    else if (kind === 'particles'){ bgEl.style.background = 'radial-gradient(120% 100% at 50% 0%, #1a1433, #07060d)'; particles = startParticles(); }
+    if (kind !== 'particles') bgEl.style.background = '';
+  }
+  function startParticles(){
+    var c = document.createElement('canvas'); bgEl.appendChild(c);
+    var ctx = c.getContext('2d'), pts = [], raf, w, h;
+    function size(){ w = c.width = innerWidth; h = c.height = innerHeight; }
+    size(); addEventListener('resize', size);
+    for (var i = 0; i < 90; i++) pts.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4, r: 1 + Math.random() * 2.5, c: i % 3 });
+    function loop(){
+      var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--c1'), cs.getPropertyValue('--c2'), cs.getPropertyValue('--c3')];
+      ctx.clearRect(0, 0, w, h);
+      var link = Math.min(w, h) * .14;
+      for (var i = 0; i < pts.length; i++){
+        var p = pts[i]; p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1; if (p.y < 0 || p.y > h) p.vy *= -1;
+        for (var j = i + 1; j < pts.length; j++){
+          var q = pts[j], d = Math.hypot(p.x - q.x, p.y - q.y);
+          if (d < link){ ctx.globalAlpha = (1 - d / link) * .35; ctx.strokeStyle = cols[p.c]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+        }
+        ctx.globalAlpha = .9; ctx.fillStyle = cols[p.c]; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    loop();
+    return { stop: function(){ cancelAnimationFrame(raf); removeEventListener('resize', size); } };
+  }
+
+  /* ---------- Compte à rebours ---------- */
+  function computeTarget(){
+    if (/^\d{1,2}[:h]\d{2}$/.test(P.at || '')){
+      var hm = P.at.split(/[:h]/), d = new Date();
+      d.setHours(+hm[0], +hm[1], 0, 0);
+      if (d.getTime() < Date.now() - 6 * 3600 * 1000) d.setDate(d.getDate() + 1);
+      return d.getTime();
+    }
+    var min = num(P.min, 0, 600, 5);
+    if (!min) return 0;
+    // Mémorisé : si OBS recharge la source, le compte à rebours ne repart pas de zéro
+    var k = 'sk-screen:' + P.mode + ':' + min, saved = SKO.store.get(k);
+    if (P.demo !== '1' && saved && saved > Date.now() - 10 * 60 * 1000 && saved < Date.now() + min * 60 * 1000 + 1000) return saved;
+    var t = Date.now() + min * 60 * 1000;
+    if (P.demo !== '1') SKO.store.set(k, t);
+    return t;
+  }
+  function tick(){
+    if (!target){ countEl.textContent = ''; return; }
+    var left = (target - Date.now()) / 1000;
+    countEl.classList.toggle('done', left <= 0);
+    countEl.textContent = left > 0 ? SKO.clock(left) : (P.endtext || TEXTS[P.mode].e);
+  }
+  setInterval(tick, 250);
+
+  SKO.params(DEFAULTS, function(p){
+    var prev = P; P = p;
+    if (!TEXTS[P.mode]) P.mode = 'start';
+    var root = document.documentElement.style;
+    ['c1', 'c2', 'c3'].forEach(function(k){ root.setProperty('--' + k, SKO.hex(P[k], DEFAULTS[k])); });
+    root.setProperty('--font', SKO.useFont(P.font));
+
+    var tx = TEXTS[P.mode];
+    document.getElementById('kicker').textContent = P.kicker || tx.k;
+    var t = document.getElementById('title'); t.textContent = P.title || tx.t;
+    document.getElementById('sub').textContent = P.sub;
+
+    var bg = /^(aurora|synth|gradient|waves|particles|none)$/.test(P.bg) ? P.bg : 'aurora';
+    if (bg !== bgKind){ bgKind = bg; setBg(bg); }
+
+    if (prev.mode !== P.mode || prev.min !== P.min || prev.at !== P.at) target = computeTarget();
+    tick();
+
+    var so = document.getElementById('socials'); so.textContent = '';
+    [['tw', 'X'], ['ig', 'Instagram'], ['tt', 'TikTok'], ['yt', 'YouTube'], ['dc', 'Discord']].forEach(function(s){
+      var v = String(P[s[0]] || '').trim(); if (!v) return;
+      var d = el('span', 'social'); d.appendChild(el('b', '', s[1])); d.appendChild(document.createTextNode(v)); so.appendChild(d);
+    });
+
+    // Tchat intégré
+    var wantChat = P.chat === '1' && (P.ch || P.demo === '1');
+    document.body.classList.toggle('with-chat', !!wantChat);
+    var ck = wantChat ? (P.demo === '1' ? 'demo' : SKT_clean(P.ch)) : '';
+    if (ck !== chatKey){
+      chatKey = ck;
+      if (chatFrame){ chatFrame.remove(); chatFrame = null; }
+      if (ck){
+        chatFrame = document.createElement('iframe'); chatFrame.id = 'chat';
+        chatFrame.src = '../tchat/overlay.html?theme=bubble&fs=22&max=14&ac=' + encodeURIComponent(P.c1) + (ck === 'demo' ? '&demo=1' : '&ch=' + encodeURIComponent(ck));
+        document.body.appendChild(chatFrame);
+      }
+    }
+  });
+  function SKT_clean(ch){ return String(ch || '').toLowerCase().replace(/^[#@]/, '').replace(/[^a-z0-9_]/g, '').slice(0, 25); }
+})();
+</script>
+</body>
+</html>

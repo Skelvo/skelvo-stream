@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Écrans « Ça commence bientôt » et « Pause » gratuits — Skelvo Stream</title>
+<meta name="description" content="Écrans d'attente animés gratuits pour ton stream : Ça commence bientôt, Pause, Fin du live. Compte à rebours, réseaux sociaux, tchat intégré. Pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/ecrans/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 18px; }
+  .sw-aurora{ background: radial-gradient(circle at 20% 20%, #9b5cff, transparent 60%), radial-gradient(circle at 80% 70%, #4be1c3, transparent 60%), #07060d; }
+  .sw-synth{ background: linear-gradient(#2a0c3d 50%, #05020b 50%); position: relative; }
+  .sw-synth::after{ content: ""; position: absolute; left: 30%; top: 15%; width: 40%; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(#ff5c8a, #9b5cff); }
+  .sw-gradient{ background: linear-gradient(120deg, #9b5cff, #4be1c3, #ff5c8a); }
+  .sw-waves{ background: linear-gradient(#0a0816 60%, #4be1c3 60%); }
+  .sw-particles{ background: radial-gradient(#4be1c3 1.5px, transparent 2px) 0 0/9px 9px, #120e24; }
+  .sw-none{ background: repeating-conic-gradient(#2a2545 0 25%, #1b1830 0 50%) 0 0/10px 10px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="ecrans.title">Écrans d'attente animés</h1>
+    <p data-i18n="ecrans.lead">« Ça commence bientôt », « Pause », « Fin du live » : fonds animés, compte à rebours, tes réseaux et même ton tchat intégré. Crée un écran par scène.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Quel écran ?</legend>
+        <label class="field"><span>Type d'écran</span><select name="mode"><option value="start">Ça commence bientôt</option><option value="brb">Pause / Je reviens</option><option value="end">Fin du live</option></select></label>
+        <label class="field"><span>Petit texte au-dessus</span><input type="text" name="kicker" value="" placeholder="Automatique" maxlength="40" ></label>
+        <label class="field"><span>Titre</span><input type="text" name="title" value="" placeholder="Automatique selon le type" maxlength="60" ></label>
+        <label class="field"><span>Sous-titre</span><input type="text" name="sub" value="" placeholder="ex. Ce soir : Elden Ring en hardcore" maxlength="90" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Compte à rebours</legend>
+        <label class="field"><span><span>Durée</span><output for="f-min" data-unit=" min"></output></span><input type="range" id="f-min" name="min" min="0" max="60" value="5"><small>0 = pas de compte à rebours.</small></label>
+        <label class="field"><span>Ou une heure précise</span><input type="text" name="at" value="" placeholder="ex. 20:30" maxlength="5" ><small>Prioritaire sur la durée si elle est remplie.</small></label>
+        <label class="field"><span>Texte quand c'est fini</span><input type="text" name="endtext" value="Ça commence !" placeholder="" maxlength="40" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Fond animé</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="bg" id="bg-aurora" value="aurora" checked><label for="bg-aurora"><span class="sw sw-aurora"></span><span>Aurore</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-synth" value="synth"><label for="bg-synth"><span class="sw sw-synth"></span><span>Synthwave</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-particles" value="particles"><label for="bg-particles"><span class="sw sw-particles"></span><span>Particules</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-waves" value="waves"><label for="bg-waves"><span class="sw sw-waves"></span><span>Vagues</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-gradient" value="gradient"><label for="bg-gradient"><span class="sw sw-gradient"></span><span>Dégradé</span></label></div>
+          <div class="choice"><input type="radio" name="bg" id="bg-none" value="none"><label for="bg-none"><span class="sw sw-none"></span><span>Transparent</span></label></div>
+        </div>
+        <div class="field colors"><label class="color"><input type="color" name="c1" value="#9b5cff"><span>Couleur 1</span></label><label class="color"><input type="color" name="c2" value="#4be1c3"><span>Couleur 2</span></label><label class="color"><input type="color" name="c3" value="#ff5c8a"><span>Couleur 3</span></label></div>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>Tes réseaux</legend>
+        <p class="hint">Laisse vide ce que tu n'utilises pas.</p>
+        <div class="row2"><label class="field"><span>X (Twitter)</span><input type="text" name="tw" value="" placeholder="@pseudo" maxlength="40" ></label><label class="field"><span>Instagram</span><input type="text" name="ig" value="" placeholder="@pseudo" maxlength="40" ></label></div>
+        <div class="row2"><label class="field"><span>TikTok</span><input type="text" name="tt" value="" placeholder="@pseudo" maxlength="40" ></label><label class="field"><span>YouTube</span><input type="text" name="yt" value="" placeholder="@chaine" maxlength="40" ></label></div>
+        <label class="field"><span>Discord</span><input type="text" name="dc" value="" placeholder="discord.gg/…" maxlength="60" ></label>
+      </fieldset>
+      <fieldset>
+        <legend>Tchat intégré</legend>
+        <label class="check"><input type="checkbox" name="chat"><span>Afficher mon tchat sur la droite de l'écran</span></label>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">1920 × 1080</b>.</span></li>
+          <li><span>Crée une <b>scène</b> par écran (Début, Pause, Fin) et ajoute la source dedans, en plein écran.</span></li>
+          <li><span>Si tu recharges la source, le compte à rebours ne repart pas de zéro.</span></li>
+        </ol>
+        <div class="tip">Astuce : dans les propriétés de la source, coche « Contrôler l'audio via OBS » si tu ajoutes de la musique par-dessus, pour garder la main sur le volume.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-ecrans-size', def: { w: 1920, h: 1080 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-ecrans',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){  }
+  });
+
+})();
+</script>
+</body>
+</html>
