@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sondage par le tchat Twitch, gratuit — Skelvo Stream</title>
+<meta name="description" content="Lance un sondage en une commande : ton tchat vote en tapant 1, 2 ou 3, les résultats s'animent sur ton stream. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/sondage/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<style>
+  .sw{ display: flex; flex-direction: column; gap: 3px; justify-content: center; padding: 4px; }
+  .sw i{ display: block; height: 5px; border-radius: 3px; background: #9b5cff; }
+  .sw i + i{ width: 60%; opacity: .6; }
+  .sw-card{ background: #17132a; border-top: 2px solid #9b5cff; }
+  .sw-neon{ background: #0d0a18; border: 1px solid #9b5cff; box-shadow: 0 0 6px #9b5cff; }
+  .sw-clean{ background: transparent; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="sondage.title">Sondage par le tchat</h1>
+    <p data-i18n="sondage.lead">Lance un sondage avec une commande, ton tchat vote en tapant 1, 2, 3… et les résultats s'animent en direct sur ton stream. Jusqu'à 9 choix.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Déroulement</legend>
+        <label class="field"><span><span>Durée du sondage</span><output for="f-dur" data-unit=" s"></output></span><input type="range" id="f-dur" name="dur" min="0" max="600" value="120" step="10"><small>0 = jusqu'à ce que tu tapes la commande de fin.</small></label>
+        <label class="field"><span><span>Résultats affichés pendant</span><output for="f-hide" data-unit=" s"></output></span><input type="range" id="f-hide" name="hide" min="0" max="120" value="20" step="5"><small>0 = restent jusqu'au prochain sondage.</small></label>
+        <label class="field"><span>Nom de la commande</span><input type="text" name="cmd" value="sondage" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices">
+          <div class="choice"><input type="radio" name="style" id="style-card" value="card" checked><label for="style-card"><span class="sw sw-card"><i></i><i></i></span><span>Carte</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-neon" value="neon"><label for="style-neon"><span class="sw sw-neon"><i></i><i></i></span><span>Néon</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="style-clean" value="clean"><label for="style-clean"><span class="sw sw-clean"><i></i><i></i></span><span>Texte seul</span></label></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Apparence</legend>
+        <div class="field colors"><label class="color"><input type="color" name="ac" value="#9b5cff"><span>Accent</span></label></div>
+        <label class="field"><span data-i18n="chat.font">Police</span><select name="font"><option value="grotesk" selected>Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="bebas">Bebas Neue</option><option value="marker">Permanent Marker</option><option value="pixel">VT323 (pixel)</option></select></label>
+        <label class="field"><span><span>Taille du texte</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="48" value="24"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">600 × 420</b>.</span></li>
+          <li><span>Le sondage est invisible tant que tu n'en lances pas un : tu peux laisser la source dans toutes tes scènes.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+        <div class="tip">Chaque viewer a un seul vote, qu'il peut changer en retapant un autre numéro.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-sondage-size', def: { w: 600, h: 420 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    var n = '!' + (p.cmd || 'sondage').toLowerCase().replace(/^!/, '');
+    cmds.textContent = '';
+    [[n + ' Quel jeu ? | Minecraft | Fortnite', 'lance un sondage avec ses choix'], [n + ' On continue ?', 'sans choix : Oui / Non'],
+     ['1, 2, 3…', 'les viewers votent en tapant le numéro'], [n + ' fin', 'termine et affiche le gagnant'], [n + ' stop', 'cache le sondage']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-sondage',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>
