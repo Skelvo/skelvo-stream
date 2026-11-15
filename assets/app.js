@@ -183,7 +183,12 @@
    */
   SK.stage = function(opts){
     var size = SK.store.get(opts.storageKey) || opts.def;
-    function fit(){ opts.canvas.style.transform = 'scale(' + (opts.stage.clientWidth / size.w) + ')'; }
+    function fit(){
+      var w = opts.stage.clientWidth;
+      // hauteur explicite : Safari peut ignorer aspect-ratio
+      opts.stage.style.height = Math.round(w * size.h / size.w) + 'px';
+      opts.canvas.style.transform = 'scale(' + (w / size.w) + ')';
+    }
     function set(w, h){
       size = { w: w, h: h };
       SK.store.set(opts.storageKey, size);
@@ -420,7 +425,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.5';
+  SK.VERSION = '1.6';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');

@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=5">
+<link rel="stylesheet" href="../assets/app.css?v=6">
 <style>
   .sw{ display: flex; flex-direction: column; gap: 3px; padding: 5px; justify-content: center; position: relative; }
   .sw i{ display: block; height: 5px; border-radius: 3px; background: #5b5580; width: 80%; }
@@ -166,7 +166,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=7"></script>
+<script src="../assets/app.js?v=8"></script>
 <script>
 (function(){
   'use strict';
@@ -191,7 +191,7 @@
     fit();
   }
   ratioBtns.forEach(function(b){ b.addEventListener('click', function(){ setSize(+b.dataset.w, +b.dataset.h); }); });
-  function fit(){ canvas.style.transform = 'scale(' + (stage.clientWidth / size.w) + ')'; }
+  function fit(){ var w = stage.clientWidth; stage.style.height = Math.round(w * size.h / size.w) + 'px'; canvas.style.transform = 'scale(' + (w / size.w) + ')'; } // hauteur explicite : Safari peut ignorer aspect-ratio
   new ResizeObserver(fit).observe(stage);
 
   // ---------- Démo ou vrai tchat dans l'aperçu ----------

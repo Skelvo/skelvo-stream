@@ -312,3 +312,10 @@ details.more summary::-webkit-details-marker{ display: none; }
   .has-steps .sticky-preview .preview-bar > *{ flex: none; }
   .has-steps .sticky-preview .preview-bar .btn{ padding: 6px 10px; font-size: .8rem; }
 }
+
+/* Safari (iPhone, Mac) : dans un conteneur flex, il ignore aspect-ratio et
+   donne une hauteur nulle à l'aperçu (son contenu est entièrement en position
+   absolue). En bloc, le format est respecté partout. La hauteur est aussi
+   posée en JavaScript par SK.stage, par sécurité. */
+.stage-wrap{ display: block !important; }
+.stage{ margin-left: auto; margin-right: auto; }
