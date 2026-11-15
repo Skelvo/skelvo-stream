@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.8';
+  SK.VERSION = '1.9';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -599,7 +599,7 @@
         // Remonte au début de l'étape, juste sous l'aperçu collé en haut
         var top = settings.getBoundingClientRect().top + window.scrollY;
         var stickH = stageHolder && getComputedStyle(stageHolder).position === 'sticky' && window.innerWidth <= 920 ? stageHolder.offsetHeight : 0;
-        var target = top - 72 - stickH;
+        var target = top - ((document.querySelector('.topbar') || {}).offsetHeight || 64) - 8 - stickH;
         if (window.scrollY > target + 4 || window.scrollY < target - 400) window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
       }
     }
@@ -610,6 +610,11 @@
   };
   function initSteps(){ document.querySelectorAll('.editor, .tool-grid').forEach(SK.makeSteps); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSteps); else setTimeout(initSteps, 0);
+
+  /* Hauteur réelle de la barre du haut (plus haute en appli sur iPhone) */
+  function topbarH(){ var t = document.querySelector('.topbar'); if (t) document.documentElement.style.setProperty('--topbar-h', t.offsetHeight + 'px'); }
+  topbarH(); window.addEventListener('resize', topbarH); window.addEventListener('orientationchange', function(){ setTimeout(topbarH, 300); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', topbarH);
 
   document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

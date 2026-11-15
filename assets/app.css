@@ -331,3 +331,17 @@ details.more summary::-webkit-details-marker{ display: none; }
 .pack-dots{ position: absolute; right: 6px; top: 6px; z-index: 1; display: flex; gap: 3px; }
 .pack-dots i{ width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(0,0,0,.35); }
 .theme-panel .packs + .sub-legend{ margin-top: 18px; }
+
+/* ---------- Barre du haut opaque + aperçu collé juste dessous ----------
+   - Barre opaque : le contenu qui défile ne se voit plus à travers.
+   - En appli sur iPhone (écran d'accueil), la barre passe sous l'heure et la
+     batterie : on ajoute la marge de sécurité, et l'aperçu collé se place
+     exactement sous la barre (hauteur mesurée en JavaScript : --topbar-h).
+   - Un fond plein au-dessus de l'aperçu cache ce qui défile entre les deux. */
+.topbar{ background: rgba(12,11,20,.98); padding-top: env(safe-area-inset-top, 0px); }
+@media (max-width: 920px){
+  .has-steps .sticky-preview{ top: var(--topbar-h, 64px) !important; }
+  .has-steps .sticky-preview::before{ content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 300px; background: var(--bg); pointer-events: none; }
+  .steps-nav.alone{ top: var(--topbar-h, 64px); }
+  html:has(.has-steps .sticky-preview){ scroll-padding-top: calc(var(--topbar-h, 64px) + 30vh + 120px); }
+}
