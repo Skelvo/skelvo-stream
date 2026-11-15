@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transitions de scène (stinger) gratuites pour OBS — Skelvo Stream</title>
+<meta name="description" content="Crée ta transition de scène animée pour OBS, assortie à ton pack : volet, cercle, rideau, bandes, avec ton pseudo ou ton logo. Vidéo générée dans ton navigateur, gratuite." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/transitions/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=7">
+<!--
+  Transition « Stinger » pour OBS, générée dans le navigateur :
+  une vidéo deux fois plus large que haute, l'animation à gauche et son
+  cache noir et blanc à droite (mode « track matte » d'OBS). Le blanc du
+  cache = là où la transition est visible. Aucune transparence nécessaire,
+  donc la vidéo marche partout (WebM, ou MP4 sur Safari).
+-->
+<style>
+  .stage{ background: #08070d; }
+  .stage canvas{ display: block; width: 100%; height: auto; }
+  .styles{ display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .rec{ display: none; align-items: center; gap: 10px; font-size: .92rem; color: var(--muted); margin-top: 10px; }
+  .rec.on{ display: flex; }
+  .rec i{ width: 10px; height: 10px; border-radius: 50%; background: var(--hot); animation: live 1s infinite; }
+  .obs-steps code{ font-size: .82rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small>outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Transitions de scène</h1>
+    <p>Une transition animée entre tes scènes OBS, assortie à ton pack, avec ton pseudo ou ton logo. La vidéo est fabriquée directement dans ton navigateur.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Style</legend>
+        <div class="choices styles">
+          <div class="choice"><input type="radio" name="style" id="s-wipe" value="wipe" checked><label for="s-wipe"><span class="sw" style="background:linear-gradient(110deg,#a78bfa 50%,#19171f 50%)"></span><span>Volet</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="s-circle" value="circle"><label for="s-circle"><span class="sw" style="background:radial-gradient(circle,#a78bfa 45%,#19171f 46%)"></span><span>Cercle</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="s-curtain" value="curtain"><label for="s-curtain"><span class="sw" style="background:linear-gradient(90deg,#a78bfa 35%,#19171f 35% 65%,#a78bfa 65%)"></span><span>Rideau</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="s-stripes" value="stripes"><label for="s-stripes"><span class="sw" style="background:repeating-linear-gradient(#a78bfa 0 5px,#19171f 5px 10px)"></span><span>Bandes</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="s-diamond" value="diamond"><label for="s-diamond"><span class="sw" style="background:conic-gradient(from 45deg,#a78bfa 0 25%,#19171f 0 50%,#a78bfa 0 75%,#19171f 0)"></span><span>Losange</span></label></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Pack et couleurs</legend>
+        <div id="packs"></div>
+        <div class="field colors" style="margin-top:12px"><label class="color"><input type="color" id="c1" value="#a78bfa"><span>Couleur 1</span></label><label class="color"><input type="color" id="c2" value="#67e8f9"><span>Couleur 2</span></label></div>
+        <label class="check"><input type="checkbox" id="usebg" checked><span>Utiliser la texture du pack (sinon un dégradé des deux couleurs)</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Pseudo ou logo</legend>
+        <label class="field"><span>Texte au milieu</span><input type="text" id="txt" maxlength="30" placeholder="Ton pseudo (facultatif)"></label>
+        <div class="field"><span>Ou ton logo</span><div class="img-row"><button type="button" class="btn ghost small" id="logobtn">Importer</button><button type="button" class="btn ghost small" id="logoclr" hidden>Retirer</button><input type="file" id="logofile" accept="image/*" hidden></div></div>
+      </fieldset>
+      <fieldset>
+        <legend>Durée</legend>
+        <label class="field"><span><span>Durée de la transition</span><output id="durout">1,2 s</output></span><input type="range" id="dur" min="0.6" max="2.5" step="0.1" value="1.2"></label>
+        <label class="field"><span>Qualité de la vidéo</span><select id="res"><option value="1280">720p (léger, conseillé)</option><option value="1920">1080p</option></select></label>
+      </fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar"><div class="title"><span class="live-dot"></span><span>Aperçu (en boucle)</span></div></div>
+        <div class="stage-wrap"><div class="stage" id="stage"><canvas id="pv" width="640" height="360"></canvas></div></div>
+      </div>
+
+      <div class="panel output">
+        <h2>Ta vidéo pour OBS</h2>
+        <button type="button" class="btn" id="make" style="width:100%;justify-content:center;padding:14px">🎬 Créer et télécharger la vidéo</button>
+        <div class="rec" id="rec"><i></i><span id="recmsg">Enregistrement…</span></div>
+        <ol class="steps obs-steps">
+          <li><span>Dans OBS, sous <b>Transitions de scène</b>, clique sur <b>+</b> puis <b>Stinger</b>.</span></li>
+          <li><span><b>Fichier vidéo</b> : choisis la vidéo téléchargée. <b>Type de point de transition</b> : Temps, et mets <b id="tp">600</b> ms.</span></li>
+          <li><span>Coche <b>Utiliser une piste de cache (track matte)</b> et choisis la disposition <b>Côte à côte (horizontale)</b>.</span></li>
+        </ol>
+        <div class="tip">La vidéo contient l'animation à gauche et son cache noir et blanc à droite : c'est normal, OBS s'en sert pour ne montrer que la transition. Elle se fabrique en temps réel : garde l'onglet ouvert pendant les quelques secondes d'enregistrement.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
+<script src="../assets/overlay.js?v=3"></script>
+<script>
+(function(){
+  'use strict';
+  function $(id){ return document.getElementById(id); }
+  var saved = SK.store.get('sk-transition') || {};
+  var pack = (window.SK_PACKS || []).filter(function(p){ return p.id === (saved.pack || 'lavande'); })[0] || window.SK_PACKS[0];
+  var texture = null, logo = null;
+  ['c1', 'c2', 'txt', 'dur', 'res'].forEach(function(k){ if (saved[k] != null) $(k).value = saved[k]; });
+  if (saved.style) document.querySelector('input[name=style][value=' + saved.style + ']').checked = true;
+  if (saved.usebg != null) $('usebg').checked = saved.usebg;
+
+  function loadTexture(){ var i = new Image(); i.onload = function(){ texture = i; }; i.src = SK.packImage(pack.id); }
+  var grid = SK.buildPackGrid(function(p){ pack = p; $('c1').value = '#' + p.c[0]; $('c2').value = '#' + p.c[1]; loadTexture(); save(); });
+  $('packs').appendChild(grid);
+  grid.querySelectorAll('.pack').forEach(function(b){ b.classList.toggle('on', b.dataset.pack === pack.id); });
+  loadTexture();
+
+  // logo importé
+  $('logobtn').addEventListener('click', function(){ $('logofile').click(); });
+  $('logoclr').addEventListener('click', function(){ logo = null; $('logoclr').hidden = true; });
+  $('logofile').addEventListener('change', function(){
+    var f = this.files[0]; this.value = ''; if (!f) return;
+    var r = new FileReader(); r.onload = function(){ var i = new Image(); i.onload = function(){ logo = i; $('logoclr').hidden = false; }; i.src = r.result; }; r.readAsDataURL(f);
+  });
+
+  function opts(){
+    return { style: (document.querySelector('input[name=style]:checked') || {}).value || 'wipe', c1: $('c1').value, c2: $('c2').value, txt: $('txt').value.trim(),
+      dur: +$('dur').value, res: +$('res').value, usebg: $('usebg').checked };
+  }
+  function save(){ var o = opts(); o.pack = pack.id; SK.store.set('sk-transition', o); $('durout').textContent = String(o.dur).replace('.', ',') + ' s'; $('tp').textContent = Math.round(o.dur * 500); }
+  $('settings').addEventListener('input', save); save();
+
+  /* ---------- Dessin : forme couvrante à l'instant t (0 → 1, plein écran à 0,5) ---------- */
+  function ease(x){ return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function shape(x, o, t, W, H){
+    var e = ease(t);
+    x.beginPath();
+    if (o.style === 'circle'){
+      var R = Math.hypot(W, H) / 2 * Math.sin(Math.PI * Math.min(1, Math.max(0, t)));
+      x.arc(W / 2, H / 2, Math.max(0, R * 1.02), 0, Math.PI * 2);
+    } else if (o.style === 'curtain'){
+      var c = W / 2 * Math.sin(Math.PI * t) * 1.02;
+      x.rect(0, 0, c, H); x.rect(W - c, 0, c, H);
+    } else if (o.style === 'stripes'){
+      var n = 7, bh = H / n;
+      for (var i = 0; i < n; i++){
+        var d = i / n * .25, tt = Math.min(1, Math.max(0, (t - d) / .75));
+        var cover = Math.sin(Math.PI * tt), dir = i % 2 ? -1 : 1;
+        var w = W * cover * 1.02, x0 = dir > 0 ? (tt < .5 ? 0 : W - w) : (tt < .5 ? W - w : 0);
+        x.rect(x0, i * bh - 1, w, bh + 2);
+      }
+    } else if (o.style === 'diamond'){
+      var s = (W + H) * Math.sin(Math.PI * t) * .55;
+      x.moveTo(W / 2, H / 2 - s); x.lineTo(W / 2 + s, H / 2); x.lineTo(W / 2, H / 2 + s); x.lineTo(W / 2 - s, H / 2); x.closePath();
+    } else { // volet en biais
+      var sk = W * .25, B = W * 1.7, L = -sk + e * (2 * (W + sk) + sk);
+      x.moveTo(L - B, H); x.lineTo(L - B + sk, 0); x.lineTo(L + sk, 0); x.lineTo(L, H); x.closePath();
+    }
+  }
+  function content(x, o, t, W, H){
+    if (o.usebg && texture){ var sc = Math.max(W / texture.width, H / texture.height) * (1.08 - .08 * t); x.drawImage(texture, (W - texture.width * sc) / 2, (H - texture.height * sc) / 2, texture.width * sc, texture.height * sc); }
+    else { var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, o.c1); g.addColorStop(1, o.c2); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+    // pseudo ou logo, visible quand l'écran est couvert
+    var a = Math.max(0, 1 - Math.abs(t - .5) / .2);
+    if (a > 0 && (logo || o.txt)){
+      x.save(); x.globalAlpha = a; x.translate(W / 2, H / 2); var z = .9 + .1 * a; x.scale(z, z);
+      if (logo){ var s = Math.min(W * .4 / logo.width, H * .4 / logo.height); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = H * .03; x.drawImage(logo, -logo.width * s / 2, -logo.height * s / 2, logo.width * s, logo.height * s); }
+      else { var fam = SKO.useFont(pack.t.font), fs = H * .14; x.font = '800 ' + fs + 'px ' + fam;
+        while (x.measureText(o.txt).width > W * .8 && fs > 10){ fs -= 2; x.font = '800 ' + fs + 'px ' + fam; }
+        x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = fs * .3; x.fillStyle = pack.light ? '#' + pack.t.tx : '#fff'; x.fillText(o.txt, 0, 0); }
+      x.restore();
+    }
+  }
+  // Image complète : animation à gauche, cache à droite
+  function frame(x, o, t, W, H){
+    x.fillStyle = '#000'; x.fillRect(0, 0, W * 2, H);
+    x.save(); shape(x, o, t, W, H); x.clip(); content(x, o, t, W, H); x.restore();
+    x.save(); x.translate(W, 0); x.fillStyle = '#fff'; shape(x, o, t, W, H); x.fill(); x.restore();
+    // léger liseré lumineux sur le bord de la forme
+    x.save(); shape(x, o, t, W, H); x.strokeStyle = o.c1; x.lineWidth = H * .006; x.shadowColor = o.c1; x.shadowBlur = H * .02; x.stroke(); x.restore();
+  }
+
+  /* ---------- Aperçu : deux fausses scènes et la transition par-dessus ---------- */
+  var pv = $('pv'), px = pv.getContext('2d');
+  function sceneA(x, W, H){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#1b2a4a'); g.addColorStop(1, '#2a1840'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText('Scène 1', W / 2, H / 2 + 10); }
+  function sceneB(x, W, H){ var g = x.createLinearGradient(0, H, W, 0); g.addColorStop(0, '#0f3b33'); g.addColorStop(1, '#3b0f2e'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText('Scène 2', W / 2, H / 2 + 10); }
+  var t0 = performance.now();
+  (function loop(now){
+    var o = opts(), cycle = o.dur * 1000 + 900, k = ((now - t0) % (cycle * 2)), first = k < cycle, ph = (k % cycle) - 450, t = ph / (o.dur * 1000);
+    var W = 640, H = 360;
+    var before = first ? sceneA : sceneB, after = first ? sceneB : sceneA;
+    (t < .5 ? before : after)(px, W, H);
+    if (t > 0 && t < 1){
+      // même dessin que la vidéo : la forme découpe la texture par-dessus la scène
+      px.save(); shape(px, o, t, W, H); px.clip(); content(px, o, t, W, H); px.restore();
+      px.save(); shape(px, o, t, W, H); px.strokeStyle = o.c1; px.lineWidth = H * .006; px.shadowColor = o.c1; px.shadowBlur = H * .02; px.stroke(); px.restore();
+    }
+    requestAnimationFrame(loop);
+  })(t0);
+
+  /* ---------- Enregistrement de la vidéo ---------- */
+  function pickType(){
+    var types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'];
+    for (var i = 0; i < types.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported(types[i])) return types[i];
+    return '';
+  }
+  $('make').addEventListener('click', function(){
+    var type = pickType();
+    if (!type){ SK.toast('Ton navigateur ne sait pas créer de vidéo : essaie avec Chrome ou Edge'); return; }
+    var o = opts(), W = o.res, H = Math.round(W * 9 / 16);
+    var c = document.createElement('canvas'); c.width = W * 2; c.height = H;
+    var x = c.getContext('2d'), stream = c.captureStream(60), chunks = [];
+    var rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: W >= 1920 ? 16e6 : 10e6 });
+    rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = function(){
+      $('rec').classList.remove('on'); $('make').disabled = false;
+      var blob = new Blob(chunks, { type: type.split(';')[0] });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'transition-skelvo-' + pack.id + '-' + o.style + (type.indexOf('mp4') >= 0 ? '.mp4' : '.webm'); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      SK.toast('Vidéo prête ! Ajoute-la dans OBS');
+    };
+    $('make').disabled = true; $('rec').classList.add('on'); $('recmsg').textContent = 'Enregistrement… (' + String(o.dur).replace('.', ',') + ' s)';
+    frame(x, o, 0, W, H); rec.start();
+    var start = performance.now(), D = o.dur * 1000;
+    (function step(now){
+      var t = (now - start) / D;
+      frame(x, o, Math.min(1, t), W, H);
+      if (t < 1.05) requestAnimationFrame(step); else setTimeout(function(){ rec.stop(); }, 120);
+    })(start);
+  });
+})();
+</script>
+</body>
+</html>
