@@ -48,6 +48,14 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   .tool-grid{ display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px; align-items: start; padding-bottom: 60px; }
   @media (max-width: 920px){ .tool-grid{ grid-template-columns: 1fr; } }
   .pad{ padding: 18px; }
+  .social{ width: 100%; height: auto; border-radius: 12px; display: block; margin-top: 12px; }
+  #t-planning .social, #t-live .social{ max-height: 70vh; width: auto; max-width: 100%; margin-left: auto; margin-right: auto; }
+  .fmt{ display: flex; width: fit-content; }
+  .days{ display: grid; gap: 8px; }
+  .day{ display: grid; grid-template-columns: 74px 70px 1fr; gap: 6px; align-items: center; }
+  .day .check{ margin: 0; font-weight: 600; }
+  .day input[type=text]{ padding: 8px 10px; }
+  .day.off input[type=text]{ opacity: .35; }
   .tpls{ display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-bottom: 12px; }
   .tpl{ border: 1px solid var(--line-2); background: var(--bg-2); color: var(--text); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; font: 500 .78rem 'IBM Plex Sans', sans-serif; align-items: stretch; }
   .tpl.on{ border-color: var(--accent); background: rgba(155,92,255,.12); }
@@ -73,6 +81,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     <button type="button" role="tab" aria-selected="true" data-tab="t-emotes">😀 Emotes et badges</button>
     <button type="button" role="tab" aria-selected="false" data-tab="t-panels">🧩 Panneaux de profil</button>
     <button type="button" role="tab" aria-selected="false" data-tab="t-banner">🖼️ Bannières</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t-planning">📅 Planning</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t-live">🔴 En live</button>
   </div>
 
   <!-- ---------- Emotes et badges ---------- -->
@@ -180,6 +190,64 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       <div class="tip">Sur Twitch : Paramètres de la chaîne → Marque, pour la bannière de profil, et Lecteur vidéo pour la bannière hors ligne.</div>
     </div>
   </section>
+
+  <!-- ---------- Planning de la semaine ---------- -->
+  <section class="tab tool-grid" id="t-planning" hidden>
+    <form class="panel settings" id="plform" autocomplete="off">
+      <fieldset>
+        <legend>Ta semaine</legend>
+        <label class="field"><span>Semaine</span><select id="plweek"><option value="0">Cette semaine</option><option value="1">La semaine prochaine</option></select></label>
+        <div class="days" id="pldays"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Textes</legend>
+        <label class="field"><span>Titre</span><input type="text" id="pltitle" value="Planning" maxlength="30"></label>
+        <label class="field"><span>Ton pseudo Twitch</span><input type="text" id="plname" maxlength="25" placeholder="ex. skelvo" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Texte des jours sans live</span><input type="text" id="ploff" value="Repos" maxlength="20"></label>
+        <div class="field"><span>Ton logo (facultatif)</span><div class="img-row"><button type="button" class="btn ghost small" id="pllogobtn">Importer</button><button type="button" class="btn ghost small" id="pllogoclr" hidden>Retirer</button><input type="file" id="pllogofile" accept="image/*" hidden></div></div>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div id="plpacks"></div>
+        <label class="field" style="margin-top:12px"><span><span>Assombrir le fond</span><output id="pldimout">35 %</output></span><input type="range" id="pldim" min="0" max="80" value="35"></label>
+      </fieldset>
+    </form>
+    <div class="panel pad">
+      <div class="seg fmt" id="plfmt" role="group" aria-label="Format"><button type="button" data-f="sq" aria-pressed="true">Carré (Insta)</button><button type="button" data-f="wide">Large (X)</button><button type="button" data-f="story">Story</button></div>
+      <canvas id="plcanvas" class="social" width="1080" height="1080"></canvas>
+      <div class="btn-row" style="margin-top:14px"><button type="button" class="btn" id="plshare">Partager</button><button type="button" class="btn ghost" id="pldl">Télécharger</button></div>
+      <div class="tip">Remplis seulement les jours où tu lances un live : les autres affichent « Repos ». Ton planning est mémorisé pour la semaine suivante.</div>
+    </div>
+  </section>
+
+  <!-- ---------- Je suis en live ---------- -->
+  <section class="tab tool-grid" id="t-live" hidden>
+    <form class="panel settings" id="lvform" autocomplete="off">
+      <fieldset>
+        <legend>Ton live</legend>
+        <label class="field"><span>Titre du live</span><input type="text" id="lvtitle" value="On tente le boss final ce soir !" maxlength="70"></label>
+        <label class="field"><span>Jeu ou activité</span><input type="text" id="lvgame" value="Elden Ring" maxlength="40"></label>
+        <label class="field"><span>Ton pseudo Twitch</span><input type="text" id="lvname" maxlength="25" placeholder="ex. skelvo" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Petit texte du badge</span><input type="text" id="lvbadge" value="EN LIVE" maxlength="16"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Ton image</legend>
+        <div class="field"><span>Capture du jeu ou ta photo</span><div class="img-row"><button type="button" class="btn ghost small" id="lvimgbtn">Importer</button><button type="button" class="btn ghost small" id="lvimgclr" hidden>Retirer</button><input type="file" id="lvimgfile" accept="image/*" hidden></div><small>Facultatif : sans image, le visuel reste élégant avec juste le texte.</small></div>
+        <div class="field"><span>Ton logo (facultatif)</span><div class="img-row"><button type="button" class="btn ghost small" id="lvlogobtn">Importer</button><button type="button" class="btn ghost small" id="lvlogoclr" hidden>Retirer</button><input type="file" id="lvlogofile" accept="image/*" hidden></div></div>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <div id="lvpacks"></div>
+        <label class="field" style="margin-top:12px"><span><span>Assombrir le fond</span><output id="lvdimout">35 %</output></span><input type="range" id="lvdim" min="0" max="80" value="35"></label>
+      </fieldset>
+    </form>
+    <div class="panel pad">
+      <div class="seg fmt" id="lvfmt" role="group" aria-label="Format"><button type="button" data-f="sq" aria-pressed="true">Carré (Insta)</button><button type="button" data-f="wide">Large (X)</button><button type="button" data-f="story">Story</button></div>
+      <canvas id="lvcanvas" class="social" width="1080" height="1080"></canvas>
+      <div class="btn-row" style="margin-top:14px"><button type="button" class="btn" id="lvshare">Partager</button><button type="button" class="btn ghost" id="lvdl">Télécharger</button></div>
+      <div class="tip">Sur téléphone, « Partager » ouvre directement Instagram, X, Discord ou TikTok avec ton image.</div>
+    </div>
+  </section>
 </main>
 
 <footer class="foot">
@@ -203,6 +271,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     document.querySelectorAll('.tab').forEach(function(s){ s.hidden = s.id !== id; });
     SK.store.set('sk-images-tab', id);
     if (id === 't-panels') drawPanels(); if (id === 't-banner') drawBanner();
+    if (id === 't-planning') drawPlanning(); if (id === 't-live') drawLive();
   }
   tabs.forEach(function(t){ t.addEventListener('click', function(){ openTab(t.dataset.tab); }); });
 
@@ -621,7 +690,214 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     btpl = 'image'; document.querySelectorAll('#btpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === 'image'); });
   }));
 
-  openTab(SK.store.get('sk-images-tab') || 't-emotes');
+
+  /* ================= Visuels réseaux : outils communs ================= */
+  var FORMATS = { sq: [1080, 1080], wide: [1600, 900], story: [1080, 1920] };
+  function socialBg(x, W, H, pk, dim){
+    var img = pk && pk.__img;
+    if (img){ coverImage(x, img, W, H, 0); }
+    else mesh(x, W, H, pk ? ['#' + pk.c[0], '#' + pk.c[1], '#' + pk.c[2]] : ['#a78bfa', '#67e8f9', '#f9a8d4'], '#07060d');
+    x.fillStyle = (pk && pk.light) ? 'rgba(255,255,255,' + dim / 160 + ')' : 'rgba(0,0,0,' + dim / 100 + ')'; x.fillRect(0, 0, W, H);
+    var v = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .75);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, (pk && pk.light) ? 'rgba(0,0,0,.12)' : 'rgba(0,0,0,.45)'); x.fillStyle = v; x.fillRect(0, 0, W, H);
+    grain(x, W, H, .1);
+  }
+  function packPicker(holderId, storeKey, redraw){
+    var cur = (window.SK_PACKS || []).filter(function(p){ return p.id === SK.store.get(storeKey); })[0] || window.SK_PACKS[0];
+    function load(pk){ if (pk.__img){ redraw(); return; } var i = new Image(); i.onload = function(){ pk.__img = i; redraw(); }; i.src = SK.packImage(pk.id); }
+    var g = SK.buildPackGrid(function(pk){ cur = pk; SK.store.set(storeKey, pk.id); load(pk); });
+    $(holderId).appendChild(g);
+    g.querySelectorAll('.pack').forEach(function(b){ b.classList.toggle('on', b.dataset.pack === cur.id); });
+    load(cur);
+    return function(){ return cur; };
+  }
+  function fmtSwitch(id, storeKey, redraw){
+    var f = SK.store.get(storeKey) || 'sq';
+    var btns = document.querySelectorAll('#' + id + ' button');
+    function mark(){ btns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.f === f)); }); }
+    btns.forEach(function(b){ b.addEventListener('click', function(){ f = b.dataset.f; SK.store.set(storeKey, f); mark(); redraw(); }); });
+    mark();
+    return function(){ return f; };
+  }
+  function textColors(pk){ return pk && pk.light ? { tx: '#' + pk.t.tx, mu: rgbaHex('#' + pk.t.tx, .7), card: 'rgba(255,255,255,.55)', line: 'rgba(0,0,0,.08)' } : { tx: '#ffffff', mu: 'rgba(255,255,255,.72)', card: 'rgba(10,10,16,.45)', line: 'rgba(255,255,255,.14)' }; }
+  function fitFont(x, text, weight, size, fam, maxW){ x.font = weight + ' ' + size + 'px ' + fam; while (x.measureText(text).width > maxW && size > 10){ size -= 2; x.font = weight + ' ' + size + 'px ' + fam; } return size; }
+  function shareCanvas(canvas, name, text){
+    canvas.toBlob(function(blob){
+      var file = new File([blob], name, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })){
+        navigator.share({ files: [file], text: text }).catch(function(){});
+      } else { download(canvas, name); SK.toast('Image téléchargée : partage-la depuis ta galerie'); }
+    }, 'image/png');
+  }
+  function twitchUrl(n){ n = String(n || '').trim().replace(/^@/, ''); return n ? 'twitch.tv/' + n : ''; }
+
+  /* ================= Planning de la semaine ================= */
+  var DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  var plSaved = SK.store.get('sk-planning') || {};
+  var plDays = plSaved.days || DAYS.map(function(d, i){ return { on: i === 2 || i === 5, time: i === 5 ? '21h' : '20h', what: i === 2 ? 'Minecraft entre potes' : i === 5 ? 'Elden Ring : boss final' : '' }; });
+  ['pltitle', 'plname', 'ploff', 'pldim', 'plweek'].forEach(function(k){ if (plSaved[k] != null) $(k).value = plSaved[k]; });
+  var daysEl = $('pldays');
+  DAYS.forEach(function(d, i){
+    var row = document.createElement('div'); row.className = 'day' + (plDays[i].on ? '' : ' off');
+    var l = document.createElement('label'); l.className = 'check'; var c = document.createElement('input'); c.type = 'checkbox'; c.checked = plDays[i].on;
+    l.appendChild(c); l.appendChild(document.createTextNode(d.slice(0, 3) + '.'));
+    var t = document.createElement('input'); t.type = 'text'; t.value = plDays[i].time; t.placeholder = '20h'; t.maxLength = 12;
+    var w = document.createElement('input'); w.type = 'text'; w.value = plDays[i].what; w.placeholder = 'Jeu ou activité'; w.maxLength = 40;
+    c.addEventListener('change', function(){ plDays[i].on = c.checked; row.classList.toggle('off', !c.checked); });
+    t.addEventListener('input', function(){ plDays[i].time = t.value; }); w.addEventListener('input', function(){ plDays[i].what = w.value; });
+    row.appendChild(l); row.appendChild(t); row.appendChild(w); daysEl.appendChild(row);
+  });
+  var plLogo = imagePicker('pllogobtn', 'pllogoclr', 'pllogofile', 'sk-pl-logo', 600, function(){ drawPlanning(); });
+  var plPack = packPicker('plpacks', 'sk-pl-pack', function(){ drawPlanning(); });
+  var plFmt = fmtSwitch('plfmt', 'sk-pl-fmt', function(){ drawPlanning(); });
+
+  function weekDates(){
+    var d = new Date(); var day = (d.getDay() + 6) % 7; d.setDate(d.getDate() - day + 7 * (+$('plweek').value)); d.setHours(12);
+    return DAYS.map(function(_, i){ var x = new Date(d); x.setDate(d.getDate() + i); return x; });
+  }
+  function drawPlanning(){
+    var pk = plPack(), f = plFmt(), W = FORMATS[f][0], H = FORMATS[f][1], c = $('plcanvas');
+    $('pldimout').textContent = $('pldim').value + ' %';
+    SK.store.set('sk-planning', { days: plDays, pltitle: $('pltitle').value, plname: $('plname').value, ploff: $('ploff').value, pldim: $('pldim').value, plweek: $('plweek').value });
+    Promise.all([fontReady(pk.t.font, pk.t.fw), fontReady('inter', '600'), fontReady('inter', '800')]).then(function(r){
+      var fam = r[0], x = c.getContext('2d'); c.width = W; c.height = H;
+      socialBg(x, W, H, pk, +$('pldim').value);
+      var col = textColors(pk), ac = '#' + pk.t.ac, dates = weekDates(), M = W * .07;
+      var title = $('pltitle').value || 'Planning', range = dates[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ' – ' + dates[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      var up = pk.t.up === '1';
+      // en-tête : petite date au-dessus, puis le titre, avec de l'air autour
+      var logo = plLogo();
+      var ks = Math.round(H * (f === 'story' ? .016 : .024));
+      var ts = fitFont(x, up ? title.toUpperCase() : title, pk.t.fw, Math.round(H * (f === 'story' ? .055 : .085)), fam, W - M * 2 - (logo ? W * .2 : 0));
+      var ky = H * (f === 'story' ? .07 : .085), ty = ky + ks * .8 + ts * 1.05;
+      if (logo){ var lh = H * (f === 'wide' ? .1 : .075), lw = logo.width * lh / logo.height; x.drawImage(logo, W - M - lw, ty - lh * .85, lw, lh); }
+      x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+      x.fillStyle = ac; x.font = '700 ' + ks + 'px Inter, sans-serif';
+      if ('letterSpacing' in x) x.letterSpacing = '4px';
+      x.fillText(range.toUpperCase(), M, ky); if ('letterSpacing' in x) x.letterSpacing = '0px';
+      x.font = pk.t.fw + ' ' + ts + 'px ' + fam;
+      x.fillStyle = col.tx; x.shadowColor = 'rgba(0,0,0,.3)'; x.shadowBlur = 20; x.fillText(up ? title.toUpperCase() : title, M, ty); x.shadowBlur = 0;
+      var top = ty + H * (f === 'story' ? .035 : .05), bottom = H - H * (f === 'story' ? .09 : .1);
+      // jours
+      if (f === 'wide'){
+        var gap = W * .012, cw = (W - M * 2 - gap * 6) / 7, ch = bottom - top;
+        dates.forEach(function(dt, i){
+          var dd = plDays[i], cx = M + i * (cw + gap);
+          x.fillStyle = dd.on ? col.card : 'rgba(127,127,127,.12)'; rr(x, cx, top, cw, ch, 22); x.fill();
+          if (dd.on){ x.strokeStyle = rgbaHex(ac, .6); x.lineWidth = 2; x.stroke(); }
+          x.textAlign = 'center'; x.fillStyle = dd.on ? col.tx : col.mu;
+          x.font = '800 ' + Math.round(cw * .17) + 'px Inter, sans-serif'; x.fillText(DAYS[i].slice(0, 3).toUpperCase(), cx + cw / 2, top + ch * .14);
+          x.font = '600 ' + Math.round(cw * .28) + 'px ' + fam; x.fillText(String(dt.getDate()), cx + cw / 2, top + ch * .32);
+          if (dd.on){
+            x.fillStyle = ac; rr(x, cx + cw * .15, top + ch * .42, cw * .7, ch * .11, 999); x.fill();
+            x.fillStyle = (pk.light ? '#fff' : '#0b0b10'); x.font = '800 ' + Math.round(cw * .14) + 'px Inter, sans-serif'; x.fillText(dd.time || '', cx + cw / 2, top + ch * .5);
+            x.fillStyle = col.tx; wrapText(x, dd.what || '', cx + cw / 2, top + ch * .66, cw * .86, Math.round(cw * .12), '600', fam, 4);
+          } else { x.fillStyle = col.mu; x.font = '600 ' + Math.round(cw * .12) + 'px Inter, sans-serif'; x.fillText($('ploff').value, cx + cw / 2, top + ch * .55); }
+        });
+      } else {
+        var gap2 = H * .012, rh = (bottom - top - gap2 * 6) / 7;
+        dates.forEach(function(dt, i){
+          var dd = plDays[i], cy = top + i * (rh + gap2);
+          x.fillStyle = dd.on ? col.card : 'rgba(127,127,127,.12)'; rr(x, M, cy, W - M * 2, rh, rh * .28); x.fill();
+          if (dd.on){ x.fillStyle = ac; rr(x, M, cy, W * .012, rh, 4); x.fill(); }
+          x.textAlign = 'left'; x.textBaseline = 'middle';
+          x.fillStyle = dd.on ? col.tx : col.mu;
+          x.font = '800 ' + Math.round(rh * .3) + 'px Inter, sans-serif'; x.fillText(DAYS[i].slice(0, 3).toUpperCase(), M + W * .045, cy + rh * .38);
+          x.font = '600 ' + Math.round(rh * .24) + 'px Inter, sans-serif'; x.fillStyle = col.mu; x.fillText(dt.getDate() + ' ' + dt.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''), M + W * .045, cy + rh * .7);
+          if (dd.on){
+            var tw = W * .14, tx0 = M + W * .2;
+            x.fillStyle = ac; rr(x, tx0, cy + rh * .26, tw, rh * .48, 999); x.fill();
+            x.fillStyle = (pk.light ? '#fff' : '#0b0b10'); x.textAlign = 'center'; x.font = '800 ' + Math.round(rh * .27) + 'px Inter, sans-serif'; x.fillText(dd.time || '', tx0 + tw / 2, cy + rh * .51);
+            x.textAlign = 'left'; x.fillStyle = col.tx; fitFont(x, dd.what || '', pk.t.fw, Math.round(rh * .34), fam, W - M - (tx0 + tw + W * .03) - W * .03);
+            x.fillText(dd.what || '', tx0 + tw + W * .03, cy + rh * .52);
+          } else { x.textAlign = 'left'; x.fillStyle = col.mu; x.font = '600 ' + Math.round(rh * .28) + 'px Inter, sans-serif'; x.fillText($('ploff').value, M + W * .2, cy + rh * .52); }
+          x.textBaseline = 'alphabetic';
+        });
+      }
+      // pied
+      var tu = twitchUrl($('plname').value);
+      if (tu){ x.textAlign = f === 'wide' ? 'left' : 'center'; x.fillStyle = col.tx; x.font = '700 ' + Math.round(H * (f === 'story' ? .02 : .028)) + 'px Inter, sans-serif'; x.fillText('▶ ' + tu, f === 'wide' ? M : W / 2, H - H * (f === 'story' ? .045 : .045)); }
+    });
+  }
+  function wrapText(x, text, cx, y, maxW, size, weight, fam, maxLines){
+    x.font = weight + ' ' + size + 'px ' + fam; var words = text.split(' '), line = '', n = 0;
+    for (var i = 0; i < words.length; i++){
+      var t = line ? line + ' ' + words[i] : words[i];
+      if (x.measureText(t).width > maxW && line){ x.fillText(line, cx, y); y += size * 1.2; line = words[i]; if (++n >= maxLines - 1) { line = words.slice(i).join(' '); break; } }
+      else line = t;
+    }
+    if (line) x.fillText(line, cx, y);
+  }
+  $('plform').addEventListener('input', throttled(drawPlanning, 140));
+  $('plform').addEventListener('change', throttled(drawPlanning, 140));
+  $('pldl').addEventListener('click', function(){ download($('plcanvas'), 'planning-' + plFmt() + '.png'); });
+  $('plshare').addEventListener('click', function(){ shareCanvas($('plcanvas'), 'planning.png', 'Mon planning de la semaine ' + (twitchUrl($('plname').value) ? '👉 https://' + twitchUrl($('plname').value) : '')); });
+
+  /* ================= Je suis en live ================= */
+  var lvSaved = SK.store.get('sk-live') || {};
+  ['lvtitle', 'lvgame', 'lvname', 'lvbadge', 'lvdim'].forEach(function(k){ if (lvSaved[k] != null) $(k).value = lvSaved[k]; });
+  if (!$('lvname').value && plSaved.plname) $('lvname').value = plSaved.plname;
+  var lvImg = imagePicker('lvimgbtn', 'lvimgclr', 'lvimgfile', 'sk-lv-img', 1600, function(){ drawLive(); });
+  var lvLogo = imagePicker('lvlogobtn', 'lvlogoclr', 'lvlogofile', 'sk-lv-logo', 600, function(){ drawLive(); });
+  var lvPack = packPicker('lvpacks', 'sk-lv-pack', function(){ drawLive(); });
+  var lvFmt = fmtSwitch('lvfmt', 'sk-lv-fmt', function(){ drawLive(); });
+  function liveBadge(x, text, bx, by, size){
+    x.font = '800 ' + size + 'px Inter, sans-serif'; if ('letterSpacing' in x) x.letterSpacing = (size * .08) + 'px';
+    var w = x.measureText(text).width + size * 2.2, h = size * 1.9;
+    x.fillStyle = '#e11d48'; rr(x, bx, by, w, h, 999); x.fill();
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(bx + size * .9, by + h / 2, size * .28, 0, 7); x.fill();
+    x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(text, bx + size * 1.45, by + h / 2 + 1); x.textBaseline = 'alphabetic';
+    if ('letterSpacing' in x) x.letterSpacing = '0px';
+    return h;
+  }
+  function drawLive(){
+    var pk = lvPack(), f = lvFmt(), W = FORMATS[f][0], H = FORMATS[f][1], c = $('lvcanvas');
+    $('lvdimout').textContent = $('lvdim').value + ' %';
+    SK.store.set('sk-live', { lvtitle: $('lvtitle').value, lvgame: $('lvgame').value, lvname: $('lvname').value, lvbadge: $('lvbadge').value, lvdim: $('lvdim').value });
+    Promise.all([fontReady(pk.t.font, pk.t.fw), fontReady('inter', '600'), fontReady('inter', '800')]).then(function(r){
+      var fam = r[0], x = c.getContext('2d'); c.width = W; c.height = H;
+      socialBg(x, W, H, pk, +$('lvdim').value);
+      var col = textColors(pk), ac = '#' + pk.t.ac, img = lvImg(), logo = lvLogo(), M = W * .07;
+      var title = $('lvtitle').value, game = $('lvgame').value, tu = twitchUrl($('lvname').value), up = pk.t.up === '1';
+      // zone image
+      var ix, iy, iw, ih;
+      if (f === 'wide'){ iw = W * .46; ih = iw * 9 / 16; ix = W - M - iw; iy = (H - ih) / 2; }
+      else if (f === 'story'){ iw = W - M * 2; ih = iw * 9 / 16; ix = M; iy = H * .2; }
+      else { iw = W - M * 2; ih = iw * 9 / 16 * .82; ix = M; iy = H * .1; }
+      if (img){
+        x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 50; x.fillStyle = '#000'; rr(x, ix, iy, iw, ih, 26); x.fill(); x.restore();
+        // coverImage dessine en (0,0) : on le place dans le cadre
+        x.save(); rr(x, ix, iy, iw, ih, 26); x.clip(); x.translate(ix, iy); coverImage(x, img, iw, ih, 0); x.restore();
+        x.strokeStyle = rgbaHex(ac, .9); x.lineWidth = 4; rr(x, ix, iy, iw, ih, 26); x.stroke();
+      }
+      // textes
+      var tx0, tyb, maxW;
+      if (f === 'wide'){ tx0 = M; maxW = img ? W * .38 : W - M * 2; tyb = H * .3; }
+      else if (f === 'story'){ tx0 = M; maxW = W - M * 2; tyb = img ? iy + ih + H * .07 : H * .38; }
+      else { tx0 = M; maxW = W - M * 2; tyb = img ? iy + ih + H * .07 : H * .32; }
+      var bs = Math.round(H * (f === 'story' ? .018 : .028));
+      var bh = liveBadge(x, ($('lvbadge').value || 'EN LIVE').toUpperCase(), tx0, tyb - bs * 2.2, bs);
+      var y = tyb + bh * .4;
+      x.textAlign = 'left'; x.fillStyle = col.tx; x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 18;
+      var tsz = Math.round(H * (f === 'story' ? .05 : f === 'wide' ? .075 : .065));
+      x.font = pk.t.fw + ' ' + tsz + 'px ' + fam;
+      // titre sur plusieurs lignes
+      var words = (up ? title.toUpperCase() : title).split(' '), line = '', lines = [];
+      words.forEach(function(w){ var t = line ? line + ' ' + w : w; if (x.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; });
+      if (line) lines.push(line); lines = lines.slice(0, 3);
+      lines.forEach(function(l){ y += tsz * 1.08; x.fillText(l, tx0, y); });
+      x.shadowBlur = 0;
+      if (game){ y += tsz * .75; x.fillStyle = ac; x.font = '700 ' + Math.round(tsz * .5) + 'px Inter, sans-serif'; x.fillText('🎮  ' + game, tx0, y); }
+      if (tu){ y += tsz * .85; x.fillStyle = col.mu; x.font = '700 ' + Math.round(tsz * .44) + 'px Inter, sans-serif'; x.fillText('▶ ' + tu, tx0, y); }
+      if (logo){ var lh = H * (f === 'story' ? .06 : .09), lw = logo.width * lh / logo.height; x.drawImage(logo, W - M - lw, H - M - lh, lw, lh); }
+    });
+  }
+  $('lvform').addEventListener('input', throttled(drawLive, 140));
+  $('lvdl').addEventListener('click', function(){ download($('lvcanvas'), 'en-live-' + lvFmt() + '.png'); });
+  $('lvshare').addEventListener('click', function(){ var tu = twitchUrl($('lvname').value); shareCanvas($('lvcanvas'), 'en-live.png', '🔴 En live ! ' + $('lvtitle').value + (tu ? ' 👉 https://' + tu : '')); });
+
+  var qtab = new URLSearchParams(location.search).get('tab');
+  openTab((qtab && document.getElementById(qtab)) ? qtab : (SK.store.get('sk-images-tab') || 't-emotes'));
 })();
 </script>
 </body>
