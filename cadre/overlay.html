@@ -131,7 +131,7 @@
   };
 
   var frame = document.getElementById('frame');
-  var current = {};
+  var current = {}, lastStructure = '';
 
   function num(v, min, max, def){ v = parseFloat(v); if (isNaN(v)) v = def; return Math.min(max, Math.max(min, v)); }
   function hex(v, def){ return /^[0-9a-f]{6}$/i.test(v || '') ? '#' + v : '#' + def; }
@@ -204,6 +204,10 @@
     document.body.className = [circle ? 'circle' : 'rect', 's-' + style, glow ? '' : 'no-glow', speed ? '' : 'static'].join(' ');
 
     var art = { c1: c1, c2: c2, c3: c3, style: style, img: cimg };
+    var lst0 = /^(fill|glass|dark|outline|text)$/.test(p.lstyle) ? p.lstyle : 'fill';
+    var structure = [style, circle, label, p.lpos, lst0, p.lup, cimg, style === 'dash' ? c1 + c2 + c3 : ''].join('|');
+    if (structure === lastStructure){ sizeSvg(); return; } // un curseur a bougé : les variables CSS suffisent
+    lastStructure = structure;
     var html = (style === 'image' ? '' : '<div class="layer glow">' + drawing(art).replace(/\{ID\}/g, 'a') + '</div>') +
                '<div class="layer main">' + drawing(art).replace(/\{ID\}/g, 'b') + '</div>';
 

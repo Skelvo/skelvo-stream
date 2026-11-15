@@ -124,22 +124,34 @@
       return u.href;
     }
 
-    var raf;
-    function update(){
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(function(){
-        syncOutputs(form);
-        var p = readForm(form);
-        var url = buildUrl(p);
-        if (opts.urlInput) opts.urlInput.value = url;
-        if (opts.openBtn) opts.openBtn.href = url;
-        SK.store.set(opts.storageKey, p);
-        if (opts.onChange) opts.onChange(p, url);
-      });
+    // Pendant qu'on fait glisser un curseur, l'aperçu est mis à jour au plus
+    // ~12 fois par seconde (assez pour être fluide, sans surcharger un téléphone).
+    // Le lien OBS et la sauvegarde se font quand on relâche (ou 300 ms après).
+    var raf, last = 0, pending = null, saveTimer = null, lastP = null, lastUrl = '';
+    function apply(){
+      pending = null; last = Date.now();
+      syncOutputs(form);
+      lastP = readForm(form); lastUrl = buildUrl(lastP);
+      if (opts.onChange) opts.onChange(lastP, lastUrl);
+      clearTimeout(saveTimer); saveTimer = setTimeout(save, 300);
+    }
+    function save(){
+      if (!lastP) return;
+      if (opts.urlInput) opts.urlInput.value = lastUrl;
+      if (opts.openBtn) opts.openBtn.href = lastUrl;
+      SK.store.set(opts.storageKey, lastP);
+    }
+    function update(e){
+      var dragging = e && e.type === 'input' && e.target && e.target.type === 'range';
+      if (!dragging){ cancelAnimationFrame(raf); clearTimeout(pending); raf = requestAnimationFrame(function(){ apply(); save(); }); return; }
+      syncOutputs(form); // le chiffre à côté du curseur suit tout de suite
+      var wait = 80 - (Date.now() - last);
+      if (wait <= 0){ cancelAnimationFrame(raf); raf = requestAnimationFrame(apply); }
+      else if (!pending) pending = setTimeout(function(){ raf = requestAnimationFrame(apply); }, wait);
     }
 
     form.addEventListener('input', update);
-    form.addEventListener('change', update);
+    form.addEventListener('change', function(){ update(); });
     form.addEventListener('submit', function(e){ e.preventDefault(); });
 
     if (opts.copyBtn) opts.copyBtn.addEventListener('click', function(){ SK.copy(opts.urlInput.value); });
@@ -408,7 +420,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.4';
+  SK.VERSION = '1.5';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -543,7 +555,8 @@
         if (window.scrollY > target + 4 || window.scrollY < target - 400) window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
       }
     }
-    settings.addEventListener('input', refresh); settings.addEventListener('change', refresh);
+    var rt; function later(){ clearTimeout(rt); rt = setTimeout(refresh, 250); }
+    settings.addEventListener('input', later); settings.addEventListener('change', later);
     settings.addEventListener('click', function(){ setTimeout(refresh, 0); });
     go(0, false);
   };

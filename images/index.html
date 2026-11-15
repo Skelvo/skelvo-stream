@@ -184,7 +184,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=6"></script>
+<script src="../assets/app.js?v=7"></script>
 <script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){
@@ -487,7 +487,10 @@
     if (o.up != null) $('pup').checked = o.up; if (o.grain != null) $('pgrain').checked = o.grain;
     document.querySelectorAll('#ptpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === ptpl); });
   })();
-  $('pform').addEventListener('input', drawPanels);
+  // Redessin limité pendant qu'on fait glisser un curseur (fluide sur téléphone)
+  function throttled(fn, ms){ var t = null, last = 0; return function(){ var w = ms - (Date.now() - last); clearTimeout(t);
+    t = setTimeout(function(){ last = Date.now(); requestAnimationFrame(fn); }, Math.max(0, w)); }; }
+  $('pform').addEventListener('input', throttled(drawPanels, 140));
   $('pdl-all').addEventListener('click', function(){ panelCanvases.forEach(function(o, i){ setTimeout(function(){ download(o[0], o[1]); }, i * 250); }); });
 
   /* ================= Bannières ================= */
@@ -585,7 +588,7 @@
     $('bup').value = o.up ? '1' : '0'; if (o.grain != null) $('bgrain').checked = o.grain; if (o.vig != null) $('bvig').checked = o.vig;
     document.querySelectorAll('#btpls .tpl').forEach(function(x){ x.classList.toggle('on', x.dataset.tpl === btpl); });
   })();
-  $('bform').addEventListener('input', drawBanner);
+  $('bform').addEventListener('input', throttled(drawBanner, 140));
   $('bdl').addEventListener('click', function(){ download(bc, ($('btype').value === 'profile' ? 'banniere-profil' : 'banniere-hors-ligne') + '.png'); });
 
   openTab(SK.store.get('sk-images-tab') || 't-emotes');
