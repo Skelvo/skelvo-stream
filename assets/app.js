@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '1.7';
+  SK.VERSION = '1.8';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');

@@ -20,6 +20,19 @@ En ligne : https://skelvo.fr/skelvo-stream/
 - `minuteur/` : subathon, `!timer start | pause | +10m | -5m | set 2h | reset`.
 - `objectif/` : subs, bits ou manuel, `!objectif +5 | = 20 | reset`.
 
+**Plus** :
+- `giveaway/` : tirage au sort (`!participer`, `!giveaway start | stop | tirage | annule`), machine à sous ou roue.
+- `derniers/` : dernier abonné, sub offert, raid, bits, tops du jour (`!derniers reset`).
+- `jeux/` : duels (`!duel @pseudo`, `!accepte`) et courses (`!course`).
+- `horloge/` : heure, date, durée du live (`!uptime reset`), compte à rebours.
+
+**Kit et outils du streamer** :
+- `kit/` : un pack + une chaîne -> tous les liens et une collection de scènes OBS à importer (Début, Live, Pause, Fin).
+- `transitions/` : vidéo Stinger avec cache (track matte) générée dans le navigateur.
+- `debuter/` : guide pour débuter le stream avec OBS.
+
+**Packs** : `assets/packs.js` (thème + couleurs du contour + fond) et `assets/bg/` (textures, et miniatures `-mini`).
+
 **Pour le streamer** :
 - `voix/` : lecture vocale du tchat (page à garder ouverte dans un onglet).
 - `images/` : emotes et badges redimensionnés, panneaux de profil, bannières.

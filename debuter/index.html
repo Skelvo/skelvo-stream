@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Débuter le stream sur Twitch avec OBS : le guide pas à pas — Skelvo Stream</title>
+<meta name="description" content="Guide gratuit pour débuter le stream sur Twitch : installer OBS, le régler, ajouter ton jeu, ta caméra, ton micro et un habillage complet en quelques minutes." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/debuter/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=8">
+<style>
+  .guide{ display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; padding-bottom: 70px; }
+  @media (max-width: 900px){ .guide{ grid-template-columns: 1fr; } .toc{ display: none; } }
+  .toc{ position: sticky; top: 84px; display: grid; gap: 4px; }
+  .toc a{ text-decoration: none; color: var(--muted); font-size: .9rem; padding: 7px 10px; border-radius: 9px; display: flex; gap: 8px; }
+  .toc a:hover{ background: var(--panel); color: var(--text); }
+  .toc a b{ color: var(--accent-2); font-family: 'Space Grotesk', sans-serif; }
+  .chapter{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 26px; margin-bottom: 16px; scroll-margin-top: 84px; }
+  .chapter h2{ font-size: 1.35rem; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .chapter h2 .n{ width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; font-size: 1rem; flex: none; }
+  .chapter p, .chapter li{ color: #d9d3f0; }
+  .chapter ul, .chapter ol{ padding-left: 20px; display: grid; gap: 6px; }
+  .chapter b{ color: var(--text); }
+  .chapter .cta{ margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .note{ margin-top: 12px; font-size: .9rem; color: var(--muted); background: var(--bg-2); border: 1px dashed var(--line-2); border-radius: 12px; padding: 10px 12px; }
+  .faq details{ border-top: 1px solid var(--line); padding: 12px 0; }
+  .faq summary{ cursor: pointer; font: 600 1rem 'Space Grotesk', sans-serif; }
+  .faq details p{ margin: 8px 0 0; }
+  .table{ width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: 8px; }
+  .table th, .table td{ text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .table th{ color: var(--muted); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small>outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Débuter le stream, pas à pas</h1>
+    <p>De zéro à ton premier live sur Twitch, avec un habillage complet et assorti. Compte une petite demi-heure, sans rien payer.</p>
+  </div>
+
+  <div class="guide">
+    <nav class="toc" aria-label="Sommaire">
+      <a href="#obs"><b>1</b> Installer OBS</a>
+      <a href="#reglages"><b>2</b> Les bons réglages</a>
+      <a href="#twitch"><b>3</b> Relier Twitch</a>
+      <a href="#sources"><b>4</b> Jeu, caméra, micro</a>
+      <a href="#kit"><b>5</b> Ton habillage</a>
+      <a href="#son"><b>6</b> Un son propre</a>
+      <a href="#live"><b>7</b> Lancer le live</a>
+      <a href="#faq"><b>?</b> Problèmes fréquents</a>
+    </nav>
+
+    <div>
+      <section class="chapter" id="obs">
+        <h2><span class="n">1</span>Installer OBS Studio</h2>
+        <p>OBS Studio est le logiciel de stream gratuit utilisé par la plupart des streamers. Télécharge-le sur le site officiel <b>obsproject.com</b> (Windows, Mac ou Linux), puis installe-le normalement.</p>
+        <div class="note">Méfie-toi des sites qui proposent OBS « gratuit » avec des publicités : le seul site officiel est obsproject.com.</div>
+      </section>
+
+      <section class="chapter" id="reglages">
+        <h2><span class="n">2</span>Les bons réglages</h2>
+        <p>Au premier lancement, OBS propose l'<b>assistant de configuration automatique</b> : choisis « Optimiser pour le streaming », laisse-le tester ta connexion et ta machine. C'est la façon la plus simple d'avoir des réglages adaptés.</p>
+        <p>Si tu préfères régler à la main (<b>Paramètres → Sortie</b> et <b>Vidéo</b>), voici des valeurs sûres pour Twitch :</p>
+        <table class="table">
+          <tr><th>Ta connexion (envoi)</th><th>Résolution</th><th>Images / s</th><th>Débit vidéo</th></tr>
+          <tr><td>Moins de 5 Mb/s</td><td>1280 × 720</td><td>30</td><td>2 500 kb/s</td></tr>
+          <tr><td>5 à 10 Mb/s</td><td>1280 × 720</td><td>60</td><td>4 500 kb/s</td></tr>
+          <tr><td>Plus de 10 Mb/s</td><td>1920 × 1080</td><td>60</td><td>6 000 kb/s</td></tr>
+        </table>
+        <div class="note">Encodeur : choisis celui de ta carte graphique s'il est proposé (NVENC chez NVIDIA, AMF chez AMD, QuickSync chez Intel). Ton jeu restera fluide.</div>
+      </section>
+
+      <section class="chapter" id="twitch">
+        <h2><span class="n">3</span>Relier ton compte Twitch</h2>
+        <ol>
+          <li>Dans OBS : <b>Paramètres → Stream</b>.</li>
+          <li>Service : <b>Twitch</b>, puis <b>Connecter le compte</b> et identifie-toi.</li>
+          <li>OBS ajoute alors le tchat et les infos de ton live dans sa fenêtre : pratique pour tout gérer au même endroit.</li>
+        </ol>
+      </section>
+
+      <section class="chapter" id="sources">
+        <h2><span class="n">4</span>Ton jeu, ta caméra, ton micro</h2>
+        <p>Dans le panneau <b>Sources</b>, clique sur <b>+</b> :</p>
+        <ul>
+          <li><b>Capture de jeu</b> (ou <b>Capture d'écran</b> si ton jeu n'est pas détecté) pour montrer ton jeu.</li>
+          <li><b>Périphérique de capture vidéo</b> pour ta webcam. Redimensionne-la et place-la dans un coin.</li>
+          <li>Ton micro apparaît normalement tout seul dans le <b>Mixeur audio</b>. Sinon : <b>Paramètres → Audio → Micro/Auxiliaire</b>.</li>
+        </ul>
+        <div class="note">L'ordre compte : une source plus haute dans la liste passe devant celles du dessous. Ta caméra doit être au-dessus du jeu.</div>
+      </section>
+
+      <section class="chapter" id="kit">
+        <h2><span class="n">5</span>Ton habillage en 2 minutes</h2>
+        <p>Avec le <b>Kit complet</b> de Skelvo Stream, tu choisis un pack (Lavande, Or, Cyber…), tu entres le nom de ta chaîne, et tu télécharges un fichier à importer dans OBS. Tu obtiens d'un coup :</p>
+        <ul>
+          <li>4 scènes prêtes : <b>Début</b>, <b>Live</b>, <b>Pause</b> et <b>Fin</b> ;</li>
+          <li>un contour caméra, ton tchat à l'écran, les alertes, la pluie d'emotes, les derniers abonnés, la durée du live, le sondage, le tirage au sort et les jeux du tchat, tout assorti.</li>
+        </ul>
+        <p>Ensuite, dans la scène <b>Live</b>, ajoute ta capture de jeu et ta caméra tout en bas de la liste, et place ta caméra sous le contour.</p>
+        <div class="cta"><a class="btn" href="../kit/">Créer mon kit</a><a class="btn ghost" href="../transitions/">Ajouter une transition</a></div>
+      </section>
+
+      <section class="chapter" id="son">
+        <h2><span class="n">6</span>Un son propre</h2>
+        <p>Un bon son compte plus qu'une belle image. Sur ton micro, clique sur les <b>⋮</b> du mixeur → <b>Filtres</b>, et ajoute dans cet ordre :</p>
+        <ol>
+          <li><b>Suppression du bruit</b> (RNNoise) : enlève le ventilateur, le clavier…</li>
+          <li><b>Gate</b> (porte de bruit) : coupe le micro quand tu ne parles pas.</li>
+          <li><b>Compresseur</b> : égalise ta voix entre les chuchotements et les cris.</li>
+        </ol>
+        <div class="note">Ta voix doit monter dans le jaune du mixeur quand tu parles normalement, jamais dans le rouge. Le jeu doit être nettement plus bas que ta voix.</div>
+      </section>
+
+      <section class="chapter" id="live">
+        <h2><span class="n">7</span>Lancer ton premier live</h2>
+        <ol>
+          <li>Sur Twitch, dans le <b>Gestionnaire de stream</b>, donne un titre et une catégorie à ton live.</li>
+          <li>Dans OBS, place-toi sur la scène <b>Début</b> et clique sur <b>Démarrer le streaming</b>.</li>
+          <li>Quand le compte à rebours se termine, passe sur la scène <b>Live</b>. Pour une pause, scène <b>Pause</b>. Pour finir, scène <b>Fin</b>, puis <b>Arrêter le streaming</b>.</li>
+        </ol>
+        <div class="note">Fais un premier essai en privé : clique sur <b>Démarrer l'enregistrement</b> au lieu de <b>Démarrer le streaming</b>, et regarde la vidéo pour vérifier le son et l'image.</div>
+      </section>
+
+      <section class="chapter faq" id="faq">
+        <h2><span class="n">?</span>Problèmes fréquents</h2>
+        <details><summary>Mon overlay ne s'affiche pas dans OBS</summary><p>Vérifie que la source Navigateur est <b>au-dessus</b> du jeu dans la liste, et que sa taille est celle indiquée par l'outil. Clic droit sur la source → <b>Actualiser</b> si tu viens de modifier le lien.</p></details>
+        <details><summary>Le tchat ou les alertes ne réagissent pas</summary><p>Vérifie le nom de ta chaîne dans le lien (c'est celui de l'adresse twitch.tv/…). Dans l'éditeur, le bouton « Ma chaîne » de l'aperçu te dit si la connexion marche.</p></details>
+        <details><summary>Je n'entends pas le son des alertes</summary><p>Dans les propriétés de la source alertes, coche <b>Contrôler l'audio via OBS</b>, puis dans le mixeur : ⋮ → <b>Propriétés audio avancées</b> → Monitoring audio : <b>Monitoring et sortie</b> pour l'entendre toi aussi.</p></details>
+        <details><summary>Comment avoir la dernière version des outils ?</summary><p>Les pages du site te préviennent avec un bandeau « nouvelle version ». Dans OBS, les overlays se mettent à jour au prochain démarrage, ou tout de suite avec clic droit → <b>Actualiser</b>.</p></details>
+        <details><summary>C'est vraiment gratuit ?</summary><p>Oui, entièrement : pas de compte, pas de filigrane, pas d'abonnement. Tout tourne dans ton navigateur et dans OBS.</p></details>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=10"></script>
+</body>
+</html>

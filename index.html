@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/app.css?v=7">
+<link rel="stylesheet" href="assets/app.css?v=8">
 <style>
   .hero{ position: relative; overflow: hidden; padding: 84px 0 70px; }
   .hero::before{
@@ -58,6 +58,15 @@
   .hero-demo .chat{ position: absolute; left: 32px; top: 28px; bottom: 28px; width: 500px; }
 
   .tools{ padding: 30px 0 70px; }
+  .kit-hero{ padding: 10px 0 20px; }
+  .kit-card{ display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: center; text-decoration: none; padding: 28px; border-radius: 22px; border: 1px solid rgba(155,92,255,.35);
+    background: radial-gradient(80% 120% at 0% 0%, rgba(155,92,255,.22), transparent 60%), radial-gradient(60% 100% at 100% 100%, rgba(75,225,195,.14), transparent 60%), var(--panel); transition: transform .2s, border-color .2s; }
+  .kit-card:hover{ transform: translateY(-3px); border-color: var(--accent); }
+  .kit-card h2{ font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 10px 0 8px; }
+  .kit-card p{ color: var(--muted); margin: 0 0 18px; }
+  .kit-packs{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .kit-packs span{ aspect-ratio: 16 / 10; border-radius: 10px; background: center/cover; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+  @media (max-width: 800px){ .kit-card{ grid-template-columns: 1fr; padding: 20px; } }
   .group-head{ margin: 34px 0 16px; }
   .group-head:first-child{ margin-top: 0; }
   .group-head h2{ font-size: clamp(1.5rem, 2.8vw, 2rem); }
@@ -89,7 +98,9 @@
   <div class="wrap">
     <a class="brand" href="./"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
     <nav class="topnav">
-      <a href="#outils" data-i18n="nav.tools">Les outils</a>
+      <a href="debuter/" class="hide-sm">Débuter</a>
+      <a href="kit/">Kit complet</a>
+      <a href="#outils" data-i18n="nav.tools">Outils</a>
     </nav>
   </div>
 </header>
@@ -100,10 +111,10 @@
       <div>
         <span class="kicker" data-i18n="home.kicker">Pour OBS et Streamlabs</span>
         <h1><span data-i18n="home.h1a">Tout pour ton stream,</span> <em data-i18n="home.h1b">gratuitement.</em></h1>
-        <p class="lead" data-i18n="home.lead">Cadres caméra, tchat, alertes, pluie d'emotes, compteurs, sondages, subathon, sous-titres… 15 outils que tu règles en direct, puis tu copies un lien dans OBS. C'est fini.</p>
+        <p class="lead" data-i18n="home.lead">Contour caméra, tchat, alertes, tirage au sort, jeux du tchat, subathon, sous-titres… Plus de 20 outils assortis, ou un kit complet prêt à importer dans OBS.</p>
         <div class="cta">
-          <a class="btn" href="cadre/" data-i18n="home.cta1">Créer mon cadre caméra</a>
-          <a class="btn ghost" href="#outils" data-i18n="home.cta2">Voir les 15 outils</a>
+          <a class="btn" href="kit/" data-i18n="home.cta1">Créer mon kit complet</a>
+          <a class="btn ghost" href="#outils" data-i18n="home.cta2">Voir tous les outils</a>
         </div>
         <ul class="perks">
           <li data-i18n="perk.free">100 % gratuit</li>
@@ -122,6 +133,20 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="kit-hero">
+    <div class="wrap">
+      <a class="kit-card" href="kit/">
+        <div class="kit-txt">
+          <span class="kicker">Nouveau</span>
+          <h2>Ton stream complet en 2 minutes</h2>
+          <p>Choisis un pack, entre ta chaîne : tu récupères tous tes overlays assortis et un fichier de scènes à importer dans OBS. Début, Live, Pause, Fin : tout est monté.</p>
+          <span class="btn">Créer mon kit →</span>
+        </div>
+        <div class="kit-packs" id="kit-packs"></div>
+      </a>
     </div>
   </section>
 
@@ -171,6 +196,18 @@
           <p>Ce que tu dis s'affiche en sous-titres, et peut être traduit en direct dans une autre langue.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="derniers/">
+          <span class="ico">🏅</span>
+          <h3>Derniers et tops</h3>
+          <p>Dernier abonné, dernier raid, derniers bits et les tops du jour, en rotation ou en liste.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="horloge/">
+          <span class="ico">🕒</span>
+          <h3>Horloge et durée du live</h3>
+          <p>L'heure, la date, depuis combien de temps tu es en live, ou un compte à rebours.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
       </div>
       <div class="group-head"><h2>Avec ton tchat</h2><p>Tes viewers et tes modos pilotent ces outils depuis le tchat.</p></div>
       <div class="grid">
@@ -198,6 +235,18 @@
           <p>Objectif d'abonnés, de bits ou manuel, qui se remplit tout seul. Confettis quand c'est atteint.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="giveaway/">
+          <span class="ico">🎁</span>
+          <h3>Tirage au sort</h3>
+          <p>Tes viewers tapent !participer, une roue ou une machine à sous désigne le gagnant en direct.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="jeux/">
+          <span class="ico">⚔️</span>
+          <h3>Jeux du tchat</h3>
+          <p>Duels entre viewers et courses animées, lancés depuis le tchat.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
       </div>
       <div class="group-head"><h2>Pour toi</h2><p>Des outils pour le streamer, hors de l'écran du live.</p></div>
       <div class="grid">
@@ -210,9 +259,26 @@
         <a class="card" href="images/">
           <span class="ico">🖼️</span>
           <h3>Atelier images</h3>
-          <p>Emotes et badges aux bonnes tailles, panneaux de profil, bannière hors ligne. Tout dans ton navigateur.</p>
+          <p>Emotes et badges aux bonnes tailles, panneaux de profil, bannières. Tout dans ton navigateur.</p>
           <span class="go">Ouvrir →</span>
         </a>
+        <a class="card" href="transitions/">
+          <span class="ico">🎬</span>
+          <h3>Transitions de scène</h3>
+          <p>Une transition animée entre tes scènes OBS, assortie à ton pack, avec ton pseudo ou ton logo.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <a class="card" href="debuter/">
+          <span class="ico">🚀</span>
+          <h3>Débuter le stream</h3>
+          <p>Le guide pas à pas : installer OBS, le régler, relier Twitch et lancer ton premier live.</p>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <div class="card soon">
+          <span class="tag">Bientôt</span>
+          <h3>YouTube et Kick</h3>
+          <p>Ton tchat YouTube et Kick à l'écran, en plus de Twitch.</p>
+        </div>
         <div class="card soon">
           <span class="tag">Bientôt</span>
           <h3>Follows et points de chaîne</h3>
@@ -247,8 +313,11 @@
 </footer>
 
 <script src="assets/packs.js?v=1"></script>
-<script src="assets/app.js?v=9"></script>
+<script src="assets/app.js?v=10"></script>
 <script>
+  // Miniatures des packs dans le bloc Kit
+  (function(){ var box = document.getElementById('kit-packs'); if (!box || !window.SK_PACKS) return;
+    SK_PACKS.slice(0, 12).forEach(function(p){ var s = document.createElement('span'); s.style.backgroundImage = 'url(assets/bg/' + p.id + '-mini.webp)'; s.title = p.label; box.appendChild(s); }); })();
   // Réduit la scène de démo à la largeur disponible
   (function(){
     var demo = document.querySelector('.hero-demo'), scene = document.getElementById('scene');
