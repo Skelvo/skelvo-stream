@@ -465,7 +465,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.0';
+  SK.VERSION = '2.1';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -474,19 +474,42 @@
     var foot = document.querySelector('.foot .wrap');
     if (foot && !foot.querySelector('.ver')){ var v = document.createElement('span'); v.className = 'ver'; v.textContent = 'v' + SK.VERSION; foot.appendChild(v); }
   }
+  // Toutes les pages du site : à chaque mise à jour, on force leur téléchargement
+  // pour qu'aucune ne reste sur une ancienne copie (GitHub Pages les garde 10 min).
+  var PAGES = ['', 'kit/', 'debuter/', 'cadre/', 'tchat/', 'alertes/', 'emotes/', 'ecrans/', 'musique/', 'sous-titres/', 'compteur/', 'sondage/',
+    'minuteur/', 'objectif/', 'giveaway/', 'derniers/', 'jeux/', 'horloge/', 'voix/', 'images/', 'transitions/'];
+  function refreshAll(){
+    var jobs = PAGES.map(function(u){ return fetch(new URL(u, ROOT).href, { cache: 'reload' }).catch(function(){}); });
+    return Promise.race([Promise.all(jobs), new Promise(function(r){ setTimeout(r, 5000); })]);
+  }
+  function reloadFresh(){
+    var u = new URL(location.href); u.searchParams.set('upd', Date.now());
+    location.replace(u.href);
+  }
+  function ssGet(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
+  function ssSet(k, v){ try { sessionStorage.setItem(k, v); } catch(e){} }
+  var firstCheck = true;
   function checkUpdate(){
+    var isFirst = firstCheck; firstCheck = false;
     fetch(new URL('version.txt?t=' + Date.now(), ROOT).href, { cache: 'no-store' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(v){
       v = String(v || '').trim();
       if (!/^\d+\.\d{1,3}$/.test(v) || v === SK.VERSION || document.querySelector('.upd')) return;
+      // Page ouverte depuis une ancienne copie (relance de l'appli, retour au menu) :
+      // on met tout à jour sans rien demander, une seule fois par version.
+      if (isFirst && ssGet('sk-autoupd') !== v){
+        ssSet('sk-autoupd', v);
+        document.documentElement.style.opacity = '.4';
+        refreshAll().then(reloadFresh);
+        return;
+      }
       var b = document.createElement('button'); b.type = 'button'; b.className = 'upd';
       var t = document.createElement('span'); t.textContent = 'Version ' + v + ' disponible';
       var go = document.createElement('b'); go.textContent = 'Rafraîchir';
       b.appendChild(t); b.appendChild(go);
       b.addEventListener('click', function(){
         b.disabled = true; t.textContent = 'Mise à jour…'; go.remove();
-        // on garde les réglages de l'adresse, on force juste une page neuve
-        var u = new URL(location.href); u.searchParams.set('upd', Date.now());
-        location.replace(u.href);
+        ssSet('sk-autoupd', v);
+        refreshAll().then(reloadFresh);
       });
       document.body.appendChild(b);
       requestAnimationFrame(function(){ b.classList.add('on'); });
