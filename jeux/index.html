@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jeux du tchat Twitch : duel et course — Skelvo Stream</title>
+<meta name="description" content="Des mini-jeux pour ton tchat Twitch : duels entre viewers et courses animées, en direct sur ton stream. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/jeux/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=7">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 20px; background: #19171f; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="jeux.title">Jeux du tchat</h1>
+    <p data-i18n="jeux.lead">Tes viewers se défient en duel ou s'affrontent dans une course, en direct sur ton stream. De quoi animer ton tchat sans rien installer.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Duel</legend>
+        <label class="check"><input type="checkbox" name="duel" checked><span>Activer les duels</span></label>
+        <div class="row2"><label class="field"><span>Commande pour défier</span><input type="text" name="dcmd" value="duel" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label><label class="field"><span>Commande pour accepter</span><input type="text" name="acmd" value="accepte" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label></div>
+      </fieldset>
+      <fieldset>
+        <legend>Course</legend>
+        <label class="check"><input type="checkbox" name="race" checked><span>Activer les courses</span></label>
+        <label class="field"><span>Commande</span><input type="text" name="rcmd" value="course" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Qui peut lancer une course ?</span><select name="who"><option value="mods">Toi et tes modos</option><option value="all">Tout le monde</option></select></label>
+        <label class="field"><span><span>Temps pour s'inscrire</span><output for="f-reg" data-unit=" s"></output></span><input type="range" id="f-reg" name="reg" min="10" max="90" value="30" step="5"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Réglages</legend>
+        <label class="field"><span><span>Pause entre deux jeux</span><output for="f-cool" data-unit=" s"></output></span><input type="range" id="f-cool" name="cool" min="0" max="300" value="30" step="5"><small>Évite qu'un jeu en chasse un autre.</small></label>
+        <label class="field"><span><span>Résultat affiché pendant</span><output for="f-hide" data-unit=" s"></output></span><input type="range" id="f-hide" name="hide" min="3" max="30" value="10"></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="48" value="26"></label>
+      </fieldset>
+      <div data-theme-panel="minimal"></div>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">700 × 460</b>.</span></li>
+          <li><span>Les jeux sont invisibles quand personne ne joue : laisse la source dans ta scène de live.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=9"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-jeux-size', def: { w: 700, h: 460 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    cmds.textContent = '';
+    [['!' + (p.dcmd || 'duel') + ' @pseudo', 'défie un autre viewer'], ['!' + (p.acmd || 'accepte'), 'accepte le duel (60 s pour répondre)'],
+     ['!' + (p.rcmd || 'course'), (p.who === 'all' ? 'lance une course, puis' : 'un modo lance la course, puis') + ' les viewers la rejoignent (8 coureurs max)']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-jeux',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>

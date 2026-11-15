@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Jeux du tchat — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Jeux du tchat, en direct sur le stream :
+  - Duel : un viewer tape « !duel @pseudo », l'autre accepte avec « !accepte »
+    dans les 60 s, puis un combat animé désigne le gagnant au hasard.
+  - Course : un modo lance « !course », les viewers rejoignent en tapant
+    « !course » pendant 30 s, puis les coureurs s'affrontent à l'écran.
+  Un seul jeu à la fois ; invisible le reste du temps.
+-->
+<style>
+  :root{ --fs: 26px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; align-items: center; justify-content: center; padding: .6em; box-sizing: border-box; }
+  .game{ width: 100%; max-width: 24em; padding: .9em 1em 1em; text-align: center; transition: opacity .5s, transform .6s cubic-bezier(.2,1.2,.3,1); }
+  .game.hidden{ opacity: 0; transform: scale(.92) translateY(.6em); }
+  .kick{ font-size: .55em; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ac); }
+  .big{ font-size: 1.15em; font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); margin: .25em 0 .35em; line-height: 1.15; }
+  .hint{ font-size: .62em; color: var(--muted); font-weight: 600; }
+  .hint code{ font: 800 1em var(--font); color: var(--ac); }
+
+  /* Duel */
+  .arena{ display: flex; align-items: center; justify-content: center; gap: .6em; margin-top: .4em; }
+  .fighter{ flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: .25em; }
+  .avatar{ width: 2.2em; height: 2.2em; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 1em; background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); }
+  .fighter b{ font-size: .75em; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hp{ width: 100%; height: .3em; border-radius: 1em; background: rgba(127,127,127,.25); overflow: hidden; }
+  .hp i{ display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--ac), var(--ac2)); transition: width .35s ease; }
+  .vs{ font-weight: 900; font-size: 1.1em; color: var(--ac); text-shadow: var(--glow-text); }
+  .hit{ animation: hit .35s ease; } @keyframes hit{ 30%{ transform: translateX(-.2em) rotate(-6deg); filter: brightness(1.6); } 60%{ transform: translateX(.15em); } }
+  .ko{ opacity: .35; filter: grayscale(1); transition: opacity .5s, filter .5s; }
+  .winner .avatar{ box-shadow: 0 0 0 .12em var(--ac), 0 0 1em var(--ac); }
+
+  /* Course */
+  .track{ margin-top: .5em; display: grid; gap: .28em; }
+  .lane{ position: relative; height: 1.25em; border-radius: calc(var(--rad) * .5); background: rgba(127,127,127,.14); overflow: hidden; }
+  .lane::after{ content: ""; position: absolute; right: .3em; top: 0; bottom: 0; width: .12em; background: repeating-linear-gradient(var(--tx) 0 .15em, transparent .15em .3em); opacity: .5; }
+  .runner{ position: absolute; left: 0; top: 50%; transform: translate(0, -50%); display: flex; align-items: center; gap: .3em; font-size: .62em; font-weight: 700; white-space: nowrap; padding: 0 .4em; transition: left .25s linear, transform .25s linear; }
+  .runner::before{ content: "🏃"; font-size: 1.3em; transform: scaleX(-1); display: inline-block; }
+  .lane.first .runner{ color: var(--ac); }
+  .podium{ margin-top: .5em; font-size: .7em; font-weight: 700; }
+  .podium div{ margin-top: .15em; }
+  .confetti{ position: absolute; left: 50%; top: 50%; width: .3em; height: .48em; border-radius: .06em; animation: conf 2s cubic-bezier(.15,.7,.4,1) forwards; pointer-events: none; }
+  @keyframes conf{ from{ transform: translate(-50%,-50%) rotate(0); opacity: 1; } to{ transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+</style>
+</head>
+<body>
+<div class="game sk-surface hidden" id="game"></div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', duel: '1', race: '1', dcmd: 'duel', acmd: 'accepte', rcmd: 'course', who: 'mods', reg: '30', cool: '30', hide: '10', fs: '26', demo: '0'
+  });
+  var num = SKO.num, el = SKO.el;
+  var box = document.getElementById('game');
+  var P = {}, game = null, source = null, sourceKey = '', timers = [], lastEnd = 0;
+
+  function later(fn, ms){ var t = setTimeout(fn, ms); timers.push(t); return t; }
+  function clear(){ timers.forEach(clearTimeout); timers = []; }
+  function hide(){ clear(); game = null; box.classList.add('hidden'); lastEnd = Date.now(); }
+  function show(){ box.classList.remove('hidden'); }
+  function rnd(n){ var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+  function initials(n){ return String(n).replace(/[^a-z0-9]/gi, '').slice(0, 2).toUpperCase() || '?'; }
+  function cmd(x, d){ return String(x || d).toLowerCase().replace(/^!/, ''); }
+  function busy(){ return game || Date.now() - lastEnd < num(P.cool, 0, 600, 30) * 1000; }
+
+  /* ---------- Duel ---------- */
+  function challenge(a, bName){
+    if (busy()) return;
+    var b = bName.replace(/^@/, '');
+    if (!b || b.toLowerCase() === a.login) return;
+    game = { type: 'duel', a: a.name, al: a.login, b: b, bl: b.toLowerCase(), state: 'wait' };
+    box.textContent = '';
+    box.appendChild(el('div', 'kick', 'Duel'));
+    box.appendChild(el('div', 'big', a.name + ' défie ' + b + ' !'));
+    var h = el('div', 'hint'); h.appendChild(document.createTextNode(b + ', tape ')); h.appendChild(el('code', '', '!' + cmd(P.acmd, 'accepte'))); h.appendChild(document.createTextNode(' pour accepter (60 s)'));
+    box.appendChild(h); show();
+    later(function(){ if (game && game.state === 'wait'){ box.querySelector('.hint').textContent = b + ' n\'a pas répondu… 🐔'; later(hide, 3500); game.state = 'end'; } }, 60000);
+  }
+  function fight(){
+    clear(); game.state = 'fight';
+    box.textContent = '';
+    box.appendChild(el('div', 'kick', 'Duel'));
+    var arena = el('div', 'arena'), fa = fighter(game.a), fb = fighter(game.b);
+    arena.appendChild(fa.el); arena.appendChild(el('div', 'vs', 'VS')); arena.appendChild(fb.el);
+    box.appendChild(arena);
+    var res = el('div', 'big'); res.style.marginTop = '.5em'; box.appendChild(res);
+    var hp = [100, 100], f = [fa, fb], turn = rnd(2), i = 0;
+    (function round(){
+      if (hp[0] <= 0 || hp[1] <= 0){
+        var w = hp[0] > 0 ? 0 : 1;
+        f[1 - w].el.classList.add('ko'); f[w].el.classList.add('winner');
+        res.textContent = '🏆 ' + (w ? game.b : game.a) + ' gagne !';
+        confetti(); game.state = 'end'; later(hide, num(P.hide, 3, 60, 10) * 1000); return;
+      }
+      var target = 1 - turn, dmg = 12 + rnd(26);
+      hp[target] = Math.max(0, hp[target] - dmg);
+      f[target].hp.style.width = hp[target] + '%';
+      f[target].el.classList.remove('hit'); void f[target].el.offsetWidth; f[target].el.classList.add('hit');
+      turn = target; i++;
+      later(round, 520);
+    })();
+  }
+  function fighter(name){
+    var d = el('div', 'fighter'), hp = el('div', 'hp'), bar = el('i');
+    hp.appendChild(bar); d.appendChild(el('div', 'avatar', initials(name))); d.appendChild(el('b', '', name)); d.appendChild(hp);
+    return { el: d, hp: bar };
+  }
+
+  /* ---------- Course ---------- */
+  function openRace(){
+    if (busy()) return;
+    game = { type: 'race', state: 'reg', runners: [] };
+    renderReg(); show();
+    var reg = P.demo === '1' ? 8 : num(P.reg, 10, 120, 30);
+    game.end = Date.now() + reg * 1000;
+    var tick = function(){
+      if (!game || game.state !== 'reg') return;
+      var left = (game.end - Date.now()) / 1000, t = box.querySelector('.left');
+      if (left <= 0) return startRace();
+      if (t) t.textContent = Math.ceil(left) + ' s';
+      later(tick, 250);
+    };
+    tick();
+  }
+  function renderReg(){
+    box.textContent = '';
+    box.appendChild(el('div', 'kick', 'Course'));
+    box.appendChild(el('div', 'big', 'Qui veut courir ?'));
+    var h = el('div', 'hint'); h.appendChild(document.createTextNode('Tape ')); h.appendChild(el('code', '', '!' + cmd(P.rcmd, 'course'))); h.appendChild(document.createTextNode(' pour participer · ')); h.appendChild(el('b', 'left', ''));
+    box.appendChild(h);
+    var tr = el('div', 'track'); box.appendChild(tr);
+    game.runners.slice(-8).forEach(function(r){ tr.appendChild(laneEl(r)); });
+  }
+  function laneEl(r){ var l = el('div', 'lane'), ru = el('div', 'runner', r.n); l.appendChild(ru); r.el = ru; r.lane = l; return l; }
+  function joinRace(m){
+    if (!game || game.type !== 'race' || game.state !== 'reg') return;
+    if (game.runners.some(function(r){ return r.l === m.login; }) || game.runners.length >= 8) return;
+    game.runners.push({ n: m.name, l: m.login, x: 0 });
+    var tr = box.querySelector('.track'); if (tr) tr.appendChild(laneEl(game.runners[game.runners.length - 1]));
+  }
+  function startRace(){
+    if (game.runners.length < 2){ box.querySelector('.hint').textContent = 'Pas assez de coureurs… la course est annulée.'; game.state = 'end'; later(hide, 3500); return; }
+    game.state = 'run';
+    box.querySelector('.big').textContent = '3… 2… 1… Partez !';
+    box.querySelector('.hint').textContent = '';
+    var finish = 100, order = [];
+    var step = function(){
+      game.runners.forEach(function(r){
+        if (r.done) return;
+        r.x = Math.min(finish, r.x + 1.2 + rnd(55) / 10);
+        // le coureur avance sans jamais dépasser de sa ligne
+        r.el.style.left = r.x + '%'; r.el.style.transform = 'translate(-' + r.x + '%, -50%)';
+        if (r.x >= finish){ r.done = true; order.push(r); }
+      });
+      var lead = game.runners.slice().sort(function(a, b){ return b.x - a.x; })[0];
+      game.runners.forEach(function(r){ r.lane.classList.toggle('first', r === lead); });
+      if (order.length >= Math.min(3, game.runners.length)){
+        box.querySelector('.big').textContent = '🏆 ' + order[0].n + ' gagne la course !';
+        var pod = el('div', 'podium'); ['🥇', '🥈', '🥉'].forEach(function(md, i){ if (order[i]) pod.appendChild(el('div', '', md + ' ' + order[i].n)); });
+        box.appendChild(pod); confetti(); game.state = 'end'; later(hide, num(P.hide, 3, 60, 10) * 1000); return;
+      }
+      later(step, 260);
+    };
+    later(step, 1200);
+  }
+
+  function confetti(){
+    var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--ac'), cs.getPropertyValue('--ac2'), '#ffd700', '#fff'];
+    for (var i = 0; i < 60; i++){
+      var c = el('i', 'confetti'); c.style.background = cols[i % cols.length];
+      var a = Math.random() * Math.PI * 2, d = 4 + Math.random() * 7;
+      c.style.setProperty('--dx', Math.cos(a) * d + 'em'); c.style.setProperty('--dy', Math.sin(a) * d - 1 + 'em'); c.style.setProperty('--r', (Math.random() * 900 - 450) + 'deg');
+      box.appendChild(c); setTimeout(c.remove.bind(c), 2100);
+    }
+  }
+
+  function onMessage(m){
+    if (!m.cmd) return;
+    var c = m.cmd.name;
+    if (P.duel === '1' && c === cmd(P.dcmd, 'duel') && m.cmd.args[0]) return challenge(m, m.cmd.args[0]);
+    if (P.duel === '1' && c === cmd(P.acmd, 'accepte') && game && game.type === 'duel' && game.state === 'wait' && m.login === game.bl){ game.b = m.name; return fight(); }
+    if (P.race === '1' && c === cmd(P.rcmd, 'course')){
+      if (!game){ if (P.who === 'all' || m.isMod) openRace(); if (game) joinRace(m); return; }
+      joinRace(m);
+    }
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    document.documentElement.style.setProperty('--fs', num(P.fs, 12, 72, 26) + 'px');
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    if (sk !== sourceKey){
+      sourceKey = sk; hide(); lastEnd = 0;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      if (sk === 'demo'){
+        var step = 0, U = SKT.DEMO_USERS;
+        source = SKT.demo(h, { min: 600, spread: 300, extra: function(){
+          step++;
+          if (step === 1) return SKT.fakeMessage(U[0], '!' + cmd(P.dcmd, 'duel') + ' @KevGaming');
+          if (step === 3) return SKT.fakeMessage(U[1], '!' + cmd(P.acmd, 'accepte'));
+          if (step === 22){ lastEnd = 0; return SKT.fakeMessage(U[2], '!' + cmd(P.rcmd, 'course')); }
+          if (step > 22 && step < 29) return SKT.fakeMessage(U[step - 22], '!' + cmd(P.rcmd, 'course'));
+          if (step === 75){ step = 0; lastEnd = 0; }
+          return { type: 'none' };
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>
