@@ -7,7 +7,7 @@
 <title>Cadre caméra — Skelvo Stream</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
 <!--
   Overlay "cadre caméra" à coller dans OBS (Source > Navigateur).
   Page volontairement transparente et autonome : aucun fichier partagé,
@@ -59,6 +59,15 @@
   .s-pulse    .ring{ background: linear-gradient(135deg, var(--c1), var(--c2)); }
   .s-pulse    .layer{ animation: pulse var(--speed) ease-in-out infinite; }
 
+  .s-thin .ring{ background: linear-gradient(135deg, var(--c1), var(--c2)); padding: max(1.5px, calc(var(--w) * .35)); }
+  .s-thin .layer.glow{ opacity: .6; }
+  .s-double .ring{ background: var(--c1); }
+  .s-double .ring.inner{ inset: calc(var(--w) * 2.2); border-radius: max(0px, calc(var(--r) - var(--w) * 2.2)); background: var(--c2); padding: max(1px, calc(var(--w) * .45)); opacity: .85; }
+  body.circle.s-double .ring.inner{ border-radius: 50%; }
+  .s-glass .ring{ background: linear-gradient(145deg, rgba(255,255,255,.55), rgba(255,255,255,.12) 40%, rgba(255,255,255,.05) 60%, rgba(255,255,255,.35)); }
+  .s-glass .layer.main::after{ content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45); }
+  .s-glass .layer.glow{ opacity: .35; }
+  .custom{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
   @keyframes spin{ to{ --a: 360deg; } }
   @keyframes flow{ from{ background-position: 0% 50%; } to{ background-position: 100% 50%; } }
   @keyframes neon{ 0%,100%{ opacity: .95; } 50%{ opacity: .45; } }
@@ -76,7 +85,7 @@
   .corner.tr{ top: 0; right: 0; border-top-width: var(--w); border-right-width: var(--w); border-top-right-radius: var(--r); border-color: var(--c2); --dx: 1; --dy: -1; }
   .corner.br{ bottom: 0; right: 0; border-bottom-width: var(--w); border-right-width: var(--w); border-bottom-right-radius: var(--r); --dx: 1; --dy: 1; }
   .corner.bl{ bottom: 0; left: 0; border-bottom-width: var(--w); border-left-width: var(--w); border-bottom-left-radius: var(--r); border-color: var(--c2); --dx: -1; --dy: 1; }
-  @keyframes breathe{ 0%,100%{ translate: 0 0; } 50%{ translate: calc(var(--dx) * var(--w) * .8) calc(var(--dy) * var(--w) * .8); } }
+  @keyframes breathe{ 0%,100%{ transform: translate(0, 0); } 50%{ transform: translate(calc(var(--dx) * var(--w) * .8), calc(var(--dy) * var(--w) * .8)); } }
 
   body.static *{ animation: none !important; }
 
@@ -84,7 +93,7 @@
   .label{
     position: absolute;
     z-index: 2;
-    font: 700 var(--ls)/1 'Space Grotesk', system-ui, sans-serif;
+    font: var(--lfw, 700) var(--ls)/1 var(--lfont, 'Space Grotesk'), system-ui, sans-serif;
     color: var(--lt);
     background: linear-gradient(135deg, var(--c1), var(--c2));
     padding: .42em .8em .46em;
@@ -93,6 +102,11 @@
     box-shadow: 0 .3em 1em rgba(0,0,0,.35);
     letter-spacing: .01em;
   }
+  .label.ls-glass{ background: linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.06)), rgba(15,14,22,.55); color: #fff; border: 1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .label.ls-dark{ background: rgba(10,10,14,.85); color: #fff; border: 1px solid rgba(255,255,255,.1); }
+  .label.ls-dark::before{ content: ""; display: inline-block; width: .5em; height: .5em; border-radius: 50%; background: var(--c1); margin-right: .45em; vertical-align: .08em; box-shadow: 0 0 .5em var(--c1); }
+  .label.ls-outline{ background: rgba(0,0,0,.35); color: #fff; border: .1em solid var(--c1); }
+  .label.ls-text{ background: none; box-shadow: none; color: #fff; text-shadow: 0 .05em .3em rgba(0,0,0,.8); padding-left: .2em; padding-right: .2em; }
   .label.b{ bottom: 0; } .label.t{ top: 0; }
   .label.b{ transform: translateY(50%); } .label.t{ transform: translateY(-50%); }
   .label.l{ left: calc(var(--r) * .5 + var(--w) * 2 + 10px); }
@@ -104,15 +118,16 @@
 <body>
 <div id="frame"></div>
 
+<script src="../assets/overlay.js?v=3"></script>
 <script>
 (function(){
   'use strict';
 
   var DEFAULTS = {
     shape: 'rect', style: 'gradient',
-    c1: '9b5cff', c2: '4be1c3', c3: 'ff5c8a',
-    w: '8', r: '24', glow: '18', speed: '4',
-    cl: '22', label: '', lpos: 'bl', ls: '22'
+    c1: 'a78bfa', c2: '67e8f9', c3: 'f9a8d4',
+    w: '8', r: '24', glow: '12', speed: '4',
+    cl: '22', label: '', lpos: 'bl', ls: '22', lfont: 'grotesk', lstyle: 'fill', lup: '0', cimg: ''
   };
 
   var frame = document.getElementById('frame');
@@ -134,6 +149,8 @@
              '<stop offset="0" stop-color="' + p.c1 + '"/><stop offset=".5" stop-color="' + p.c2 + '"/><stop offset="1" stop-color="' + p.c3 + '"/>' +
              '</linearGradient></defs><rect stroke="url(#g{ID})"/></svg>';
     }
+    if (p.style === 'image'){ return p.img ? '<img class="custom" src="' + esc(p.img) + '" alt="">' : ''; }
+    if (p.style === 'double'){ return '<div class="ring"></div><div class="ring inner"></div>'; }
     if (p.style === 'corners'){
       return '<div class="corner tl"></div><div class="corner tr"></div><div class="corner br"></div><div class="corner bl"></div>';
     }
@@ -164,11 +181,14 @@
     var c1 = hex(p.c1, DEFAULTS.c1), c2 = hex(p.c2, DEFAULTS.c2), c3 = hex(p.c3, DEFAULTS.c3);
     var w = num(p.w, 1, 60, 8), r = num(p.r, 0, 400, 24), glow = num(p.glow, 0, 80, 18);
     var speed = num(p.speed, 0, 30, 4), ls = num(p.ls, 10, 80, 22), cl = num(p.cl, 5, 50, 22);
-    var style = /^(solid|neon|gradient|flow|rainbow|pulse|dash|corners)$/.test(p.style) ? p.style : 'gradient';
+    var style = /^(solid|neon|gradient|flow|rainbow|pulse|dash|corners|thin|double|glass|image)$/.test(p.style) ? p.style : 'gradient';
+    var cimg = SKO.safeImage(p.cimg);
+    if (cimg) style = 'image';
     var circle = p.shape === 'circle';
     var label = String(p.label || '').slice(0, 40);
 
     // Marge autour du cadre pour ne pas couper la lueur ni l'étiquette
+    if (cimg) glow = 0;
     var pad = Math.ceil(Math.max(glow * 1.6, label ? ls * 0.9 : 0, 2));
 
     var root = document.documentElement.style;
@@ -178,17 +198,20 @@
     root.setProperty('--speed', (speed || 1) + 's');
     root.setProperty('--cl', cl + '%'); root.setProperty('--ls', ls + 'px');
     root.setProperty('--lt', textOn(c1));
+    root.setProperty('--lfont', SKO.useFont(p.lfont));
+    root.setProperty('--lfw', p.lfont === 'bebas' || p.lfont === 'anton' || p.lfont === 'press' || p.lfont === 'pixel' ? '400' : '700');
 
     document.body.className = [circle ? 'circle' : 'rect', 's-' + style, glow ? '' : 'no-glow', speed ? '' : 'static'].join(' ');
 
-    var art = { c1: c1, c2: c2, c3: c3, style: style };
-    var html = '<div class="layer glow">' + drawing(art).replace(/\{ID\}/g, 'a') + '</div>' +
+    var art = { c1: c1, c2: c2, c3: c3, style: style, img: cimg };
+    var html = (style === 'image' ? '' : '<div class="layer glow">' + drawing(art).replace(/\{ID\}/g, 'a') + '</div>') +
                '<div class="layer main">' + drawing(art).replace(/\{ID\}/g, 'b') + '</div>';
 
     if (label){
       var pos = /^(tl|tc|tr|bl|bc|br)$/.test(p.lpos) ? p.lpos : 'bl';
       if (circle) pos = pos[0] + 'c'; // sur un rond, l'étiquette reste centrée
-      html += '<div class="label ' + pos[0] + ' ' + pos[1] + '">' + esc(label) + '</div>';
+      var lst = /^(fill|glass|dark|outline|text)$/.test(p.lstyle) ? p.lstyle : 'fill';
+      html += '<div class="label ls-' + lst + ' ' + pos[0] + ' ' + pos[1] + '"' + (p.lup === '1' ? ' style="text-transform:uppercase;letter-spacing:.06em"' : '') + '>' + esc(label) + '</div>';
     }
     frame.innerHTML = html;
     sizeSvg();

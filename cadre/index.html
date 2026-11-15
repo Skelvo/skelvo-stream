@@ -17,11 +17,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=2">
+<link rel="stylesheet" href="../assets/app.css?v=3">
 <style>
   /* Miniatures des styles */
   .sw{ background: var(--bg); position: relative; }
   .sw-solid{ border: 3px solid var(--accent); }
+  .sw-thin{ border: 1.5px solid #c4b5fd; box-shadow: 0 0 8px rgba(196,181,253,.5); }
+  .sw-double{ border: 2px solid #a78bfa; box-shadow: inset 0 0 0 3px var(--bg), inset 0 0 0 4px #67e8f9; }
+  .sw-glass{ border: 4px solid rgba(255,255,255,.35); box-shadow: inset 0 0 0 1px rgba(255,255,255,.5); }
   .sw-neon{ border: 3px solid #4be1c3; box-shadow: 0 0 10px #4be1c3, inset 0 0 6px #4be1c3; }
   .sw-gradient{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, conic-gradient(#9b5cff, #4be1c3, #ff5c8a, #9b5cff) border-box; }
   .sw-flow{ border: 3px solid transparent; background: linear-gradient(var(--bg), var(--bg)) padding-box, linear-gradient(115deg, #9b5cff, #4be1c3, #ff5c8a) border-box; }
@@ -72,6 +75,9 @@
         <legend data-i18n="frame.style">Style</legend>
         <div class="choices">
           <div class="choice"><input type="radio" name="style" id="st-gradient" value="gradient" checked><label for="st-gradient"><span class="sw sw-gradient"></span><span data-i18n="style.gradient">Dégradé tournant</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-thin" value="thin"><label for="st-thin"><span class="sw sw-thin"></span><span>Trait fin</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-double" value="double"><label for="st-double"><span class="sw sw-double"></span><span>Double trait</span></label></div>
+          <div class="choice"><input type="radio" name="style" id="st-glass" value="glass"><label for="st-glass"><span class="sw sw-glass"></span><span>Verre</span></label></div>
           <div class="choice"><input type="radio" name="style" id="st-neon" value="neon"><label for="st-neon"><span class="sw sw-neon"></span><span data-i18n="style.neon">Néon</span></label></div>
           <div class="choice"><input type="radio" name="style" id="st-flow" value="flow"><label for="st-flow"><span class="sw sw-flow"></span><span data-i18n="style.flow">Vague</span></label></div>
           <div class="choice"><input type="radio" name="style" id="st-rainbow" value="rainbow"><label for="st-rainbow"><span class="sw sw-rainbow"></span><span data-i18n="style.rainbow">Arc-en-ciel</span></label></div>
@@ -86,9 +92,9 @@
         <legend data-i18n="frame.colors">Couleurs</legend>
         <div class="presets" id="presets" style="margin-bottom:14px"></div>
         <div class="colors">
-          <label class="color"><input type="color" name="c1" value="#9b5cff"><span data-i18n="color.1">Couleur 1</span></label>
-          <label class="color"><input type="color" name="c2" value="#4be1c3"><span data-i18n="color.2">Couleur 2</span></label>
-          <label class="color"><input type="color" name="c3" value="#ff5c8a"><span data-i18n="color.3">Couleur 3</span></label>
+          <label class="color"><input type="color" name="c1" value="#a78bfa"><span data-i18n="color.1">Couleur 1</span></label>
+          <label class="color"><input type="color" name="c2" value="#67e8f9"><span data-i18n="color.2">Couleur 2</span></label>
+          <label class="color"><input type="color" name="c3" value="#f9a8d4"><span data-i18n="color.3">Couleur 3</span></label>
         </div>
       </fieldset>
 
@@ -107,7 +113,7 @@
 
       <fieldset>
         <legend data-i18n="frame.anim">Lueur et animation</legend>
-        <label class="field"><span><span data-i18n="frame.glow">Lueur</span><output for="f-glow" data-unit=" px"></output></span><input type="range" id="f-glow" name="glow" min="0" max="60" value="18"></label>
+        <label class="field"><span><span data-i18n="frame.glow">Lueur</span><output for="f-glow" data-unit=" px"></output></span><input type="range" id="f-glow" name="glow" min="0" max="60" value="12"></label>
         <label class="field"><span><span data-i18n="frame.speed">Durée d'un cycle</span><output for="f-speed" data-unit=" s"></output></span><input type="range" id="f-speed" name="speed" min="0" max="20" step="0.5" value="4"><small data-i18n="frame.speed.hint">0 = pas d'animation. Plus le chiffre est grand, plus c'est lent.</small></label>
       </fieldset>
 
@@ -124,7 +130,17 @@
             <option value="tr" data-i18n="pos.tr">En haut à droite</option>
           </select>
         </label>
+        <label class="field"><span>Style de l'étiquette</span>
+          <select name="lstyle"><option value="fill">Plein (couleurs du cadre)</option><option value="glass">Verre</option><option value="dark">Sombre avec point lumineux</option><option value="outline">Contour</option><option value="text">Texte seul</option></select>
+        </label>
+        <label class="field"><span>Police de l'étiquette</span><select name="lfont" id="lfont"></select></label>
+        <label class="check"><input type="checkbox" name="lup"><span>En MAJUSCULES</span></label>
         <label class="field"><span><span data-i18n="frame.label.size">Taille du texte</span><output for="f-ls" data-unit=" px"></output></span><input type="range" id="f-ls" name="ls" min="12" max="60" value="22"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Ton propre cadre</legend>
+        <div class="field"><span>Image de cadre (PNG transparent)</span><input type="text" name="cimg" value="" placeholder="Lien https ou Importer" data-image="1280" spellcheck="false"><small>Remplace le cadre dessiné. Ton PNG est étiré à la taille de la source : fais-le au même format (ex. 1280 × 720).</small></div>
       </fieldset>
 
       <fieldset>
@@ -190,7 +206,7 @@
   </div>
 </footer>
 
-<script src="../assets/app.js?v=2"></script>
+<script src="../assets/app.js?v=3"></script>
 <script>
 (function(){
   'use strict';
@@ -204,15 +220,21 @@
 
   // ---------- Palettes prêtes à l'emploi ----------
   var PRESETS = [
-    { n: 'Violet',     c: ['9b5cff', '4be1c3', 'ff5c8a'] },
-    { n: 'Cyber',      c: ['00f0ff', 'ff00e5', '7a00ff'] },
-    { n: 'Feu',        c: ['ff3d00', 'ffb300', 'ff006a'] },
-    { n: 'Glace',      c: ['8be9ff', 'ffffff', '4f7bff'] },
-    { n: 'Toxique',    c: ['39ff14', 'c6ff00', '00ffa3'] },
-    { n: 'Bonbon',     c: ['ff8fd8', 'ffd36e', '9fe7ff'] },
-    { n: 'Or',         c: ['ffd700', 'fff1b0', 'c58b00'] },
-    { n: 'Sang',       c: ['ff1744', '7a0010', 'ff6b6b'] }
+    { n: 'Lavande',   c: ['a78bfa', '67e8f9', 'f9a8d4'] },
+    { n: 'Glace',     c: ['e0f2fe', '7dd3fc', 'a5b4fc'] },
+    { n: 'Pêche',     c: ['fdba74', 'fda4af', 'fde68a'] },
+    { n: 'Menthe',    c: ['6ee7b7', '5eead4', 'a7f3d0'] },
+    { n: 'Or',        c: ['e8c77d', 'fff1c1', 'b08d4a'] },
+    { n: 'Argent',    c: ['f4f4f5', 'a1a1aa', 'e4e4e7'] },
+    { n: 'Nuit',      c: ['818cf8', 'c084fc', '38bdf8'] },
+    { n: 'Sakura',    c: ['fbcfe8', 'f9a8d4', 'e9d5ff'] },
+    { n: 'Braise',    c: ['f97316', 'ef4444', 'fbbf24'] },
+    { n: 'Cyber',     c: ['22d3ee', 'e879f9', '818cf8'] },
+    { n: 'Toxique',   c: ['a3e635', '4ade80', 'facc15'] },
+    { n: 'Mono',      c: ['ffffff', '71717a', 'd4d4d8'] }
   ];
+  var lf = document.getElementById('lfont');
+  SK.FONTS.forEach(function(f){ var o = document.createElement('option'); o.value = f[0]; o.textContent = f[1]; if (f[0] === 'grotesk') o.selected = true; lf.appendChild(o); });
   var presetsEl = document.getElementById('presets');
   PRESETS.forEach(function(p){
     var b = document.createElement('button');
@@ -243,7 +265,7 @@
 
   // Même calcul de marge que l'overlay, pour placer la caméra pile dans le cadre
   function geometry(p){
-    var w = +p.w, glow = +p.glow, ls = +p.ls;
+    var w = +p.w, glow = p.cimg ? 0 : +p.glow, ls = +p.ls;
     var pad = Math.ceil(Math.max(glow * 1.6, p.label ? ls * 0.9 : 0, 2));
     var inset = pad + w / 2;
     if (p.shape === 'circle'){
