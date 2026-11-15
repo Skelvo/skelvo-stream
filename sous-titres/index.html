@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sous-titres en direct pour ton stream, gratuits — Skelvo Stream</title>
+<meta name="description" content="Sous-titres automatiques en direct sur ton stream, avec traduction en option. Gratuit, sans compte, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/sous-titres/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=2">
+<!--
+  Page « micro » : reconnaissance vocale du navigateur (Chrome / Edge),
+  traduction locale avec l'API Translator de Chrome si disponible, puis envoi
+  du texte à l'overlay d'OBS via PeerJS (identifiant skelvo-st-<code>).
+  Le formulaire de gauche règle l'apparence (paramètres de l'URL de l'overlay).
+-->
+<style>
+  .mic{ padding: 20px; display: grid; gap: 14px; }
+  .mic-row{ display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .mic-row select{ width: auto; flex: 1; min-width: 150px; }
+  .btn.rec{ background: var(--hot); }
+  .btn.rec::before{ content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: live 1.2s infinite; }
+  .transcript{ background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 14px; padding: 14px 16px; min-height: 80px; max-height: 180px; overflow: auto; font-size: .98rem; }
+  .transcript .i{ color: var(--muted); }
+  .transcript .t{ color: var(--accent-2); display: block; font-size: .9rem; }
+  .pill{ display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--muted); }
+  .pill::before{ content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .pill.ok::before{ background: #1fae7a; }
+  .warn-box{ background: rgba(255,176,46,.1); border: 1px solid rgba(255,176,46,.35); color: #ffd59a; border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1>Sous-titres en direct</h1>
+    <p>Ce que tu dis s'affiche en sous-titres sur ton stream, et peut même être traduit en direct. Garde cette page ouverte dans Chrome pendant ton live.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <input type="hidden" name="room" value="">
+      <fieldset>
+        <legend>Affichage</legend>
+        <label class="field"><span>Afficher</span>
+          <select name="show">
+            <option value="orig">Ce que je dis</option>
+            <option value="trans">La traduction seulement</option>
+            <option value="both">Les deux (traduction en couleur)</option>
+          </select>
+        </label>
+        <label class="field"><span><span>Lignes affichées</span><output for="s-lines"></output></span><input type="range" id="s-lines" name="lines" min="1" max="5" value="2"></label>
+        <label class="field"><span><span>Disparaît après un silence de</span><output for="s-fade" data-unit=" s"></output></span><input type="range" id="s-fade" name="fade" min="0" max="30" value="6"><small>0 = reste affiché.</small></label>
+        <label class="field"><span>Position</span><select name="pos"><option value="bottom">En bas de la source</option><option value="top">En haut de la source</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>Style</legend>
+        <label class="field"><span>Fond</span><select name="style"><option value="box">Bandeau sombre</option><option value="outline">Contour (sans fond)</option></select></label>
+        <label class="field"><span><span>Opacité du bandeau</span><output for="s-bgo" data-unit=" %"></output></span><input type="range" id="s-bgo" name="bgo" min="0" max="100" value="65"></label>
+        <div class="field colors"><label class="color"><input type="color" name="tx" value="#ffffff"><span>Texte</span></label><label class="color"><input type="color" name="ac" value="#4be1c3"><span>Traduction</span></label></div>
+        <label class="field"><span>Police</span><select name="font"><option value="grotesk">Space Grotesk</option><option value="rubik">Rubik</option><option value="rounded">Nunito</option><option value="system">Police du système</option></select></label>
+        <label class="field"><span><span>Taille du texte</span><output for="s-fs" data-unit=" px"></output></span><input type="range" id="s-fs" name="fs" min="16" max="90" value="40"></label>
+      </fieldset>
+      <fieldset><button type="button" class="btn ghost small" id="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel mic">
+        <div class="mic-row">
+          <select id="lang" aria-label="Langue parlée">
+            <option value="fr-FR">Je parle français</option><option value="en-US">I speak English</option><option value="es-ES">Hablo español</option>
+            <option value="de-DE">Ich spreche Deutsch</option><option value="it-IT">Parlo italiano</option><option value="pt-BR">Falo português</option>
+          </select>
+          <select id="target" aria-label="Traduire en">
+            <option value="">Sans traduction</option><option value="en">Traduire en anglais</option><option value="fr">Traduire en français</option>
+            <option value="es">Traduire en espagnol</option><option value="de">Traduire en allemand</option><option value="it">Traduire en italien</option>
+            <option value="pt">Traduire en portugais</option><option value="ja">Traduire en japonais</option><option value="ar">Traduire en arabe</option>
+          </select>
+          <button type="button" class="btn" id="go">🎙 Démarrer</button>
+        </div>
+        <div class="mic-row"><span class="pill" id="obs">Aucun OBS connecté</span><button type="button" class="btn ghost small" id="clear">Effacer l'écran</button></div>
+        <div class="warn-box" id="nosupport" hidden>Ton navigateur ne sait pas transformer la voix en texte. Ouvre cette page avec <b>Google Chrome</b> ou <b>Microsoft Edge</b> sur ordinateur.</div>
+        <div class="warn-box" id="notrans" hidden>La traduction en direct demande Chrome 138 ou plus récent, sur ordinateur. Les sous-titres marchent quand même, sans traduction.</div>
+        <div class="transcript" id="transcript"><span class="i">Clique sur Démarrer et parle : le texte apparaît ici et sur ton stream.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="preview-bar"><div class="title"><span class="live-dot"></span><span>Aperçu</span></div></div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu des sous-titres"></iframe></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel output">
+        <h2>Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span>Dans OBS, ajoute une source <b>Navigateur</b>, colle le lien et règle la taille sur <b>1600 × 300</b>. Place-la en bas de ton écran.</span></li>
+          <li><span>Pendant ton live, garde cette page ouverte dans Chrome et clique sur <b>Démarrer</b>. L'indicateur ci-dessus passe au vert quand OBS est relié.</span></li>
+          <li><span>Le lien contient un code secret propre à toi : ne le partage pas, sinon quelqu'un d'autre pourrait afficher du texte sur ton stream.</span></li>
+        </ol>
+        <div class="tip">La reconnaissance vocale de Chrome passe par les serveurs de Google. La traduction, elle, se fait directement sur ton ordinateur. <button type="button" class="btn ghost small" id="newroom" style="margin-top:8px">Changer de code secret</button></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/app.js?v=2"></script>
+<script src="../assets/vendor/peerjs-1.5.4.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  var iframe = document.getElementById('preview'), trEl = document.getElementById('transcript'), goBtn = document.getElementById('go');
+  var langSel = document.getElementById('lang'), targetSel = document.getElementById('target'), obsPill = document.getElementById('obs');
+  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Rec) document.getElementById('nosupport').hidden = false;
+
+  var speech = SK.store.get('sk-st-speech') || {};
+  if (speech.lang) langSel.value = speech.lang;
+  if (speech.target != null) targetSel.value = speech.target;
+  function saveSpeech(){ SK.store.set('sk-st-speech', { lang: langSel.value, target: targetSel.value }); }
+  langSel.addEventListener('change', saveSpeech); targetSel.addEventListener('change', saveSpeech);
+
+  function newRoom(){ var a = new Uint8Array(9); crypto.getRandomValues(a); return Array.from(a, function(b){ return (b % 36).toString(36); }).join(''); }
+
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'), storageKey: 'sk-st-size', def: { w: 1600, h: 300 } });
+
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'), iframe: iframe, overlay: 'overlay.html', storageKey: 'sk-sous-titres',
+    urlInput: document.getElementById('url'), copyBtn: document.getElementById('copy'), resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return Object.assign({}, p, { preview: '1' }); },
+    onChange: function(p){ if (!p.room) setTimeout(function(){ ed.set({ room: newRoom() }); }, 0); else openPeer(p.room); }
+  });
+  document.getElementById('newroom').addEventListener('click', function(){
+    if (confirm('Changer de code ? Il faudra recoller le nouveau lien dans OBS.')) ed.set({ room: newRoom() });
+  });
+
+  /* ---------- Liaison avec OBS (PeerJS) ---------- */
+  var peer = null, peerRoom = '', conns = [];
+  function updatePill(){
+    var n = conns.filter(function(c){ return c.open; }).length;
+    obsPill.className = 'pill' + (n ? ' ok' : '');
+    obsPill.textContent = n ? (n === 1 ? '1 OBS connecté' : n + ' OBS connectés') : 'Aucun OBS connecté';
+  }
+  function openPeer(room){
+    if (room === peerRoom || !window.Peer) return;
+    peerRoom = room;
+    if (peer){ peer.destroy(); conns = []; updatePill(); }
+    peer = new Peer('skelvo-st-' + room, { debug: 0 });
+    peer.on('connection', function(c){
+      conns.push(c);
+      c.on('open', updatePill);
+      c.on('close', function(){ conns = conns.filter(function(x){ return x !== c; }); updatePill(); });
+      c.on('error', function(){});
+    });
+    peer.on('disconnected', function(){ try { peer.reconnect(); } catch(e){} });
+    peer.on('error', function(err){
+      if (err && err.type === 'unavailable-id'){ obsPill.className = 'pill'; obsPill.textContent = 'Cette page est déjà ouverte dans un autre onglet'; }
+    });
+  }
+  function send(data){
+    iframe.contentWindow && iframe.contentWindow.postMessage({ type: 'sk-caption', data: data }, location.origin);
+    conns.forEach(function(c){ if (c.open) try { c.send(data); } catch(e){} });
+  }
+  document.getElementById('clear').addEventListener('click', function(){ send({ t: 'clear' }); });
+
+  /* ---------- Traduction locale (Chrome) ---------- */
+  var translator = null, translatorKey = '';
+  function prepareTranslator(){
+    var target = targetSel.value, source = langSel.value.slice(0, 2);
+    document.getElementById('notrans').hidden = true;
+    if (!target || target === source){ translator = null; return Promise.resolve(); }
+    if (!('Translator' in self)){ document.getElementById('notrans').hidden = false; translator = null; return Promise.resolve(); }
+    var key = source + '>' + target;
+    if (translator && translatorKey === key) return Promise.resolve();
+    return self.Translator.create({ sourceLanguage: source, targetLanguage: target }).then(function(t){ translator = t; translatorKey = key; })
+      .catch(function(){ translator = null; document.getElementById('notrans').hidden = false; });
+  }
+
+  /* ---------- Reconnaissance vocale ---------- */
+  var rec = null, active = false;
+  function line(text, tr){
+    if (trEl.querySelector('.i')) trEl.textContent = '';
+    var d = document.createElement('div'); d.textContent = text;
+    if (tr){ var t = document.createElement('span'); t.className = 't'; t.textContent = tr; d.appendChild(t); }
+    trEl.appendChild(d); trEl.scrollTop = trEl.scrollHeight;
+    while (trEl.children.length > 40) trEl.firstChild.remove();
+  }
+  function start(){
+    if (!Rec) return;
+    prepareTranslator().then(function(){
+      rec = new Rec();
+      rec.lang = langSel.value; rec.continuous = true; rec.interimResults = true;
+      rec.onresult = function(e){
+        var interim = '';
+        for (var i = e.resultIndex; i < e.results.length; i++){
+          var txt = e.results[i][0].transcript.trim();
+          if (!txt) continue;
+          if (e.results[i].isFinal){
+            (function(txt){
+              var done = function(tr){ send({ t: 'final', text: txt, tr: tr || '' }); line(txt, tr); };
+              if (translator) translator.translate(txt).then(done, function(){ done(''); }); else done('');
+            })(txt);
+          } else interim += txt + ' ';
+        }
+        if (interim) send({ t: 'interim', text: interim.trim() });
+      };
+      rec.onerror = function(e){
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed'){ stop(); SK.toast('Autorise l\'accès au micro pour utiliser les sous-titres'); }
+      };
+      rec.onend = function(){ if (active) setTimeout(function(){ try { rec.start(); } catch(e){} }, 250); };
+      active = true;
+      try { rec.start(); } catch(e){}
+      goBtn.textContent = 'Arrêter'; goBtn.classList.add('rec');
+    });
+  }
+  function stop(){
+    active = false;
+    if (rec) try { rec.stop(); } catch(e){}
+    goBtn.textContent = '🎙 Démarrer'; goBtn.classList.remove('rec');
+  }
+  goBtn.addEventListener('click', function(){ if (active) stop(); else start(); });
+  langSel.addEventListener('change', function(){ if (active){ stop(); start(); } });
+  targetSel.addEventListener('change', function(){ if (active){ stop(); start(); } });
+
+  // Démo de l'aperçu tant que le micro n'est pas lancé
+  iframe.addEventListener('load', function(){
+    setTimeout(function(){ if (!active) send({ t: 'final', text: 'Salut tout le monde, bienvenue sur le live !', tr: 'Hi everyone, welcome to the stream!' }); }, 300);
+  });
+})();
+</script>
+</body>
+</html>
