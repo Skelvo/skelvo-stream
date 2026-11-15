@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Top tchatteurs — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Classement des viewers qui ont le plus écrit dans le tchat, du jour ou du mois.
+  Les messages sont comptés par n'importe quel overlay Skelvo connecté à la
+  chaîne (voir SKT.stats dans assets/twitch.js). Bots et commandes ignorés.
+-->
+<style>
+  :root{ --fs: 24px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; align-items: flex-start; justify-content: var(--hpos, flex-start); padding: .5em; box-sizing: border-box; }
+  .board{ min-width: 11em; max-width: 100%; padding: .7em .8em .8em; }
+  .head{ display: flex; align-items: baseline; justify-content: space-between; gap: 1em; margin-bottom: .45em; }
+  .title{ font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); font-size: .9em; }
+  .period{ font-size: .52em; color: var(--muted); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .row{ display: flex; align-items: center; gap: .55em; padding: .32em .2em; border-top: 1px solid rgba(127,127,127,.16); animation: in .4s ease both; }
+  .row:first-of-type{ border-top: 0; }
+  @keyframes in{ from{ opacity: 0; transform: translateX(-.4em); } }
+  .rank{ flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; display: grid; place-items: center; font-size: .7em; font-weight: 800; background: rgba(127,127,127,.2); }
+  .r1 .rank{ background: linear-gradient(135deg, #f5c451, #e3a63b); color: #2a1d00; }
+  .r2 .rank{ background: linear-gradient(135deg, #e5e7eb, #9ca3af); color: #1f2937; }
+  .r3 .rank{ background: linear-gradient(135deg, #f0a46b, #b86b3c); color: #2a1406; }
+  .name{ flex: 1; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .count{ font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ac); font-size: .85em; }
+  .sk-accent .count{ color: inherit; }
+  .count small{ font-weight: 600; color: var(--muted); font-size: .7em; margin-left: .2em; }
+  .empty{ font-size: .7em; color: var(--muted); padding: .3em .2em; }
+  .first{ margin-top: .45em; font-size: .6em; color: var(--muted); font-weight: 600; }
+  .first b{ color: var(--tx); }
+</style>
+</head>
+<body>
+<div class="board sk-surface" id="board"></div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=4"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', period: 'day', n: '5', title: 'Top tchatteurs', counts: '1', first: '1', hide: '', hpos: 'left', fs: '24', demo: '0'
+  });
+  var num = SKO.num, el = SKO.el;
+  var board = document.getElementById('board');
+  var P = {}, source = null, sourceKey = '', timer = null;
+  var DEMO = { msgs: { lunaa_: { n: 'Lunaa_', c: 148 }, kev: { n: 'KevGaming', c: 121 }, mamie: { n: 'Mamie_Gameuse', c: 96 }, cho: { n: 'Choupette', c: 64 }, pix: { n: 'PixelPaulo', c: 41 }, ton: { n: 'Tonton_Raclette', c: 22 } }, first: 'Mamie_Gameuse' };
+
+  function render(){
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var data = sk === 'demo' ? DEMO : (P.period === 'month' ? SKT.stats.month(sk) : SKT.stats.day(sk));
+    var hidden = {}; String(P.hide || '').toLowerCase().split(/[\s,;]+/).forEach(function(x){ if (x) hidden[x.replace(/^@/, '')] = 1; });
+    var top = SKT.stats.top(data && data.msgs, 50).filter(function(t){ return !hidden[t.login]; }).slice(0, num(P.n, 1, 10, 5));
+    board.textContent = '';
+    var head = el('div', 'head'); head.appendChild(el('span', 'title', P.title || ''));
+    head.appendChild(el('span', 'period', P.period === 'month' ? 'Ce mois-ci' : 'Aujourd\'hui')); board.appendChild(head);
+    if (!top.length) board.appendChild(el('div', 'empty', 'En attente des premiers messages…'));
+    top.forEach(function(t, i){
+      var r = el('div', 'row r' + (i + 1)); r.style.animationDelay = i * 60 + 'ms';
+      r.appendChild(el('span', 'rank', String(i + 1))); r.appendChild(el('span', 'name', t.name));
+      if (P.counts === '1'){ var c = el('span', 'count', String(t.count)); c.appendChild(el('small', '', 'msg')); r.appendChild(c); }
+      board.appendChild(r);
+    });
+    if (P.first === '1' && P.period !== 'month' && data && data.first){ var f = el('div', 'first', '🥇 Premier arrivé : '); f.appendChild(el('b', '', data.first)); board.appendChild(f); }
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    var r = document.documentElement.style;
+    r.setProperty('--fs', num(P.fs, 12, 72, 24) + 'px');
+    r.setProperty('--hpos', P.hpos === 'right' ? 'flex-end' : P.hpos === 'center' ? 'center' : 'flex-start');
+    render();
+    clearInterval(timer); timer = setInterval(render, 5000);
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      // la connexion sert au comptage (si aucun autre overlay n'est ouvert) et à !classement reset
+      source = sk && sk !== 'demo' ? SKT.connect(sk, { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); },
+        message: function(m){ if (m.cmd && m.isMod && m.cmd.name === 'classement' && (m.cmd.args[0] || '') === 'reset'){ SKT.stats.reset(sk); render(); } } }) : null;
+      if (sk === 'demo') SKO.tellParent('demo');
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -94,6 +94,19 @@
   .count.done{ font-size: 3.4em; }
   .count:empty{ display: none; }
 
+  /* Récap du live (écran de fin) */
+  .recap{ display: none; margin-top: 2.2em; gap: 1em; flex-wrap: wrap; justify-content: center; max-width: 64em; }
+  .lay-left .recap, .lay-bottom .recap{ justify-content: flex-start; }
+  .recap.on{ display: flex; }
+  .stat{ padding: .9em 1.3em 1em; min-width: 8.5em; text-align: left; }
+  .stat .k{ font-size: .95em; color: var(--muted); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .stat .v{ font-size: 2.8em; font-weight: 800; line-height: 1.05; margin-top: .15em; font-variant-numeric: tabular-nums; }
+  .stat .v small{ font-size: .4em; font-weight: 600; color: var(--muted); margin-left: .2em; }
+  .stat.tops{ min-width: 16em; }
+  .stat.tops .v{ font-size: 1.6em; }
+  .stat.tops ol{ margin: .3em 0 0; padding-left: 1.3em; font-size: 1.5em; font-weight: 700; line-height: 1.45; }
+  .stat.tops li small{ color: var(--muted); font-weight: 600; font-size: .7em; margin-left: .3em; }
+  .sk-accent .stat .k, .sk-accent .stat small{ color: inherit; opacity: .8; }
   .socials{ position: fixed; left: 0; right: 0; bottom: 5vmin; display: flex; justify-content: center; flex-wrap: wrap; gap: 1em; font-size: 1.5em; padding: 0 6vmin; }
   .lay-left .socials, .lay-bottom .socials{ justify-content: flex-start; padding-left: 10vmin; }
   body.with-chat .socials{ right: 30%; }
@@ -119,17 +132,19 @@
   <h1 class="rise d1" id="title"></h1>
   <div class="sub rise d2" id="sub"></div>
   <div class="count rise d3" id="count"></div>
+  <div class="recap rise d3" id="recap"></div>
 </div>
 <div class="socials" id="socials"></div>
 
 <script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=4"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     mode: 'start', title: '', sub: '', kicker: '', min: '5', at: '', endtext: '', bg: 'mesh',
     c1: '7c6cf2', c2: '3fc8d8', c3: 'f472b6', speed: '1', grain: '35', vig: '50', bgimg: '', bgvid: '', dim: '45', logo: '', bgpack: '', pdim: '25',
-    lay: 'center', cd: 'grad', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0',
+    lay: 'center', cd: 'grad', recap: '1', tw: '', ig: '', tt: '', yt: '', dc: '', chat: '0', ch: '', demo: '0',
     sk: 'glass', sf: '15131c', so: '45', rad: '70'
   });
   var TEXTS = {
@@ -220,6 +235,30 @@
   }
   setInterval(tick, 250);
 
+  /* ---------- Récap du live (écran de fin) ---------- */
+  function renderRecap(){
+    var box = document.getElementById('recap'); box.textContent = '';
+    var on = P.mode === 'end' && P.recap === '1';
+    var st = P.demo === '1'
+      ? { start: Date.now() - (3 * 3600 + 12 * 60) * 1000, last: Date.now(), subs: 7, gifts: 15, bits: 2400, raids: [{ n: 'Choupette', c: 42 }, { n: 'PixelPaulo', c: 12 }], msgs: { a: { n: 'Lunaa_', c: 148 }, b: { n: 'KevGaming', c: 121 }, c: { n: 'Mamie_Gameuse', c: 96 } } }
+      : SKT.stats.day(P.ch);
+    box.classList.toggle('on', !!(on && st));
+    if (!on || !st) return;
+    function card(k, v, unit){ var d = el('div', 'stat sk-surface'); d.appendChild(el('div', 'k', k)); var vv = el('div', 'v', v); if (unit) vv.appendChild(el('small', '', unit)); d.appendChild(vv); box.appendChild(d); }
+    var dur = Math.max(0, ((st.last || Date.now()) - st.start) / 1000);
+    card('Durée', SKO.clock(dur, true));
+    if (st.subs + st.gifts) card('Nouveaux abonnés', String(st.subs + st.gifts), st.gifts ? '(' + st.gifts + ' offerts)' : '');
+    if (st.bits) card('Bits', st.bits.toLocaleString('fr-FR'));
+    if (st.raids && st.raids.length) card('Raids', String(st.raids.length), st.raids.reduce(function(a, r){ return a + (r.c || 0); }, 0) + ' viewers');
+    var top = SKT.stats.top(st.msgs, 3);
+    if (top.length){
+      var d = el('div', 'stat tops sk-surface'); d.appendChild(el('div', 'k', 'Top tchatteurs'));
+      var ol = el('ol'); top.forEach(function(t){ var li = el('li', '', t.name); li.appendChild(el('small', '', t.count + ' msg')); ol.appendChild(li); });
+      d.appendChild(ol); box.appendChild(d);
+    }
+  }
+  setInterval(function(){ if (P.mode === 'end') renderRecap(); }, 10000);
+
   SKO.params(DEFAULTS, function(p){
     var prev = P; P = p;
     if (!TEXTS[P.mode]) P.mode = 'start';
@@ -250,6 +289,7 @@
     countEl.classList.toggle('sk-surface', cd === 'box');
 
     if (prev.mode !== P.mode || prev.min !== P.min || prev.at !== P.at) target = computeTarget();
+    renderRecap();
     tick();
 
     var so = document.getElementById('socials'); so.textContent = '';

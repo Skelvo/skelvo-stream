@@ -42,15 +42,15 @@
 <div class="list" id="list"></div>
 
 <script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=3"></script>
+<script src="../assets/twitch.js?v=4"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', i_sub: '1', i_gift: '1', i_raid: '1', i_bits: '1', i_topbits: '1', i_topgift: '1', layout: 'rotate', every: '6', icons: '1', align: 'left', fs: '24', empty: '—', demo: '0'
+    ch: '', i_sub: '1', i_gift: '1', i_raid: '1', i_bits: '1', i_topbits: '1', i_topgift: '1', i_topchat: '1', layout: 'rotate', every: '6', icons: '1', align: 'left', fs: '24', empty: '—', demo: '0'
   });
-  var LABELS = { sub: 'Dernier abonné', gift: 'Dernier sub offert', raid: 'Dernier raid', bits: 'Derniers bits', topbits: 'Top bits du jour', topgift: 'Top donneur du jour' };
-  var ICONS = { sub: '⭐', gift: '🎁', raid: '🚀', bits: '💎', topbits: '👑', topgift: '🏆' };
+  var LABELS = { sub: 'Dernier abonné', gift: 'Dernier sub offert', raid: 'Dernier raid', bits: 'Derniers bits', topbits: 'Top bits du jour', topgift: 'Top donneur du jour', topchat: 'Top tchatteur du jour' };
+  var ICONS = { sub: '⭐', gift: '🎁', raid: '🚀', bits: '💎', topbits: '👑', topgift: '🏆', topchat: '💬' };
   var num = SKO.num, el = SKO.el;
   var list = document.getElementById('list');
   var P = {}, D = null, key = '', source = null, sourceKey = '', rot = 0, rotTimer = null;
@@ -64,6 +64,11 @@
   function save(){ SKO.store.set(key, D); }
 
   function value(k){
+    if (k === 'topchat'){
+      var st = P.demo === '1' ? { msgs: { a: { n: 'Lunaa_', c: 148 } } } : SKT.stats.day(P.ch);
+      var t = SKT.stats.top(st && st.msgs, 1)[0];
+      return t ? { n: t.name, x: t.count + ' msg' } : null;
+    }
     var v = D[k]; if (!v) return null;
     if (k === 'gift' || k === 'topgift') return { n: v.n, x: v.c > 1 ? '×' + v.c : '' };
     if (k === 'raid') return { n: v.n, x: v.c + ' viewers' };

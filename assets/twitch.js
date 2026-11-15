@@ -127,31 +127,33 @@
           break;
         case 'PRIVMSG': {
           var msg = toMessage(m);
+          T.stats.record(ch, 'msg', msg);
+          if (msg.bits) T.stats.record(ch, 'event', { type: 'bits', id: msg.id + ':b', amount: msg.bits, name: msg.name });
           if (h.message) h.message(msg);
-          if (msg.bits && h.event) h.event({ type: 'bits', amount: msg.bits, name: msg.name, login: msg.login, color: msg.color, text: msg.text, emotes: msg.emotes });
+          if (msg.bits && h.event) h.event({ type: 'bits', id: msg.id + ':b', amount: msg.bits, name: msg.name, login: msg.login, color: msg.color, text: msg.text, emotes: msg.emotes });
           break;
         }
         case 'USERNOTICE': {
-          if (!h.event) break;
           var t = m.tags, id = t['msg-id'], login = (t.login || '').toLowerCase();
-          var base = { name: t['display-name'] || login, login: login, color: t.color, text: m.params[1] || '', emotes: t.emotes || '', sys: t['system-msg'] || '' };
+          var base = { id: t.id || '', name: t['display-name'] || login, login: login, color: t.color, text: m.params[1] || '', emotes: t.emotes || '', sys: t['system-msg'] || '' };
+          var emit = function(e){ T.stats.record(ch, 'event', e); if (h.event) h.event(e); };
           if (id === 'sub' || id === 'resub'){
-            h.event(Object.assign(base, { type: id, tier: tierOf(t['msg-param-sub-plan']), prime: t['msg-param-sub-plan'] === 'Prime', months: parseInt(t['msg-param-cumulative-months'], 10) || 1 }));
+            emit(Object.assign(base, { type: id, tier: tierOf(t['msg-param-sub-plan']), prime: t['msg-param-sub-plan'] === 'Prime', months: parseInt(t['msg-param-cumulative-months'], 10) || 1 }));
           } else if (id === 'submysterygift'){
             var n = parseInt(t['msg-param-mass-gift-count'], 10) || 1;
             bombs[login] = (bombs[login] || 0) + n;
-            h.event(Object.assign(base, { type: 'giftbomb', count: n, tier: tierOf(t['msg-param-sub-plan']) }));
+            emit(Object.assign(base, { type: 'giftbomb', count: n, tier: tierOf(t['msg-param-sub-plan']) }));
           } else if (id === 'subgift'){
             var fromBomb = false;
             if (bombs[login] > 0){ bombs[login]--; fromBomb = true; }
-            h.event(Object.assign(base, { type: 'subgift', tier: tierOf(t['msg-param-sub-plan']), fromBomb: fromBomb,
+            emit(Object.assign(base, { type: 'subgift', tier: tierOf(t['msg-param-sub-plan']), fromBomb: fromBomb,
               recipient: t['msg-param-recipient-display-name'] || t['msg-param-recipient-user-name'] || '' }));
           } else if (id === 'raid'){
-            h.event(Object.assign(base, { type: 'raid', name: t['msg-param-displayName'] || base.name, count: parseInt(t['msg-param-viewerCount'], 10) || 0 }));
+            emit(Object.assign(base, { type: 'raid', name: t['msg-param-displayName'] || base.name, count: parseInt(t['msg-param-viewerCount'], 10) || 0 }));
           } else if (id === 'announcement'){
-            h.event(Object.assign(base, { type: 'announcement' }));
+            emit(Object.assign(base, { type: 'announcement' }));
           } else if (id === 'giftpaidupgrade' || id === 'primepaidupgrade'){
-            h.event(Object.assign(base, { type: 'upgrade' }));
+            emit(Object.assign(base, { type: 'upgrade' }));
           }
           break;
         }
@@ -171,6 +173,47 @@
         if (ws){ var s = ws; ws = null; try { s.close(); } catch(e){} }
       }
     };
+  };
+
+  /* ---------- Statistiques du live (top tchatteurs, récap) ----------
+     Tout overlay connecté compte pendant le live ; plusieurs sources dans OBS
+     partagent le même stockage (même site), d'où l'anti-doublon par
+     identifiant de message. Données du jour + cumul du mois. */
+  var BOTS = { nightbot: 1, streamelements: 1, streamlabs: 1, moobot: 1, fossabot: 1, wizebot: 1, sery_bot: 1, soundalerts: 1, kofistreambot: 1 };
+  function lsGet(k){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function dayKey(d){ d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function monthKey(d){ d = d || new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1); }
+  T.stats = {
+    day: function(ch){ return lsGet('sk-stats:' + T.cleanChannel(ch) + ':' + dayKey()) || null; },
+    month: function(ch){ return lsGet('sk-stats-m:' + T.cleanChannel(ch) + ':' + monthKey()) || null; },
+    top: function(map, n){
+      return Object.keys(map || {}).map(function(l){ return { login: l, name: map[l].n, count: map[l].c }; })
+        .sort(function(a, b){ return b.count - a.count; }).slice(0, n || 5);
+    },
+    record: function(ch, kind, x){
+      ch = T.cleanChannel(ch); if (!ch || !x) return;
+      var id = x.id; if (!id) return;
+      // anti-doublon entre plusieurs sources OBS
+      var seenK = 'sk-stats-seen:' + ch, seen = lsGet(seenK) || [];
+      if (seen.indexOf(id) >= 0) return;
+      seen.push(id); if (seen.length > 400) seen = seen.slice(-300); lsSet(seenK, seen);
+      var dk = 'sk-stats:' + ch + ':' + dayKey(), D = lsGet(dk) || { start: Date.now(), msgs: {}, subs: 0, gifts: 0, bits: 0, raids: [], first: '', last: 0 };
+      var mk = 'sk-stats-m:' + ch + ':' + monthKey(), M = lsGet(mk) || { msgs: {} };
+      D.last = Date.now();
+      if (kind === 'msg'){
+        if (BOTS[x.login] || (x.text || '').charAt(0) === '!') { lsSet(dk, D); return; }
+        if (!D.first) D.first = x.name;
+        var a = D.msgs[x.login] || { n: x.name, c: 0 }; a.c++; a.n = x.name; D.msgs[x.login] = a;
+        var b = M.msgs[x.login] || { n: x.name, c: 0 }; b.c++; b.n = x.name; M.msgs[x.login] = b;
+        lsSet(mk, M);
+      } else if (x.type === 'sub' || x.type === 'resub') D.subs++;
+      else if (x.type === 'subgift') D.gifts++;
+      else if (x.type === 'bits') D.bits += x.amount || 0;
+      else if (x.type === 'raid'){ D.raids.push({ n: x.name, c: x.count }); D.raids = D.raids.slice(-20); }
+      lsSet(dk, D);
+    },
+    reset: function(ch){ ch = T.cleanChannel(ch); try { localStorage.removeItem('sk-stats:' + ch + ':' + dayKey()); } catch(e){} }
   };
 
   /* ---------- Emotes 7TV / BTTV / FFZ ---------- */
