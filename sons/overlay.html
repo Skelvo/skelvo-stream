@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Sons du tchat — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Sons du tchat : les viewers jouent un son avec une commande (!klaxon…),
+  ou en utilisant une récompense de points de chaîne dont le message est le
+  nom du son. Sons synthétisés (assets/sounds.js) ou liens mp3/ogg perso.
+  Temps d'attente global et par viewer pour éviter le spam.
+  Dans OBS : cocher « Contrôler l'audio via OBS » pour que le stream l'entende.
+-->
+<style>
+  :root{ --fs: 22px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; flex-direction: column; justify-content: flex-end; align-items: var(--hpos, flex-start); gap: .35em; padding: .5em; box-sizing: border-box; }
+  .pop{ display: inline-flex; align-items: center; gap: .5em; padding: .4em .85em .45em .5em; animation: pop .5s cubic-bezier(.2,1.4,.4,1) both; }
+  .pop.out{ animation: out .4s ease forwards; }
+  .pop .ico{ width: 1.6em; height: 1.6em; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); font-size: .8em; }
+  .pop b{ font-weight: var(--fw); }
+  .pop span.by{ color: var(--muted); font-size: .8em; font-weight: 600; }
+  .sk-accent .pop span.by{ color: inherit; opacity: .85; }
+  .no-pop .pop{ display: none; }
+  @keyframes pop{ from{ opacity: 0; transform: translateY(.5em) scale(.8); } }
+  @keyframes out{ to{ opacity: 0; transform: translateY(-.3em); } }
+</style>
+</head>
+<body></body>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=4"></script>
+<script src="../assets/sounds.js?v=1"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', who: 'all', cool: '5', ucool: '30', vol: '70', minbits: '0', rewards: '1', pop: '1', hpos: 'left', fs: '22', demo: '0',
+    u1: '', u1c: '', u2: '', u2c: '', u3: '', u3c: '', u4: '', u4c: ''
+  });
+  SKS.list.forEach(function(s){ DEFAULTS['s_' + s.id] = s.cmd; });
+  var num = SKO.num, el = SKO.el;
+  var P = {}, source = null, sourceKey = '', lastAny = 0, lastBy = {};
+
+  // commande (sans « ! ») -> son
+  function table(){
+    var t = {};
+    SKS.list.forEach(function(s){ var c = String(P['s_' + s.id] || '').toLowerCase().replace(/^!/, '').trim(); if (c) t[c] = { id: s.id, label: s.label }; });
+    [1, 2, 3, 4].forEach(function(i){ var c = String(P['u' + i + 'c'] || '').toLowerCase().replace(/^!/, '').trim(); if (c && /^https:\/\//.test(P['u' + i] || '')) t[c] = { url: P['u' + i], label: c }; });
+    return t;
+  }
+  function popup(snd, name){
+    if (P.pop !== '1') return;
+    var d = el('div', 'pop sk-surface'); d.appendChild(el('span', 'ico', '🔊')); d.appendChild(el('b', '', snd.label));
+    if (name) d.appendChild(el('span', 'by', name));
+    document.body.appendChild(d);
+    setTimeout(function(){ d.classList.add('out'); setTimeout(function(){ d.remove(); }, 420); }, 2600);
+    while (document.body.children.length > 4) document.body.firstChild.remove();
+  }
+  function trigger(snd, who, isMod, free){
+    var now = Date.now(), cool = num(P.cool, 0, 600, 5) * 1000, ucool = num(P.ucool, 0, 3600, 30) * 1000;
+    if (!isMod && !free){
+      if (now - lastAny < cool) return;
+      if (lastBy[who] && now - lastBy[who] < ucool) return;
+    }
+    lastAny = now; lastBy[who] = now;
+    var vol = num(P.vol, 0, 100, 70) / 100;
+    if (snd.url) SKS.playUrl(snd.url, vol); else SKS.play(snd.id, vol);
+    popup(snd, who);
+  }
+  function allowed(m){
+    if (m.isMod) return true;
+    if (P.who === 'mods') return false;
+    if (P.who === 'vip') return m.isVip;
+    if (P.who === 'subs') return m.isSub || m.isVip;
+    return true;
+  }
+  function onMessage(m){
+    var t = table();
+    // récompense de points de chaîne : le message est le nom du son
+    if (m.rewardId && P.rewards === '1'){
+      var r = t[String(m.text || '').toLowerCase().replace(/^!/, '').trim().split(/\s+/)[0]];
+      if (r) trigger(r, m.name, m.isMod, true);
+      return;
+    }
+    if (!m.cmd) return;
+    var snd = t[m.cmd.name]; if (!snd) return;
+    var minb = num(P.minbits, 0, 1e6, 0);
+    if (minb > 0 && !m.isMod){ if (m.bits >= minb) trigger(snd, m.name, false, true); return; }
+    if (!allowed(m)) return;
+    trigger(snd, m.name, m.isMod, false);
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    var r = document.documentElement.style;
+    r.setProperty('--fs', num(P.fs, 12, 60, 22) + 'px');
+    r.setProperty('--hpos', P.hpos === 'right' ? 'flex-end' : P.hpos === 'center' ? 'center' : 'flex-start');
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
+      if (sk === 'demo'){
+        // démo silencieuse : on montre juste les bulles (les sons se testent avec ▶ dans l'éditeur)
+        var keys = Object.keys(table()), i = 0;
+        source = SKT.demo(h, { min: 2200, spread: 0, extra: function(){
+          var u = SKT.DEMO_USERS[i % 7]; var k = keys[i++ % keys.length]; lastAny = 0; lastBy = {};
+          if (k){ popup(table()[k], u.n); } return { type: 'none' };
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+  // Bouton ▶ de l'éditeur : jouer un son dans l'aperçu
+  window.addEventListener('message', function(e){
+    if (e.origin !== location.origin || !e.data || e.data.type !== 'sk-sound') return;
+    var t = table(), snd = e.data.id ? { id: e.data.id, label: e.data.label } : t[e.data.cmd];
+    if (snd){ if (snd.url) SKS.playUrl(snd.url, num(P.vol, 0, 100, 70) / 100); else SKS.play(snd.id, num(P.vol, 0, 100, 70) / 100); popup(snd, 'Test'); }
+  });
+})();
+</script>
+</html>
