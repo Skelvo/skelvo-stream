@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex">
+<title>Message épinglé et shoutout — Skelvo Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<!--
+  Commandes du streamer et des modos :
+    !pin Le Discord est dans la description !   épingle un message à l'écran
+    !unpin                                       le retire
+    !so @pseudo [texte]                          carte « Allez voir @pseudo »
+  Shoutout automatique sur les raids (option). Le message épinglé est
+  mémorisé dans OBS.
+-->
+<style>
+  :root{ --fs: 26px; }
+  html, body{ margin: 0; height: 100%; overflow: hidden; }
+  body{ font-size: var(--fs); display: flex; flex-direction: column; justify-content: var(--vpos, flex-end); align-items: var(--hpos, center); gap: .5em; padding: .5em; box-sizing: border-box; }
+  .card{ display: flex; align-items: center; gap: .7em; padding: .55em 1em .6em .6em; max-width: 100%; transition: opacity .5s, transform .6s cubic-bezier(.2,1.2,.3,1); }
+  .card.hidden{ opacity: 0; transform: translateY(.6em) scale(.96); }
+  .card.gone{ display: none; }
+  .ico{ flex: none; width: 1.9em; height: 1.9em; border-radius: calc(var(--rad) * .7); display: grid; place-items: center; font-size: .9em; background: linear-gradient(135deg, var(--ac), var(--ac2)); color: var(--ac-tx); }
+  .txt{ min-width: 0; }
+  .lab{ font-size: .52em; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ac); }
+  .sk-accent .lab{ color: inherit; opacity: .8; }
+  .main{ font-weight: var(--fw); line-height: 1.2; overflow-wrap: anywhere; }
+  .main .emote{ height: 1.3em; vertical-align: middle; margin: -.15em .05em; }
+  .sub{ font-size: .62em; color: var(--muted); font-weight: 600; margin-top: .15em; }
+  .sk-accent .sub{ color: inherit; opacity: .85; }
+  .so .main{ text-transform: var(--up); letter-spacing: var(--ls); }
+  .so .ico{ font-size: 1.1em; }
+  .so{ animation: soIn .7s cubic-bezier(.2,1.3,.3,1); }
+  @keyframes soIn{ from{ opacity: 0; transform: translateX(-1.5em); } }
+  .pulse .ico{ animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{ 50%{ transform: scale(1.08); } }
+</style>
+</head>
+<body>
+<div class="card sk-surface pin hidden gone" id="pin"><span class="ico">📌</span><div class="txt"><div class="lab" id="pinlab"></div><div class="main" id="pintxt"></div><div class="sub" id="pinby"></div></div></div>
+<div class="card sk-surface so hidden gone" id="so"><span class="ico">💜</span><div class="txt"><div class="lab" id="solab"></div><div class="main" id="sotxt"></div><div class="sub" id="sosub"></div></div></div>
+
+<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/twitch.js?v=3"></script>
+<script>
+(function(){
+  'use strict';
+  var DEFAULTS = Object.assign({}, SKO.THEME, {
+    ch: '', pcmd: 'pin', ucmd: 'unpin', scmd: 'so', plabel: 'Épinglé', slabel: 'Allez le suivre !', sotext: 'Passez voir sa chaîne !',
+    sodur: '12', raidso: '1', minraid: '1', showby: '0', vpos: 'bottom', hpos: 'center', fs: '26', emotes3: '1', demo: '0'
+  });
+  var num = SKO.num, el = SKO.el;
+  var pinEl = document.getElementById('pin'), soEl = document.getElementById('so');
+  var P = {}, key = '', source = null, sourceKey = '', soTimer = null, soQueue = [];
+
+  function show(card){ card.classList.remove('gone'); requestAnimationFrame(function(){ card.classList.remove('hidden'); }); }
+  function hide(card){ card.classList.add('hidden'); setTimeout(function(){ if (card.classList.contains('hidden')) card.classList.add('gone'); }, 520); }
+
+  function renderPin(p){
+    document.getElementById('pinlab').textContent = P.plabel || '';
+    if (!p){ hide(pinEl); return; }
+    var t = document.getElementById('pintxt'); t.textContent = '';
+    t.appendChild(SKT.renderText(p.text, p.emotes || '', P.emotes3 === '1').node);
+    document.getElementById('pinby').textContent = P.showby === '1' && p.by ? 'par ' + p.by : '';
+    show(pinEl); pinEl.classList.add('pulse'); setTimeout(function(){ pinEl.classList.remove('pulse'); }, 5000);
+  }
+  function pin(text, by, emotes){ var p = { text: text.slice(0, 200), by: by, emotes: emotes }; SKO.store.set(key, p); renderPin(p); }
+  function unpin(){ SKO.store.del(key); renderPin(null); }
+
+  function shoutout(name, extra){
+    soQueue.push({ name: name.replace(/^@/, ''), extra: extra });
+    if (!soTimer) nextSo();
+  }
+  function nextSo(){
+    var s = soQueue.shift(); if (!s){ soTimer = null; return; }
+    document.getElementById('solab').textContent = P.slabel || '';
+    document.getElementById('sotxt').textContent = s.name;
+    document.getElementById('sosub').textContent = (s.extra || P.sotext || '') + ' · twitch.tv/' + s.name.toLowerCase();
+    soEl.classList.remove('so'); void soEl.offsetWidth; soEl.classList.add('so');
+    show(soEl);
+    soTimer = setTimeout(function(){ hide(soEl); soTimer = setTimeout(nextSo, 700); }, num(P.sodur, 3, 120, 12) * 1000);
+  }
+
+  function cmd(x, d){ return String(x || d).toLowerCase().replace(/^!/, ''); }
+  function onMessage(m){
+    if (!m.cmd || !m.isMod) return;
+    var c = m.cmd.name;
+    if (c === cmd(P.pcmd, 'pin')){
+      if (!m.cmd.rest) return;
+      // emotes : on recalcule pour le texte après la commande
+      var rest = m.cmd.rest, off = Array.from(m.text).length - Array.from(rest).length;
+      var em = String(m.emotes || '').split('/').filter(Boolean).map(function(part){
+        var b = part.split(':'); return b[0] + ':' + b[1].split(',').map(function(r){ var ab = r.split('-'); return (ab[0] - off) + '-' + (ab[1] - off); }).filter(function(r){ return +r.split('-')[0] >= 0; }).join(',');
+      }).filter(function(x){ return !/:$/.test(x); }).join('/');
+      return pin(rest, m.name, em);
+    }
+    if (c === cmd(P.ucmd, 'unpin')) return unpin();
+    if (c === cmd(P.scmd, 'so') && m.cmd.args[0]) return shoutout(m.cmd.args[0], m.cmd.args.slice(1).join(' '));
+  }
+  function onEvent(e){
+    if (e.type === 'raid' && P.raidso === '1' && e.count >= num(P.minraid, 1, 1e6, 1)) shoutout(e.name, 'Merci pour le raid avec ' + e.count + ' viewers !');
+  }
+
+  SKO.params(DEFAULTS, function(p){
+    P = p;
+    SKO.theme(P);
+    var r = document.documentElement.style;
+    r.setProperty('--fs', num(P.fs, 12, 72, 26) + 'px');
+    r.setProperty('--vpos', P.vpos === 'top' ? 'flex-start' : P.vpos === 'center' ? 'center' : 'flex-end');
+    r.setProperty('--hpos', P.hpos === 'left' ? 'flex-start' : P.hpos === 'right' ? 'flex-end' : 'center');
+    var sk = P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch);
+    var k = 'sk-pin:' + sk;
+    if (k !== key){ key = k; renderPin(SKO.store.get(key)); }
+    else renderPin(SKO.store.get(key));
+    if (P.emotes3 === '1') SKT.loadGlobalEmotes();
+    if (sk !== sourceKey){
+      sourceKey = sk;
+      if (source) source.close();
+      var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, room: function(id){ if (P.emotes3 === '1') SKT.loadChannelEmotes(id); }, message: onMessage, event: onEvent };
+      if (sk === 'demo'){
+        var step = 0, mod = SKT.DEMO_USERS[2];
+        source = SKT.demo(h, { min: 1500, spread: 0, extra: function(){
+          step++;
+          if (step === 1) return SKT.fakeMessage(mod, '!' + cmd(P.pcmd, 'pin') + ' Le Discord est dans la description, venez ! <3');
+          if (step === 3) return SKT.fakeMessage(mod, '!' + cmd(P.scmd, 'so') + ' @Choupette');
+          if (step === 14) return { type: 'raid', name: 'PixelPaulo', count: 37 };
+          if (step === 24){ step = 0; return SKT.fakeMessage(mod, '!' + cmd(P.ucmd, 'unpin')); }
+          return { type: 'none' };
+        } });
+      } else source = SKT.connect(sk, h);
+    }
+  });
+})();
+</script>
+</body>
+</html>

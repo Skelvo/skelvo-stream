@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script>/* Retour au bon endroit : la page reste cachée le temps de se placer (voir assets/app.js) */
+try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];if(sessionStorage.getItem(k)&&!location.hash&&(!n||n.type==='navigate')){document.documentElement.classList.add('sk-restoring');setTimeout(function(){document.documentElement.classList.remove('sk-restoring')},1500)}}catch(e){}</script>
+<style>.sk-restoring body{visibility:hidden}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Message épinglé et shoutout pour Twitch, gratuits — Skelvo Stream</title>
+<meta name="description" content="Épingle un message à l'écran avec !pin et fais un shoutout avec !so @pseudo, automatique sur les raids. Gratuit, pour OBS et Streamlabs." />
+<link rel="canonical" href="https://skelvo.fr/skelvo-stream/epingle/">
+<meta name="theme-color" content="#0c0b14">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Skelvo Stream">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css?v=11">
+<style>
+  .sw{ display: grid; place-items: center; font-size: 18px; background: #19171f; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><span class="brand-mark"></span>Skelvo Stream <small data-i18n="brand.sub">outils gratuits pour streamers</small></a>
+    <nav class="topnav"><a href="../" data-i18n="nav.all">Tous les outils</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="editor-head">
+    <h1 data-i18n="epingle.title">Message épinglé et shoutout</h1>
+    <p data-i18n="epingle.lead">Tes modos épinglent une info importante à l'écran avec !pin, et remercient un ami ou un raid avec !so @pseudo. Le shoutout peut aussi se lancer tout seul à chaque raid.</p>
+  </div>
+
+  <div class="editor">
+    <form class="panel settings" id="settings" autocomplete="off">
+      <fieldset>
+        <legend>Ta chaîne</legend>
+        <label class="field"><span data-i18n="chat.channel.label">Nom de ta chaîne Twitch</span><input type="text" name="ch" maxlength="25" placeholder="ex. kameto" spellcheck="false" autocapitalize="off"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Message épinglé</legend>
+        <label class="field"><span>Commande pour épingler</span><input type="text" name="pcmd" value="pin" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"><small>Ex. : !pin Le Discord est dans la description !</small></label>
+        <label class="field"><span>Commande pour retirer</span><input type="text" name="ucmd" value="unpin" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"></label>
+        <label class="field"><span>Petit titre</span><input type="text" name="plabel" value="Épinglé" placeholder="" maxlength="30" ></label>
+        <label class="check"><input type="checkbox" name="showby"><span>Afficher qui a épinglé</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>Shoutout</legend>
+        <label class="field"><span>Commande</span><input type="text" name="scmd" value="so" placeholder="" maxlength="20" spellcheck="false" autocapitalize="off"><small>Ex. : !so @pseudo</small></label>
+        <label class="field"><span>Petit titre</span><input type="text" name="slabel" value="Allez le suivre !" placeholder="" maxlength="30" ></label>
+        <label class="field"><span>Phrase sous le pseudo</span><input type="text" name="sotext" value="Passez voir sa chaîne !" placeholder="" maxlength="80" ></label>
+        <label class="field"><span><span>Affiché pendant</span><output for="f-sodur" data-unit=" s"></output></span><input type="range" id="f-sodur" name="sodur" min="4" max="60" value="12"></label>
+        <label class="check"><input type="checkbox" name="raidso" checked><span>Shoutout automatique à chaque raid</span></label>
+        <label class="field"><span>Viewers minimum pour le shoutout de raid</span><input type="text" name="minraid" value="1" placeholder="" maxlength="6" inputmode="numeric"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Mise en page</legend>
+        <label class="field"><span>Position verticale</span><select name="vpos"><option value="bottom">En bas</option><option value="center">Au centre</option><option value="top">En haut</option></select></label>
+        <label class="field"><span>Position horizontale</span><select name="hpos"><option value="center">Centré</option><option value="left">À gauche</option><option value="right">À droite</option></select></label>
+        <label class="field"><span><span>Taille</span><output for="f-fs" data-unit=" px"></output></span><input type="range" id="f-fs" name="fs" min="14" max="48" value="26"></label>
+        <label class="check"><input type="checkbox" name="emotes3" checked><span>Emotes 7TV, BTTV et FFZ dans les messages épinglés</span></label>
+      </fieldset>
+      <div data-theme-panel="minimal"></div>
+      <fieldset><button type="button" class="btn ghost small" id="reset" data-i18n="reset">Tout remettre par défaut</button></fieldset>
+    </form>
+
+    <div class="preview-col">
+      <div class="panel">
+        <div class="preview-bar">
+          <div class="title"><span class="live-dot"></span><span data-i18n="preview">Aperçu en direct</span></div>
+          <div class="seg" id="mode" role="group" aria-label="Source de l'aperçu">
+            <button type="button" data-mode="demo" aria-pressed="true" data-i18n="mode.demo">Démo</button>
+            <button type="button" data-mode="live" data-i18n="mode.mine">Ma chaîne</button>
+          </div>
+        </div>
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="fake-game"></div>
+            <div class="canvas" id="canvas"><iframe id="preview" title="Aperçu"></iframe></div>
+          </div>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel output">
+        <h2 data-i18n="out.title">Ton lien pour OBS</h2>
+        <div class="url-row">
+          <input type="text" id="url" readonly aria-label="Lien de l'overlay">
+          <button type="button" class="btn" id="copy" data-i18n="copy">Copier</button>
+        </div>
+        <ol class="steps">
+          <li><span data-i18n="frame.step1">Dans OBS, clique sur <b>+</b> dans <b>Sources</b>, puis choisis <b>Navigateur</b>.</span></li>
+          <li><span><span data-i18n="frame.step2">Colle le lien dans <b>URL</b> et règle la taille sur</span> <b id="size-txt">900 × 300</b>.</span></li>
+          <li><span>Seuls toi et tes modos peuvent épingler ou faire un shoutout. Le message épinglé reste affiché même si OBS redémarre.</span></li>
+        </ol>
+        <ul class="cmds" id="cmds"></ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span data-i18n="foot.free">Skelvo Stream, 100 % gratuit. Fait par <a href="https://skelvo.fr/">Skelvo</a>.</span>
+    <a href="../" data-i18n="foot.all">Tous les outils</a>
+  </div>
+</footer>
+
+<script src="../assets/packs.js?v=1"></script>
+<script src="../assets/app.js?v=17"></script>
+<script>
+(function(){
+  'use strict';
+  SK.stage({ stage: document.getElementById('stage'), canvas: document.getElementById('canvas'),
+    buttons: document.querySelectorAll('#ratio button'),
+    sizeTxt: document.getElementById('size-txt'), storageKey: 'sk-epingle-size', def: { w: 900, h: 300 } });
+  SK.watchStatus(document.getElementById('status'));
+  var withDemo = SK.demoSwitch(document.querySelectorAll('#mode button'), function(){ ed.update(); });
+  var cmds = document.getElementById('cmds');
+  function showCmds(p){
+    cmds.textContent = '';
+    [['!' + (p.pcmd || 'pin') + ' Ton message', 'épingle le message à l\'écran'], ['!' + (p.ucmd || 'unpin'), 'retire le message épinglé'], ['!' + (p.scmd || 'so') + ' @pseudo', 'affiche la carte « Allez le suivre »']].forEach(function(r){
+      var li = document.createElement('li'), c = document.createElement('code');
+      c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
+    });
+  }
+  var ed = SK.overlayEditor({
+    form: document.getElementById('settings'),
+    iframe: document.getElementById('preview'),
+    overlay: 'overlay.html',
+    storageKey: 'sk-epingle',
+    urlInput: document.getElementById('url'),
+    copyBtn: document.getElementById('copy'),
+    resetBtn: document.getElementById('reset'),
+    previewParams: function(p){ return withDemo(p); },
+    onChange: function(p){ showCmds(p); }
+  });
+
+})();
+</script>
+</body>
+</html>
