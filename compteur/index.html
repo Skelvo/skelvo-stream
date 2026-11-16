@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <style>
   .sw{ display: grid; place-items: center; font: 800 12px 'Inter', sans-serif; color: #fff; }
   .sw-pill{ background: #19171f; border-radius: 99px; } .sw-pill b{ color: #a78bfa; }
@@ -118,7 +118,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
 <script>
 (function(){
   'use strict';
@@ -138,7 +139,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function showCmds(p){
     var n = '!' + (p.name || 'mort').toLowerCase().replace(/^!/, '').replace(/\s+/g, '');
     cmds.textContent = '';
-    [[n + '+', 'ajoute 1 (ou ' + n + '+ 3 pour ajouter 3)'], [n + '-', 'retire 1'], [n + '= 12', 'met le compteur à 12 (modos)']].forEach(function(r){
+    [[n + '+', SK.tr('ajoute 1 (ou {n}+ 3 pour ajouter 3)').replace('{n}', n)], [n + '-', SK.tr('retire 1')], [n + '= 12', SK.tr('met le compteur à 12 (modos)')]].forEach(function(r){
       var li = document.createElement('li'), c = document.createElement('code');
       c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
     });

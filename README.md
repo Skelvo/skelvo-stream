@@ -97,3 +97,14 @@ clé dans les réglages avancés si la clé partagée était saturée.
   de `assets/app.js`) : les pages restées ouvertes affichent alors le bandeau
   « Version x disponible · Rafraîchir », comme sur Tribune ;
 - après une modification de `assets/`, augmenter les `?v=` dans les pages HTML.
+
+## Version anglaise
+
+- Le français est écrit dans le HTML. En anglais, `assets/app.js` remplace chaque
+  texte de la page par sa traduction trouvée dans `assets/lang-en.js` (clé = texte
+  français exact). Les textes ajoutés par les scripts sont traduits au vol.
+- `lang-en.js` est généré : `t` = textes, `v` = valeurs par défaut des champs
+  (textes des overlays, commandes), `rx` = phrases avec une partie variable.
+- Les overlays ont leur petit dictionnaire dans `assets/overlay.js` (`SKO.tr`) ;
+  la langue vient de `?lang=en` dans le lien OBS (ajouté par les éditeurs).
+- Bouton FR / EN en haut de chaque page ; premier choix selon la langue de l'appareil.

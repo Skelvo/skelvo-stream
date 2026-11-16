@@ -17,12 +17,12 @@
 </style>
 </head>
 <body>
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = { ch: '', mode: 'rain', size: '72', per: '5', max: '80', life: '7', raid: '1', subs: '1', who: 'all', cmd: 'pluie', emotes3: '1', demo: '0' };
+  var DEFAULTS = { ch: '', mode: 'rain', size: '72', per: '5', max: '80', life: '7', raid: '1', subs: '1', who: 'all', cmd: SKO.tr('pluie'), emotes3: '1', demo: '0' };
   var num = SKO.num;
   var P = {}, source = null, sourceKey = '';
   var parts = [], pool = [];
@@ -80,7 +80,7 @@
   }
 
   function onMessage(m){
-    if (m.cmd && m.isMod && m.cmd.name === String(P.cmd || 'pluie').toLowerCase().replace(/^!/, '')){ burst(40); return; }
+    if (m.cmd && m.isMod && m.cmd.name === String(P.cmd || SKO.tr('pluie')).toLowerCase().replace(/^!/, '')){ burst(40); return; }
     if (P.who === 'subs' && !m.isSub && !m.isMod && !m.isVip) return;
     var urls = [];
     SKT.pieces(m.text, m.emotes, P.emotes3 === '1').forEach(function(x){ if (x.emote) urls.push(x.emote); });

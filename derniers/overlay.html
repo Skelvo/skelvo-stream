@@ -41,15 +41,15 @@
 <body>
 <div class="list" id="list"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', i_sub: '1', i_gift: '1', i_raid: '1', i_bits: '1', i_topbits: '1', i_topgift: '1', i_topchat: '1', i_follow: '0', i_tip: '0', tk: '', se: '', layout: 'rotate', every: '6', icons: '1', align: 'left', fs: '24', empty: '—', demo: '0'
   });
-  var LABELS = { sub: 'Dernier abonné', gift: 'Dernier sub offert', raid: 'Dernier raid', bits: 'Derniers bits', topbits: 'Top bits du jour', topgift: 'Top donneur du jour', topchat: 'Top tchatteur du jour', follow: 'Dernier follow', tip: 'Dernier don' };
+  var LABELS = { sub: SKO.tr('Dernier abonné'), gift: SKO.tr('Dernier sub offert'), raid: SKO.tr('Dernier raid'), bits: SKO.tr('Derniers bits'), topbits: SKO.tr('Top bits du jour'), topgift: SKO.tr('Top donneur du jour'), topchat: SKO.tr('Top tchatteur du jour'), follow: SKO.tr('Dernier follow'), tip: SKO.tr('Dernier don') };
   var ICONS = { sub: '⭐', gift: '🎁', raid: '🚀', bits: '💎', topbits: '👑', topgift: '🏆', topchat: '💬', follow: '💜', tip: '💸' };
   var num = SKO.num, el = SKO.el;
   var list = document.getElementById('list');
@@ -75,7 +75,7 @@
     if (k === 'tip') return { n: v.n, x: v.c };
     if (k === 'follow') return { n: v.n, x: '' };
     if (k === 'bits' || k === 'topbits') return { n: v.n, x: v.c + ' bits' };
-    if (k === 'sub') return { n: v.n, x: v.m > 1 ? v.m + ' mois' : '' };
+    if (k === 'sub') return { n: v.n, x: v.m > 1 ? v.m + SKO.tr(' mois') : '' };
     return { n: v.n, x: '' };
   }
   function itemEl(k){
@@ -127,7 +127,7 @@
     save(); render(changed);
   }
   function onMessage(m){
-    if (m.cmd && m.isMod && m.cmd.name === 'derniers' && (m.cmd.args[0] || '').toLowerCase() === 'reset'){ SKO.store.del(key); load(); save(); render(); }
+    if (m.cmd && m.isMod && (m.cmd.name === 'derniers' || m.cmd.name === 'latest') && (m.cmd.args[0] || '').toLowerCase() === 'reset'){ SKO.store.del(key); load(); save(); render(); }
   }
 
   SKO.params(DEFAULTS, function(p){

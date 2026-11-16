@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <!--
   Lecture vocale du tchat : page à laisser ouverte dans un onglet pendant le live
   (pas une source OBS). Utilise la synthèse vocale du navigateur (speechSynthesis),
@@ -166,8 +166,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
@@ -184,15 +185,16 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     voices = synth.getVoices();
     var keep = voiceSel.value || (SK.store.get('sk-voix') || {}).voice || '';
     voiceSel.textContent = '';
+    var LRX = SK.lang === 'en' ? /^en/i : /^fr/i; // voix de la langue du site en premier
     var sorted = voices.slice().sort(function(a, b){
-      var fa = /^fr/i.test(a.lang) ? 0 : 1, fb = /^fr/i.test(b.lang) ? 0 : 1;
+      var fa = LRX.test(a.lang) ? 0 : 1, fb = LRX.test(b.lang) ? 0 : 1;
       return fa - fb || a.name.localeCompare(b.name);
     });
     var def = document.createElement('option'); def.value = ''; def.textContent = 'Voix par défaut'; voiceSel.appendChild(def);
     sorted.forEach(function(v){ var o = document.createElement('option'); o.value = v.name; o.textContent = v.name + ' (' + v.lang + ')'; voiceSel.appendChild(o); });
     voiceSel.value = keep;
     if (voiceSel.value !== keep){
-      var fr = sorted.find(function(v){ return /^fr/i.test(v.lang); });
+      var fr = sorted.find(function(v){ return LRX.test(v.lang); });
       voiceSel.value = fr ? fr.name : '';
     }
   }
@@ -203,7 +205,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function clean(m){
     var text = '';
     SKT.pieces(m.text, m.emotes, true).forEach(function(p){ text += p.emote ? (P.noemotes === '1' ? ' ' : ' ' + p.name + ' ') : p.text; });
-    if (P.nolinks === '1') text = text.replace(/\bhttps?:\/\/\S+|\bwww\.\S+|\b\S+\.(com|fr|net|org|tv|gg|io|be|ch|ca|ly)(\/\S*)?\b/gi, ' un lien ');
+    if (P.nolinks === '1') text = text.replace(/\bhttps?:\/\/\S+|\bwww\.\S+|\b\S+\.(com|fr|net|org|tv|gg|io|be|ch|ca|ly)(\/\S*)?\b/gi, ' ' + SK.tr('un lien') + ' ');
     text = text.replace(/(.)\1{3,}/g, '$1$1$1')     // "aaaaaaa" -> "aaa"
                .replace(/(\b\w+\b)(\s+\1\b){2,}/gi, '$1 $1') // "LUL LUL LUL LUL" -> "LUL LUL"
                .replace(/\s+/g, ' ').trim();
@@ -224,7 +226,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 
   function enqueue(item){
     var max = +P.queue || 8;
-    while (queue.length >= max){ var dropped = queue.shift(); addLog(dropped.name, dropped.text, true, 'sauté'); }
+    while (queue.length >= max){ var dropped = queue.shift(); addLog(dropped.name, dropped.text, true, SK.tr('sauté')); }
     queue.push(item); updateQ(); next();
   }
   function next(){
@@ -232,7 +234,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     var it = queue.shift(); updateQ();
     var u = new SpeechSynthesisUtterance(it.say);
     var v = voices.find(function(x){ return x.name === P.voice; });
-    if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'fr-FR';
+    if (v){ u.voice = v; u.lang = v.lang; } else u.lang = SK.lang === 'en' ? 'en-US' : 'fr-FR';
     u.rate = +P.rate || 1; u.pitch = +P.pitch || 1; u.volume = (+P.vol || 0) / 100;
     speaking = true; player.classList.add('speaking');
     nowEl.className = 'txt'; nowEl.textContent = '';

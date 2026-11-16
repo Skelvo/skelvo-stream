@@ -365,3 +365,5 @@ html, body{ overflow-x: clip; overscroll-behavior-x: none; max-width: 100%; }
 .auth-wrap{ display: grid; gap: 12px; margin-bottom: 14px; }
 .auth-wrap .auth-box{ margin: 0; }
 .se-field input.bad{ border-color: #ffb02e; }
+.lang-btn{ font: inherit; font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; cursor: pointer; margin-left: 4px; }
+.lang-btn:hover{ color: var(--text); border-color: var(--muted); }

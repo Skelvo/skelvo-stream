@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <!--
   Connexions (sans serveur) :
   - Twitch : flux OAuth « implicite ». Twitch renvoie un jeton dans l'adresse
@@ -95,8 +95,9 @@
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
@@ -126,7 +127,7 @@
     var t = SK.store.get('sk-twitch');
     if (t && t.token){
       $('tw-dot').className = 'dot ok'; $('tw-title').textContent = 'Connecté : ' + t.login;
-      $('tw-sub').textContent = t.until ? 'Valable jusqu\'au ' + new Date(t.until).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ' environ.' : '';
+      $('tw-sub').textContent = t.until ? 'Valable jusqu\'au ' + new Date(t.until).toLocaleDateString(SK.lang === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long' }) + ' environ.' : '';
       $('tw-login').textContent = 'Reconnecter'; $('tw-logout').hidden = false;
     } else {
       $('tw-dot').className = 'dot'; $('tw-title').textContent = 'Non connecté';

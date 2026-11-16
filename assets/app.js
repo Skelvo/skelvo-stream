@@ -25,24 +25,149 @@
     del: function(k){ try { localStorage.removeItem(k); } catch(e){} }
   };
 
-  /* ---------- Traduction ---------- */
+  /* ---------- Traduction ----------
+     Le français est écrit directement dans le HTML. En anglais, chaque texte de
+     la page est cherché dans le dictionnaire assets/lang-en.js (clé = le texte
+     français exact) et remplacé. Les textes ajoutés ensuite par les scripts
+     (messages, étapes, toasts) sont traduits au vol par un MutationObserver.
+     Un paragraphe qui mélange texte et <b>/<a>… est traduit d'un bloc :
+     la clé garde les balises sans leurs attributs (<b>…</b>, <a>…</a>), et
+     les attributs d'origine (liens) sont recopiés sur la traduction. */
   var qs = new URLSearchParams(location.search);
-  SK.lang = (qs.get('lang') || SK.store.get('sk-lang') || (navigator.language || 'fr')).slice(0, 2).toLowerCase();
-  SK.t = function(key, fallback){
-    var d = SK.dict[SK.lang];
-    return (d && d[key]) || fallback;
+  function pickLang(){
+    var l = qs.get('lang') || SK.store.get('sk-lang') || (navigator.language || 'fr');
+    return String(l).slice(0, 2).toLowerCase() === 'fr' ? 'fr' : 'en';
+  }
+  SK.lang = pickLang();
+  var EN = window.SK_EN || { t: {}, v: {}, rx: [] };
+  var D = SK.lang === 'en' ? EN : null;
+  function norm(s){ return String(s).replace(/\s+/g, ' ').trim(); }
+  var missing = window.SK_I18N_COLLECT ? (window.__miss = window.__miss || {}) : null;
+  var enVals = null;
+  function isEnglish(k){
+    if (!enVals){ enVals = {}; [EN.t, EN.v].forEach(function(o){ for (var x in o) enVals[norm(o[x])] = 1; }); }
+    return enVals[k] || /^(Step \d+ of|Next: |Size \d|Pack |Play |Command for |Connect)/.test(k);
+  }
+  function miss(k, kind){
+    if (missing && isEnglish(k)) return; if (missing && /[a-zA-Zàâçéèêëîïôûùüœ]{2}/.test(k)) missing[k] = kind; }
+  /** Traduit une phrase française (exacte, ou par motif). */
+  SK.tr = function(s){
+    if (!D || s == null) return s;
+    var k = norm(s); if (!k) return s;
+    if (Object.prototype.hasOwnProperty.call(D.t, k)) return D.t[k];
+    for (var i = 0; i < D.rx.length; i++){ if (D.rx[i][0].test(k)) return k.replace(D.rx[i][0], D.rx[i][1]); }
+    miss(k, 'text');
+    return s;
   };
-  SK.applyI18n = function(root){
-    var d = SK.dict[SK.lang];
-    if (!d) return; // français (ou langue sans dictionnaire) : le HTML fait foi
+  SK.t = function(key, fallback){ return SK.tr(fallback); };
+  var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, IFRAME: 1, CANVAS: 1, SVG: 1, svg: 1, NOSCRIPT: 1, CODE: 1 };
+  var INLINE = { B: 1, STRONG: 1, I: 1, EM: 1, A: 1, SMALL: 1, BR: 1, KBD: 1, U: 1, CODE: 1 };
+  function inlineOnly(el){
+    for (var c = el.firstChild; c; c = c.nextSibling){
+      if (c.nodeType === 1){ if (!INLINE[c.tagName] || c.id || c.hasAttribute('data-noi18n') || !inlineOnly(c)) return false; }
+      else if (c.nodeType !== 3) return false;
+    }
+    return true;
+  }
+  function mixed(el){
+    if (!el.firstElementChild || !inlineOnly(el)) return false;
+    for (var c = el.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && norm(c.data)) return true;
+    return false;
+  }
+  function canon(el){
+    var out = '';
+    for (var c = el.firstChild; c; c = c.nextSibling){
+      if (c.nodeType === 3) out += c.data;
+      else if (c.tagName === 'BR') out += '<br>';
+      else { var t = c.tagName.toLowerCase(); out += '<' + t + '>' + canon(c) + '</' + t + '>'; }
+    }
+    return out;
+  }
+  SK._canon = function(el){ return norm(canon(el)); };
+  function applyMixed(el, html){
+    var queues = {};
+    el.querySelectorAll('*').forEach(function(o){ (queues[o.tagName] = queues[o.tagName] || []).push(o); });
+    var tpl = document.createElement('template'); tpl.innerHTML = html;
+    tpl.content.querySelectorAll('*').forEach(function(n){
+      var o = (queues[n.tagName] || []).shift();
+      if (o) for (var i = 0; i < o.attributes.length; i++) n.setAttribute(o.attributes[i].name, o.attributes[i].value);
+    });
+    el.replaceChildren(tpl.content);
+  }
+  function trText(node){
+    var raw = node.data, k = norm(raw); if (!k || !/[^\d\s\W]/.test(k)) return;
+    var v = SK.tr(k); if (v === k) return;
+    var lead = raw.match(/^\s*/)[0], trail = raw.match(/\s*$/)[0];
+    node.data = (lead ? ' ' : '') + v + (trail ? ' ' : '');
+  }
+  var ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  function trAttrs(el){
+    for (var i = 0; i < ATTRS.length; i++){
+      var a = el.getAttribute(ATTRS[i]); if (!a) continue;
+      var v = SK.tr(a); if (v !== a) el.setAttribute(ATTRS[i], v);
+    }
+  }
+  function trValue(el){
+    // textes par défaut des overlays (champs du formulaire), avant que l'éditeur ne les lise
+    if (el.tagName === 'TEXTAREA' && /\n/.test(el.value)){
+      // une valeur par ligne (cases du bingo, panneaux…)
+      var lines = el.value.split('\n').map(function(l){ var k = norm(l); var t = k && (Object.prototype.hasOwnProperty.call(D.v, k) ? D.v[k] : Object.prototype.hasOwnProperty.call(D.t, k) ? D.t[k] : null); if (k && t === null) miss(k, 'value'); return t === null ? l : t; });
+      el.value = el.defaultValue = el.textContent = lines.join('\n'); return;
+    }
+    var k = norm(el.value); if (!k) return;
+    var has = Object.prototype.hasOwnProperty, nv = has.call(D.v, k) ? D.v[k] : has.call(D.t, k) && !/</.test(D.t[k]) ? D.t[k] : null;
+    if (nv !== null){ el.value = nv; el.defaultValue = nv; if (el.tagName === 'TEXTAREA') el.textContent = nv; }
+    else if (/[a-zA-Zàéè]{3}/.test(k) && !/^[\w-]+$/.test(k)) miss(k, 'value');
+  }
+  function walk(el){
+    if (el.nodeType === 3){ trText(el); return; }
+    if (el.nodeType !== 1 || SKIP[el.tagName] || el.hasAttribute('data-noi18n')) return;
+    trAttrs(el);
+    if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type === 'text')) { if (el.hasAttribute('value') || el.tagName === 'TEXTAREA') trValue(el); return; }
+    if (mixed(el)){
+      var k = SK._canon(el);
+      if (Object.prototype.hasOwnProperty.call(D.t, k)){ applyMixed(el, D.t[k]); return; }
+      miss(k, 'html');
+    }
+    for (var c = el.firstChild; c; c = c.nextSibling) walk(c);
+  }
+  function inSkipped(n){
+    for (var e = n.nodeType === 1 ? n : n.parentNode; e && e !== document.body; e = e.parentNode){
+      if (e.nodeType === 1 && (SKIP[e.tagName] || e.hasAttribute('data-noi18n'))) return true;
+    }
+    return false;
+  }
+  SK.translate = function(root){ if (D) walk(root || document.body); };
+  function startI18n(){
     document.documentElement.lang = SK.lang;
-    (root || document).querySelectorAll('[data-i18n]').forEach(function(el){
-      var v = d[el.getAttribute('data-i18n')]; if (v) el.innerHTML = v; // dictionnaires écrits par nous : le HTML (<b>, liens) est permis
-    });
-    (root || document).querySelectorAll('[data-i18n-ph]').forEach(function(el){
-      var v = d[el.getAttribute('data-i18n-ph')]; if (v) el.placeholder = v;
-    });
-  };
+    if (!D) return;
+    document.title = SK.tr(document.title);
+    SK.translate(document.body);
+    new MutationObserver(function(list){
+      list.forEach(function(m){
+        if (inSkipped(m.target)) return;
+        if (m.type === 'characterData'){ trText(m.target); return; }
+        if (m.type === 'attributes'){ trAttrs(m.target); return; }
+        m.addedNodes.forEach(function(n){
+          if (inSkipped(n)) return;
+          if (n.nodeType === 3 && n.parentNode && mixed(n.parentNode)){ walk(n.parentNode); return; }
+          walk(n);
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  }
+  SK.setLang = function(l){ SK.store.set('sk-lang', l); var u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.href); };
+  SK.applyI18n = function(){};
+  startI18n();
+  // Bouton de langue dans la barre du haut
+  (function(){
+    var nav = document.querySelector('.topnav'); if (!nav) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'lang-btn'; b.setAttribute('data-noi18n', '');
+    b.textContent = SK.lang === 'en' ? 'FR' : 'EN';
+    b.setAttribute('aria-label', SK.lang === 'en' ? 'Passer en français' : 'Switch to English');
+    b.addEventListener('click', function(){ SK.setLang(SK.lang === 'en' ? 'fr' : 'en'); });
+    nav.appendChild(b);
+  })();
 
   /* ---------- Toast ---------- */
   var toastEl, toastTimer;
@@ -123,6 +248,7 @@
     function buildUrl(p){
       var u = new URL(base.href);
       Object.keys(p).forEach(function(k){ u.searchParams.set(k, p[k]); });
+      if (SK.lang === 'en') u.searchParams.set('lang', 'en');
       // Outils qui profitent des connexions (page connexion/) : on ajoute les jetons au lien OBS
       if (opts.auth){
         var tw = SK.store.get('sk-twitch'), se = SK.seKey();
@@ -473,7 +599,7 @@
      est sortie et propose de rafraîchir avec un bandeau en haut.
      À chaque mise en ligne : changer les deux numéros ensemble.
      ====================================================================== */
-  SK.VERSION = '2.11';
+  SK.VERSION = '3.0';
   var ROOT = new URL('../', (document.currentScript && document.currentScript.src) || location.href);
   function showInstalled(){
     var last = SK.store.get('sk-version');
@@ -719,5 +845,4 @@
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(t){ document.addEventListener(t, function(e){ e.preventDefault(); }, { passive: false }); });
   document.addEventListener('touchmove', function(e){ if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
-  document.addEventListener('DOMContentLoaded', function(){ SK.applyI18n(); });
 })();

@@ -50,14 +50,14 @@
 <body>
 <div class="box sk-surface" id="box"><div class="label" id="label"></div><div class="time" id="time">0:00</div><div class="bar"><i id="bar"></i></div><div class="state" id="state"></div></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', start: '120', t1: '5', t2: '10', t3: '20', gift: '5', bits: '1', raid: '0', max: '0',
-    label: 'Subathon', cmd: 'timer', endtext: 'Terminé !', style: 'card', tc: 'text', showbar: '0', fs: '72', demo: '0'
+    label: 'Subathon', cmd: 'timer', endtext: SKO.tr('Terminé !'), style: 'card', tc: 'text', showbar: '0', fs: '72', demo: '0'
   });
   var num = SKO.num;
   var timeEl = document.getElementById('time'), stateEl = document.getElementById('state'), labelEl = document.getElementById('label'), box = document.getElementById('box');
@@ -97,7 +97,7 @@
     timeEl.textContent = left <= 0 ? (P.endtext || '0:00') : SKO.clock(left);
     var ref = num(P.max, 0, 100000, 0) * 60 || Math.max(num(P.start, 0, 100000, 120) * 60, left);
     document.getElementById('bar').style.width = Math.min(100, left / ref * 100) + '%';
-    stateEl.textContent = (!S.running && left > 0) ? 'En pause' : '';
+    stateEl.textContent = (!S.running && left > 0) ? SKO.tr('En pause') : '';
   }
   setInterval(function(){ if (S) draw(); }, 250);
 

@@ -56,13 +56,13 @@
 <body>
 <div class="gw sk-surface hidden" id="gw"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', cmd: 'participer', mcmd: 'giveaway', title: 'Giveaway !', prize: '', subonly: '0', winners: '1',
+    ch: '', cmd: SKO.tr('participer'), mcmd: 'giveaway', title: SKO.tr('Giveaway !'), prize: '', subonly: '0', winners: '1',
     dur: '0', anim: 'slot', hide: '25', fs: '26', demo: '0'
   });
   var num = SKO.num, el = SKO.el;
@@ -106,8 +106,8 @@
   /* ---------- Affichage ---------- */
   function head(){
     var f = document.createDocumentFragment();
-    f.appendChild(el('div', 'kick', 'Tirage au sort'));
-    f.appendChild(el('div', 'title', P.title || 'Giveaway !'));
+    f.appendChild(el('div', 'kick', SKO.tr('Tirage au sort')));
+    f.appendChild(el('div', 'title', P.title || SKO.tr('Giveaway !')));
     if (S.prize) f.appendChild(el('div', 'prize', '🎁 ' + S.prize));
     return f;
   }
@@ -118,12 +118,12 @@
     box.textContent = ''; box.appendChild(head());
     if (S.state === 'open' || S.state === 'closed'){
       var how = el('div', 'how');
-      if (S.state === 'open'){ how.appendChild(document.createTextNode('Tape ')); how.appendChild(el('code', '', '!' + cmdName())); how.appendChild(document.createTextNode(P.subonly === '1' ? ' (abonnés)' : ' pour participer')); }
-      else how.textContent = 'Participations fermées · tirage imminent';
+      if (S.state === 'open'){ how.appendChild(document.createTextNode(SKO.tr('Tape '))); how.appendChild(el('code', '', '!' + cmdName())); how.appendChild(document.createTextNode(P.subonly === '1' ? SKO.tr(' (abonnés)') : SKO.tr(' pour participer'))); }
+      else how.textContent = SKO.tr('Participations fermées · tirage imminent');
       box.appendChild(how);
       var meta = el('div', 'meta'), a = el('span'); a.appendChild(el('b', 'cnt', String(S.people.length))); a.appendChild(document.createTextNode(' participants'));
       meta.appendChild(a);
-      if (S.end && S.state === 'open'){ var t = el('span'); t.appendChild(el('b', 'left', '')); t.appendChild(document.createTextNode(' restant')); meta.appendChild(t); }
+      if (S.end && S.state === 'open'){ var t = el('span'); t.appendChild(el('b', 'left', '')); t.appendChild(document.createTextNode(SKO.tr(' restant'))); meta.appendChild(t); }
       box.appendChild(meta);
       var j = el('div', 'joins'); S.people.slice(-14).forEach(function(p){ j.appendChild(el('span', '', p.n)); }); box.appendChild(j);
       if (S.end && S.state === 'open'){
@@ -131,7 +131,7 @@
         tick(); tickTimer = setInterval(tick, 500);
       }
     } else if (S.state === 'done'){
-      var w = el('div', 'winners'); w.appendChild(el('div', 'winlabel', S.winners.length > 1 ? 'Les gagnants' : 'Le gagnant'));
+      var w = el('div', 'winners'); w.appendChild(el('div', 'winlabel', S.winners.length > 1 ? SKO.tr('Les gagnants') : SKO.tr('Le gagnant')));
       S.winners.forEach(function(x){ w.appendChild(el('div', 'winner', x.n)); });
       box.appendChild(w);
       var h = num(P.hide, 0, 600, 25); if (h) hideTimer = setTimeout(cancel, h * 1000);
@@ -194,7 +194,7 @@
     }
   }
 
-  function cmdName(){ return String(P.cmd || 'participer').toLowerCase().replace(/^!/, ''); }
+  function cmdName(){ return String(P.cmd || SKO.tr('participer')).toLowerCase().replace(/^!/, ''); }
   function onMessage(m){
     if (!m.cmd) return;
     var mc = String(P.mcmd || 'giveaway').toLowerCase().replace(/^!/, '');
@@ -227,7 +227,7 @@
         source = SKT.demo(h, { min: 450, spread: 300, extra: function(){
           step++;
           var mod = SKT.DEMO_USERS[2];
-          if (step === 1) return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' start Une carte cadeau de 20 €');
+          if (step === 1) return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + SKO.tr(' start Une carte cadeau de 20 €'));
           if (step > 1 && step < 16) return SKT.fakeMessage({ n: ['Lunaa_', 'KevGaming', 'Choupette', 'PixelPaulo', 'Tonton_Raclette', 'Mamie_Gameuse', 'xXDarkSasukeXx', 'Zoé_42', 'BaguetteMan', 'LaMouette', 'Kiki', 'Nono', 'Patate', 'Sushi'][step - 2], c: '', b: 'subscriber/1' }, '!' + cmdName());
           if (step === 18) return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' tirage');
           if (step === 40){ step = 0; return SKT.fakeMessage(mod, '!' + (P.mcmd || 'giveaway') + ' annule'); }

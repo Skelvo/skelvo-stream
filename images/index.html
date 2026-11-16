@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <!--
   Atelier images : tout est dessiné dans un <canvas> du navigateur, aucune image
   n'est envoyée nulle part.
@@ -258,8 +258,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
-<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
+<script src="../assets/overlay.js?v=4"></script>
 <script>
 (function(){
   'use strict';
@@ -733,6 +734,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 
   /* ================= Planning de la semaine ================= */
   var DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  if (SK.lang === 'en') DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  var LOC = SK.lang === 'en' ? 'en-GB' : 'fr-FR';
   var plSaved = SK.store.get('sk-planning') || {};
   var plDays = plSaved.days || DAYS.map(function(d, i){ return { on: i === 2 || i === 5, time: i === 5 ? '21h' : '20h', what: i === 2 ? 'Minecraft entre potes' : i === 5 ? 'Elden Ring : boss final' : '' }; });
   ['pltitle', 'plname', 'ploff', 'pldim', 'plweek'].forEach(function(k){ if (plSaved[k] != null) $(k).value = plSaved[k]; });
@@ -763,7 +766,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       var fam = r[0], x = c.getContext('2d'); c.width = W; c.height = H;
       socialBg(x, W, H, pk, +$('pldim').value);
       var col = textColors(pk), ac = '#' + pk.t.ac, dates = weekDates(), M = W * .07;
-      var title = $('pltitle').value || 'Planning', range = dates[0].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ' – ' + dates[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      var title = $('pltitle').value || 'Planning', range = dates[0].toLocaleDateString(LOC, { day: 'numeric', month: 'long' }) + ' – ' + dates[6].toLocaleDateString(LOC, { day: 'numeric', month: 'long' });
       var up = pk.t.up === '1';
       // en-tête : petite date au-dessus, puis le titre, avec de l'air autour
       var logo = plLogo();
@@ -803,7 +806,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
           x.textAlign = 'left'; x.textBaseline = 'middle';
           x.fillStyle = dd.on ? col.tx : col.mu;
           x.font = '800 ' + Math.round(rh * .3) + 'px Inter, sans-serif'; x.fillText(DAYS[i].slice(0, 3).toUpperCase(), M + W * .045, cy + rh * .38);
-          x.font = '600 ' + Math.round(rh * .24) + 'px Inter, sans-serif'; x.fillStyle = col.mu; x.fillText(dt.getDate() + ' ' + dt.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''), M + W * .045, cy + rh * .7);
+          x.font = '600 ' + Math.round(rh * .24) + 'px Inter, sans-serif'; x.fillStyle = col.mu; x.fillText(dt.getDate() + ' ' + dt.toLocaleDateString(LOC, { month: 'short' }).replace('.', ''), M + W * .045, cy + rh * .7);
           if (dd.on){
             var tw = W * .14, tx0 = M + W * .2;
             x.fillStyle = ac; rr(x, tx0, cy + rh * .26, tw, rh * .48, 999); x.fill();
@@ -876,7 +879,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       else if (f === 'story'){ tx0 = M; maxW = W - M * 2; tyb = img ? iy + ih + H * .07 : H * .38; }
       else { tx0 = M; maxW = W - M * 2; tyb = img ? iy + ih + H * .07 : H * .32; }
       var bs = Math.round(H * (f === 'story' ? .018 : .028));
-      var bh = liveBadge(x, ($('lvbadge').value || 'EN LIVE').toUpperCase(), tx0, tyb - bs * 2.2, bs);
+      var bh = liveBadge(x, ($('lvbadge').value || SK.tr('EN LIVE')).toUpperCase(), tx0, tyb - bs * 2.2, bs);
       var y = tyb + bh * .4;
       x.textAlign = 'left'; x.fillStyle = col.tx; x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 18;
       var tsz = Math.round(H * (f === 'story' ? .05 : f === 'wide' ? .075 : .065));

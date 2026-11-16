@@ -68,17 +68,17 @@
 <body>
 <div id="stage"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', style: 'card', anim: 'pop', dur: '7', sound: 'chime', vol: '60', confetti: '1', showmsg: '1', emotes3: '1',
     sub: '1', gift: '1', bits: '1', raid: '1', minbits: '1', minraid: '1',
-    tsub: '{name} s\'abonne !', tresub: '{name} se réabonne · {months} mois !', tgift: '{name} offre un abonnement à {recipient} !',
-    tbomb: '{name} offre {count} abonnements !', tfollow: '{name} suit la chaîne !', treward: '{name} utilise « {reward} »', ttip: '{name} fait un don de {amount} !',
-    follow: '1', reward: '1', tip: '1', mintip: '0', ifollow: '💜', ireward: '✨', itip: '💸', tk: '', se: '', tbits: '{name} envoie {amount} bits !', traid: 'Raid de {name} avec {count} viewers !',
+    tsub: SKO.tr('{name} s\'abonne !'), tresub: SKO.tr('{name} se réabonne · {months} mois !'), tgift: SKO.tr('{name} offre un abonnement à {recipient} !'),
+    tbomb: SKO.tr('{name} offre {count} abonnements !'), tfollow: SKO.tr('{name} suit la chaîne !'), treward: SKO.tr('{name} utilise « {reward} »'), ttip: SKO.tr('{name} fait un don de {amount} !'),
+    follow: '1', reward: '1', tip: '1', mintip: '0', ifollow: '💜', ireward: '✨', itip: '💸', tk: '', se: '', tbits: SKO.tr('{name} envoie {amount} bits !'), traid: SKO.tr('Raid de {name} avec {count} viewers !'),
     img: '', isub: '⭐', igift: '🎁', ibits: '💎', iraid: '🚀', img_sub: '', img_gift: '', img_bits: '', img_raid: '', imgh: '3.6',
     snd: '', pos: 'center', timebar: '1', wiggle: '1', fs: '34', demo: '0'
   });
@@ -122,7 +122,7 @@
     String(tpl || '').split(/(\{\w+\})/).forEach(function(part){
       var m = /^\{(\w+)\}$/.exec(part);
       if (!m){ if (part) frag.appendChild(document.createTextNode(part)); return; }
-      var amount = e.type === 'tip' ? (Number(e.amount) || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (e.currency === 'EUR' ? '€' : e.currency || '€') : e.amount;
+      var amount = e.type === 'tip' ? (Number(e.amount) || 0).toLocaleString(SKO.locale, { maximumFractionDigits: 2 }) + ' ' + (e.currency === 'EUR' ? '€' : e.currency || '€') : e.amount;
       var v = { name: e.name, months: e.months, count: e.count, amount: amount, recipient: e.recipient, tier: e.tier, reward: e.reward, cost: e.cost }[m[1]];
       if (v == null) v = '';
       frag.appendChild(m[1] === 'name' || m[1] === 'recipient' ? el('b', '', String(v)) : document.createTextNode(String(v)));
@@ -223,12 +223,12 @@
       if (sk === 'demo'){
         var seq = [
           { type: 'follow', name: 'Zoé_42', text: '' },
-          { type: 'tip', amount: 5, currency: 'EUR', name: 'BaguetteMan', text: 'Merci pour les lives !' },
-          { type: 'sub', tier: 1, months: 1, name: 'Lunaa_', text: 'Trop contente d\'être là <3' },
-          { type: 'bits', amount: 500, name: 'KevGaming', text: 'Cheer500 GG pour la win !' },
+          { type: 'tip', amount: 5, currency: 'EUR', name: 'BaguetteMan', text: SKO.tr('Merci pour les lives !') },
+          { type: 'sub', tier: 1, months: 1, name: 'Lunaa_', text: SKO.tr('Trop contente d\'être là <3') },
+          { type: 'bits', amount: 500, name: 'KevGaming', text: SKO.tr('Cheer500 GG pour la win !') },
           { type: 'giftbomb', count: 5, tier: 1, name: 'Mamie_Gameuse', text: '' },
           { type: 'raid', count: 42, name: 'Choupette', text: '' },
-          { type: 'resub', tier: 1, months: 14, name: 'Tonton_Raclette', text: 'Toujours fidèle au poste SeemsGood' },
+          { type: 'resub', tier: 1, months: 14, name: 'Tonton_Raclette', text: SKO.tr('Toujours fidèle au poste SeemsGood') },
           { type: 'subgift', tier: 1, name: 'PixelPaulo', recipient: 'xXDarkSasukeXx', text: '' }
         ];
         var i = 0;

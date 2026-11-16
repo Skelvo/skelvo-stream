@@ -20,6 +20,8 @@
    ========================================================================== */
 (function(){
   'use strict';
+  // textes de démo traduits dans les overlays anglais (voir SKO.tr dans overlay.js)
+  function L(s){ return window.SKO && window.SKO.tr ? window.SKO.tr(s) : s; }
   var T = window.SKT = {};
 
   function el(tag, cls){ var e = document.createElement(tag); if (cls) e.className = cls; return e; }
@@ -242,7 +244,7 @@
         if (d.type === 'response' && h.authStatus) h.authStatus(d.error ? 'se-invalid' : 'se-ok');
         if (d.type !== 'message' || !d.data) return;
         var don = d.data.donation || d.data, u = don.user || {};
-        if (h.event) h.event({ type: 'tip', id: 'se:' + (d.data._id || d.id || Date.now()), name: u.username || u.name || don.username || 'Quelqu\'un',
+        if (h.event) h.event({ type: 'tip', id: 'se:' + (d.data._id || d.id || Date.now()), name: u.username || u.name || don.username || L('Quelqu\'un'),
           amount: don.amount, currency: don.currency || '€', text: don.message || '' });
       };
       sock.onclose = function(){ if (sock !== ws || closed) return; retry = Math.min(retry + 1, 6); setTimeout(open, 1000 * Math.pow(2, retry)); };
@@ -395,10 +397,10 @@
     { n: 'PixelPaulo', c: '#00ff7f', b: '' }, { n: 'Nightbot', c: '#7c7cff', b: 'moderator/1', bot: true }
   ];
   var DEMO_MSGS = [
-    'Salut tout le monde HeyGuys', 'GG !!! LUL', 'mais non il a raté le saut LUL LUL', 'Kappa',
-    'Trop beau le nouveau cadre <3', 'tu joues à quoi après ?', 'Première fois que je passe ici, ça a l\'air cool',
-    'NotLikeThis NotLikeThis', 'c\'est quoi ta config ?', 'SeemsGood', 'allez on y croit !!', 'BibleThump il est mort',
-    'la musique est trop bien', 'VoHiYo', 'bonne soirée à tous <3', 'jsuis sûr il va réussir cette fois Kappa',
+    L('Salut tout le monde HeyGuys'), 'GG !!! LUL', L('mais non il a raté le saut LUL LUL'), 'Kappa',
+    L('Trop beau le nouveau cadre <3'), L('tu joues à quoi après ?'), L('Première fois que je passe ici, ça a l\'air cool'),
+    'NotLikeThis NotLikeThis', L('c\'est quoi ta config ?'), 'SeemsGood', L('allez on y croit !!'), L('BibleThump il est mort'),
+    L('la musique est trop bien'), 'VoHiYo', L('bonne soirée à tous <3'), L('jsuis sûr il va réussir cette fois Kappa'),
     'CoolCat CoolCat CoolCat', 'DinoDance DinoDance', '1', '2', 'LUL LUL LUL LUL'
   ];
   T.demoEmotesTag = function(text){
@@ -441,18 +443,18 @@
       } else if (opts.events && n % 7 === 0 && h.event){
         var u = rnd(T.DEMO_USERS.slice(0, 7));
         var e = rnd([
-          { type: 'sub', tier: 1, months: 1, sys: u.n + ' s\'est abonné(e) au niveau 1.' },
-          { type: 'resub', tier: 1, months: 6, text: 'Toujours là <3', sys: u.n + ' s\'est abonné(e) au niveau 1. Ça fait 6 mois d\'affilée !' },
-          { type: 'giftbomb', count: 5, tier: 1, sys: u.n + ' offre 5 abonnements à la communauté !' },
+          { type: 'sub', tier: 1, months: 1, sys: u.n + L(' s\'est abonné(e) au niveau 1.') },
+          { type: 'resub', tier: 1, months: 6, text: L('Toujours là <3'), sys: u.n + L(' s\'est abonné(e) au niveau 1. Ça fait 6 mois d\'affilée !') },
+          { type: 'giftbomb', count: 5, tier: 1, sys: u.n + L(' offre 5 abonnements à la communauté !') },
           { type: 'bits', amount: 500, text: 'Cheer500 trop fort' },
-          { type: 'raid', count: 42, sys: '42 spectateurs de ' + u.n + ' arrivent en raid !' }
+          { type: 'raid', count: 42, sys: L('42 spectateurs de ') + u.n + L(' arrivent en raid !') }
         ]);
         e.name = u.n; e.login = u.n.toLowerCase(); e.color = u.c; e.text = e.text || ''; e.emotes = T.demoEmotesTag(e.text);
         h.event(e);
         if (e.type === 'giftbomb') for (var i = 0; i < e.count; i++) h.event({ type: 'subgift', tier: 1, fromBomb: true, name: u.n, login: u.n.toLowerCase(), recipient: rnd(T.DEMO_USERS).n, text: '', emotes: '' });
       } else if (h.message){
         var user = rnd(T.DEMO_USERS);
-        var text = user.bot ? '!discord → rejoins le serveur ici' : rnd(opts.messages || DEMO_MSGS);
+        var text = user.bot ? L('!discord → rejoins le serveur ici') : rnd(opts.messages || DEMO_MSGS);
         h.message(T.fakeMessage(user, text, { action: !user.bot && Math.random() < .04 }));
       }
       timer = setTimeout(tick, (opts.min || 900) + Math.random() * (opts.spread || 1600));

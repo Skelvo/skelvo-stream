@@ -55,13 +55,13 @@
 <body>
 <div class="game sk-surface hidden" id="game"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', duel: '1', race: '1', dcmd: 'duel', acmd: 'accepte', rcmd: 'course', who: 'mods', reg: '30', cool: '30', hide: '10', fs: '26', demo: '0'
+    ch: '', duel: '1', race: '1', dcmd: 'duel', acmd: SKO.tr('accepte'), rcmd: SKO.tr('course'), who: 'mods', reg: '30', cool: '30', hide: '10', fs: '26', demo: '0'
   });
   var num = SKO.num, el = SKO.el;
   var box = document.getElementById('game');
@@ -84,10 +84,10 @@
     game = { type: 'duel', a: a.name, al: a.login, b: b, bl: b.toLowerCase(), state: 'wait' };
     box.textContent = '';
     box.appendChild(el('div', 'kick', 'Duel'));
-    box.appendChild(el('div', 'big', a.name + ' défie ' + b + ' !'));
-    var h = el('div', 'hint'); h.appendChild(document.createTextNode(b + ', tape ')); h.appendChild(el('code', '', '!' + cmd(P.acmd, 'accepte'))); h.appendChild(document.createTextNode(' pour accepter (60 s)'));
+    box.appendChild(el('div', 'big', a.name + SKO.tr(' défie ') + b + SKO.tr(' !')));
+    var h = el('div', 'hint'); h.appendChild(document.createTextNode(b + SKO.tr(', tape '))); h.appendChild(el('code', '', '!' + cmd(P.acmd, SKO.tr('accepte')))); h.appendChild(document.createTextNode(SKO.tr(' pour accepter (60 s)')));
     box.appendChild(h); show();
-    later(function(){ if (game && game.state === 'wait'){ box.querySelector('.hint').textContent = b + ' n\'a pas répondu… 🐔'; later(hide, 3500); game.state = 'end'; } }, 60000);
+    later(function(){ if (game && game.state === 'wait'){ box.querySelector('.hint').textContent = b + SKO.tr(' n\'a pas répondu… 🐔'); later(hide, 3500); game.state = 'end'; } }, 60000);
   }
   function fight(){
     clear(); game.state = 'fight';
@@ -137,9 +137,9 @@
   }
   function renderReg(){
     box.textContent = '';
-    box.appendChild(el('div', 'kick', 'Course'));
-    box.appendChild(el('div', 'big', 'Qui veut courir ?'));
-    var h = el('div', 'hint'); h.appendChild(document.createTextNode('Tape ')); h.appendChild(el('code', '', '!' + cmd(P.rcmd, 'course'))); h.appendChild(document.createTextNode(' pour participer · ')); h.appendChild(el('b', 'left', ''));
+    box.appendChild(el('div', 'kick', SKO.tr('Course')));
+    box.appendChild(el('div', 'big', SKO.tr('Qui veut courir ?')));
+    var h = el('div', 'hint'); h.appendChild(document.createTextNode(SKO.tr('Tape '))); h.appendChild(el('code', '', '!' + cmd(P.rcmd, SKO.tr('course')))); h.appendChild(document.createTextNode(SKO.tr(' pour participer · '))); h.appendChild(el('b', 'left', ''));
     box.appendChild(h);
     var tr = el('div', 'track'); box.appendChild(tr);
     game.runners.slice(-8).forEach(function(r){ tr.appendChild(laneEl(r)); });
@@ -152,9 +152,9 @@
     var tr = box.querySelector('.track'); if (tr) tr.appendChild(laneEl(game.runners[game.runners.length - 1]));
   }
   function startRace(){
-    if (game.runners.length < 2){ box.querySelector('.hint').textContent = 'Pas assez de coureurs… la course est annulée.'; game.state = 'end'; later(hide, 3500); return; }
+    if (game.runners.length < 2){ box.querySelector('.hint').textContent = SKO.tr('Pas assez de coureurs… la course est annulée.'); game.state = 'end'; later(hide, 3500); return; }
     game.state = 'run';
-    box.querySelector('.big').textContent = '3… 2… 1… Partez !';
+    box.querySelector('.big').textContent = SKO.tr('3… 2… 1… Partez !');
     box.querySelector('.hint').textContent = '';
     var finish = 100, order = [];
     var step = function(){
@@ -168,7 +168,7 @@
       var lead = game.runners.slice().sort(function(a, b){ return b.x - a.x; })[0];
       game.runners.forEach(function(r){ r.lane.classList.toggle('first', r === lead); });
       if (order.length >= Math.min(3, game.runners.length)){
-        box.querySelector('.big').textContent = '🏆 ' + order[0].n + ' gagne la course !';
+        box.querySelector('.big').textContent = '🏆 ' + order[0].n + SKO.tr(' gagne la course !');
         var pod = el('div', 'podium'); ['🥇', '🥈', '🥉'].forEach(function(md, i){ if (order[i]) pod.appendChild(el('div', '', md + ' ' + order[i].n)); });
         box.appendChild(pod); confetti(); game.state = 'end'; later(hide, num(P.hide, 3, 60, 10) * 1000); return;
       }
@@ -191,8 +191,8 @@
     if (!m.cmd) return;
     var c = m.cmd.name;
     if (P.duel === '1' && c === cmd(P.dcmd, 'duel') && m.cmd.args[0]) return challenge(m, m.cmd.args[0]);
-    if (P.duel === '1' && c === cmd(P.acmd, 'accepte') && game && game.type === 'duel' && game.state === 'wait' && m.login === game.bl){ game.b = m.name; return fight(); }
-    if (P.race === '1' && c === cmd(P.rcmd, 'course')){
+    if (P.duel === '1' && c === cmd(P.acmd, SKO.tr('accepte')) && game && game.type === 'duel' && game.state === 'wait' && m.login === game.bl){ game.b = m.name; return fight(); }
+    if (P.race === '1' && c === cmd(P.rcmd, SKO.tr('course'))){
       if (!game){ if (P.who === 'all' || m.isMod) openRace(); if (game) joinRace(m); return; }
       joinRace(m);
     }
@@ -212,9 +212,9 @@
         source = SKT.demo(h, { min: 600, spread: 300, extra: function(){
           step++;
           if (step === 1) return SKT.fakeMessage(U[0], '!' + cmd(P.dcmd, 'duel') + ' @KevGaming');
-          if (step === 3) return SKT.fakeMessage(U[1], '!' + cmd(P.acmd, 'accepte'));
-          if (step === 22){ lastEnd = 0; return SKT.fakeMessage(U[2], '!' + cmd(P.rcmd, 'course')); }
-          if (step > 22 && step < 29) return SKT.fakeMessage(U[step - 22], '!' + cmd(P.rcmd, 'course'));
+          if (step === 3) return SKT.fakeMessage(U[1], '!' + cmd(P.acmd, SKO.tr('accepte')));
+          if (step === 22){ lastEnd = 0; return SKT.fakeMessage(U[2], '!' + cmd(P.rcmd, SKO.tr('course'))); }
+          if (step > 22 && step < 29) return SKT.fakeMessage(U[step - 22], '!' + cmd(P.rcmd, SKO.tr('course')));
           if (step === 75){ step = 0; lastEnd = 0; }
           return { type: 'none' };
         } });

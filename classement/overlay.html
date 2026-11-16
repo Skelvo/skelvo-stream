@@ -40,13 +40,13 @@
 <body>
 <div class="board sk-surface" id="board"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', period: 'day', n: '5', title: 'Top tchatteurs', counts: '1', first: '1', hide: '', hpos: 'left', fs: '24', demo: '0'
+    ch: '', period: 'day', n: '5', title: SKO.tr('Top tchatteurs'), counts: '1', first: '1', hide: '', hpos: 'left', fs: '24', demo: '0'
   });
   var num = SKO.num, el = SKO.el;
   var board = document.getElementById('board');
@@ -60,15 +60,15 @@
     var top = SKT.stats.top(data && data.msgs, 50).filter(function(t){ return !hidden[t.login]; }).slice(0, num(P.n, 1, 10, 5));
     board.textContent = '';
     var head = el('div', 'head'); head.appendChild(el('span', 'title', P.title || ''));
-    head.appendChild(el('span', 'period', P.period === 'month' ? 'Ce mois-ci' : 'Aujourd\'hui')); board.appendChild(head);
-    if (!top.length) board.appendChild(el('div', 'empty', 'En attente des premiers messages…'));
+    head.appendChild(el('span', 'period', P.period === 'month' ? SKO.tr('Ce mois-ci') : SKO.tr('Aujourd\'hui'))); board.appendChild(head);
+    if (!top.length) board.appendChild(el('div', 'empty', SKO.tr('En attente des premiers messages…')));
     top.forEach(function(t, i){
       var r = el('div', 'row r' + (i + 1)); r.style.animationDelay = i * 60 + 'ms';
       r.appendChild(el('span', 'rank', String(i + 1))); r.appendChild(el('span', 'name', t.name));
       if (P.counts === '1'){ var c = el('span', 'count', String(t.count)); c.appendChild(el('small', '', 'msg')); r.appendChild(c); }
       board.appendChild(r);
     });
-    if (P.first === '1' && P.period !== 'month' && data && data.first){ var f = el('div', 'first', '🥇 Premier arrivé : '); f.appendChild(el('b', '', data.first)); board.appendChild(f); }
+    if (P.first === '1' && P.period !== 'month' && data && data.first){ var f = el('div', 'first', SKO.tr('🥇 Premier arrivé : ')); f.appendChild(el('b', '', data.first)); board.appendChild(f); }
   }
 
   SKO.params(DEFAULTS, function(p){
@@ -85,7 +85,7 @@
       if (source) source.close();
       // la connexion sert au comptage (si aucun autre overlay n'est ouvert) et à !classement reset
       source = sk && sk !== 'demo' ? SKT.connect(sk, { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); },
-        message: function(m){ if (m.cmd && m.isMod && m.cmd.name === 'classement' && (m.cmd.args[0] || '') === 'reset'){ SKT.stats.reset(sk); render(); } } }) : null;
+        message: function(m){ if (m.cmd && m.isMod && (m.cmd.name === 'classement' || m.cmd.name === 'leaderboard') && (m.cmd.args[0] || '') === 'reset'){ SKT.stats.reset(sk); render(); } } }) : null;
       if (sk === 'demo') SKO.tellParent('demo');
     }
   });

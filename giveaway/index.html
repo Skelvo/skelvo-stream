@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <style>
   .sw{ display: grid; place-items: center; font-size: 20px; }
   .sw-slot{ background: #19171f; border-radius: 6px; font: 800 11px 'Inter', sans-serif; color: #c4b5fd; }
@@ -115,7 +115,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
 <script>
 (function(){
   'use strict';
@@ -128,8 +129,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function showCmds(p){
     var m = '!' + (p.mcmd || 'giveaway').replace(/^!/, ''), v = '!' + (p.cmd || 'participer').replace(/^!/, '');
     cmds.textContent = '';
-    [[m + ' start Un jeu Steam', 'ouvre les participations (le texte = le lot)'], [v, 'les viewers participent'], [m + ' stop', 'ferme les participations'],
-     [m + ' tirage', 'tire le ou les gagnants'], [m + ' annule', 'cache le tirage']].forEach(function(r){
+    [[m + (SK.lang === 'en' ? ' start A Steam game' : ' start Un jeu Steam'), SK.tr('ouvre les participations (le texte = le lot)')], [v, SK.tr('les viewers participent')], [m + ' stop', SK.tr('ferme les participations')],
+     [m + (SK.lang === 'en' ? ' draw' : ' tirage'), SK.tr('tire le ou les gagnants')], [m + (SK.lang === 'en' ? ' cancel' : ' annule'), SK.tr('cache le tirage')]].forEach(function(r){
       var li = document.createElement('li'), c = document.createElement('code');
       c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
     });

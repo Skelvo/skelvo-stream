@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <!--
   Kit complet : un pack + une chaîne + une liste d'outils
   -> tous les liens des overlays, assortis,
@@ -119,7 +119,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
 <script>
 (function(){
   'use strict';
@@ -147,6 +148,12 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     { id: 'bingo',    name: 'Bingo',              x: 1340, y: 170, w: 560,  h: 520, on: false, theme: true }
   ];
   var SCREENS = [ { id: 'start', name: 'Début' }, { id: 'brb', name: 'Pause' }, { id: 'end', name: 'Fin' } ];
+  // en anglais : noms des outils, des scènes et des sources OBS traduits
+  if (SK.lang === 'en'){
+    TOOLS.forEach(function(t){ t.name = SK.tr(t.name); if (t.hint) t.hint = SK.tr(t.hint); });
+    SCREENS = [ { id: 'start', name: 'Starting' }, { id: 'brb', name: 'Break' }, { id: 'end', name: 'Ending' } ];
+  }
+  function screenLabel(n){ return SK.lang === 'en' ? '“' + n + '” screen' : 'Écran « ' + n + ' »'; }
 
   /* ---------- État ---------- */
   var saved = SK.store.get('sk-kit') || {};
@@ -176,6 +183,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function url(folder, params, page){
     var u = new URL(folder + '/' + (page || 'overlay.html'), ROOT);
     Object.keys(params).forEach(function(k){ if (params[k] !== '' && params[k] != null) u.searchParams.set(k, params[k]); });
+    if (SK.lang === 'en' && !page) u.searchParams.set('lang', 'en');
     return u.href;
   }
   function toolParams(t){
@@ -241,7 +249,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
       var p = toolParams(t);
       row(t.name, 'Taille ' + t.w + ' × ' + t.h, url(t.id, p), url(t.id, p, ''));
     });
-    SCREENS.forEach(function(s){ var p = screenParams(s.id); row('Écran « ' + s.name + ' »', 'Taille 1920 × 1080', url('ecrans', p), url('ecrans', p, '')); });
+    SCREENS.forEach(function(s){ var p = screenParams(s.id); row(screenLabel(s.name), SK.tr('Taille 1920 × 1080'), url('ecrans', p), url('ecrans', p, '')); });
   }
 
   /* ---------- Collection de scènes OBS ---------- */
@@ -271,7 +279,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     // Écrans : une scène chacun, plein écran
     var screenScenes = {};
     SCREENS.forEach(function(s){
-      var src = browserSource('Skelvo · Écran ' + s.name, url('ecrans', screenParams(s.id)), 1920, 1080, false);
+      var src = browserSource(SK.lang === 'en' ? 'Skelvo · ' + s.name + ' screen' : 'Skelvo · Écran ' + s.name, url('ecrans', screenParams(s.id)), 1920, 1080, false);
       sources.push(src); screenScenes[s.id] = sceneSource(s.name, [{ src: src, x: 0, y: 0 }]);
     });
     // Live : les overlays cochés, du bas vers le haut de la liste OBS
@@ -286,7 +294,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     var live = sceneSource('Live', items);
     scenes = [screenScenes.start, live, screenScenes.brb, screenScenes.end];
     return {
-      current_scene: 'Début', current_program_scene: 'Début',
+      current_scene: SCREENS[0].name, current_program_scene: SCREENS[0].name,
       scene_order: scenes.map(function(s){ return { name: s.name }; }),
       name: 'Skelvo Stream', sources: scenes.concat(sources), groups: [],
       quick_transitions: [], transitions: [], saved_projectors: [],
@@ -296,7 +304,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
     };
   }
   document.getElementById('dl').addEventListener('click', function(){
-    if (!cleanCh() && !confirm('Tu n\'as pas entré le nom de ta chaîne : le tchat, les alertes et les jeux ne marcheront pas. Télécharger quand même ?')) return;
+    if (!cleanCh() && !confirm(SK.tr('Tu n\'as pas entré le nom de ta chaîne : le tchat, les alertes et les jeux ne marcheront pas. Télécharger quand même ?'))) return;
     var blob = new Blob([JSON.stringify(buildCollection(), null, 2)], { type: 'application/json' });
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'skelvo-stream-' + pack.id + '.json'; a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);

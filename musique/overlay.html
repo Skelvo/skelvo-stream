@@ -60,13 +60,13 @@
   </div>
 </div>
 
-<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/overlay.js?v=4"></script>
 <script>
 (function(){
   'use strict';
   // Clé API Last.fm de Skelvo Stream (gratuite). Si elle est vide, le streamer met la sienne dans l'éditeur.
   var DEFAULT_KEY = 'd1b5bbea805e894646855baccc7b8b12';
-  var DEFAULTS = Object.assign({}, SKO.THEME, { user: '', key: '', style: 'card', fs: '24', art: '1', hide: '1', head: 'En écoute', align: 'left', demo: '0' });
+  var DEFAULTS = Object.assign({}, SKO.THEME, { user: '', key: '', style: 'card', fs: '24', art: '1', hide: '1', head: SKO.tr('En écoute'), align: 'left', demo: '0' });
   var num = SKO.num;
   var np = document.getElementById('np'), artEl = document.getElementById('art'), titleEl = document.getElementById('title'), artistEl = document.getElementById('artist');
   var P = {}, timer = null, current = '', pollKey = '', last = null;
@@ -117,9 +117,9 @@
   }
 
   var DEMO = [
-    { title: 'Nuit blanche sur la Côte', artist: 'Les Pixels Perdus' },
-    { title: 'Respawn (Version longue qui ne tient pas dans la case)', artist: 'DJ Raclette' },
-    { title: 'Boss final', artist: 'Synthwave Club' }
+    { title: SKO.tr('Nuit blanche sur la Côte'), artist: SKO.tr('Les Pixels Perdus') },
+    { title: SKO.tr('Respawn (Version longue qui ne tient pas dans la case)'), artist: 'DJ Raclette' },
+    { title: SKO.tr('Boss final'), artist: 'Synthwave Club' }
   ];
   var demoI = 0;
 

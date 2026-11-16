@@ -136,8 +136,8 @@
 </div>
 <div class="socials" id="socials"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
@@ -148,9 +148,9 @@
     sk: 'glass', sf: '15131c', so: '45', rad: '70'
   });
   var TEXTS = {
-    start: { k: 'Bienvenue', t: 'Le live commence bientôt', e: 'C\'est parti !' },
-    brb:   { k: 'Pause',     t: 'Je reviens tout de suite', e: 'Ça reprend !' },
-    end:   { k: 'Fin du live', t: 'Merci d\'avoir regardé', e: 'À bientôt !' }
+    start: { k: SKO.tr('Bienvenue'), t: SKO.tr('Le live commence bientôt'), e: SKO.tr('C\'est parti !') },
+    brb:   { k: SKO.tr('Pause'),     t: SKO.tr('Je reviens tout de suite'), e: SKO.tr('Ça reprend !') },
+    end:   { k: SKO.tr('Fin du live'), t: SKO.tr('Merci d\'avoir regardé'), e: SKO.tr('À bientôt !') }
   };
   var num = SKO.num, el = SKO.el;
   var bgEl = document.getElementById('bg'), countEl = document.getElementById('count');
@@ -246,13 +246,13 @@
     if (!on || !st) return;
     function card(k, v, unit){ var d = el('div', 'stat sk-surface'); d.appendChild(el('div', 'k', k)); var vv = el('div', 'v', v); if (unit) vv.appendChild(el('small', '', unit)); d.appendChild(vv); box.appendChild(d); }
     var dur = Math.max(0, ((st.last || Date.now()) - st.start) / 1000);
-    card('Durée', SKO.clock(dur, true));
-    if (st.subs + st.gifts) card('Nouveaux abonnés', String(st.subs + st.gifts), st.gifts ? '(' + st.gifts + ' offerts)' : '');
-    if (st.bits) card('Bits', st.bits.toLocaleString('fr-FR'));
+    card(SKO.tr('Durée'), SKO.clock(dur, true));
+    if (st.subs + st.gifts) card(SKO.tr('Nouveaux abonnés'), String(st.subs + st.gifts), st.gifts ? '(' + st.gifts + ' offerts)' : '');
+    if (st.bits) card('Bits', st.bits.toLocaleString(SKO.locale));
     if (st.raids && st.raids.length) card('Raids', String(st.raids.length), st.raids.reduce(function(a, r){ return a + (r.c || 0); }, 0) + ' viewers');
     var top = SKT.stats.top(st.msgs, 3);
     if (top.length){
-      var d = el('div', 'stat tops sk-surface'); d.appendChild(el('div', 'k', 'Top tchatteurs'));
+      var d = el('div', 'stat tops sk-surface'); d.appendChild(el('div', 'k', SKO.tr('Top tchatteurs')));
       var ol = el('ol'); top.forEach(function(t){ var li = el('li', '', t.name); li.appendChild(el('small', '', t.count + ' msg')); ol.appendChild(li); });
       d.appendChild(ol); box.appendChild(d);
     }

@@ -6,6 +6,82 @@
   'use strict';
   var O = window.SKO = {};
 
+  /* Langue : ?lang=en dans le lien OBS, ou celle de l'éditeur pour l'aperçu. */
+  O.lang = (function(){
+    var l = new URLSearchParams(location.search).get('lang');
+    // aperçu dans un éditeur (iframe) : même choix de langue que le site
+    if (!l && window.parent !== window){
+      try { l = (window.parent.SK && window.parent.SK.lang) || JSON.parse(localStorage.getItem('sk-lang') || 'null') || (/^fr/i.test(navigator.language || 'fr') ? 'fr' : 'en'); } catch(e){}
+    }
+    return l === 'en' ? 'en' : 'fr';
+  })();
+  O.locale = O.lang === 'en' ? 'en-US' : 'fr-FR';
+  O.EN = {
+    // alertes
+    "{name} s'abonne !": '{name} just subscribed!', '{name} se réabonne · {months} mois !': '{name} resubscribed · {months} months!',
+    '{name} offre un abonnement à {recipient} !': '{name} gifted a sub to {recipient}!', '{name} offre {count} abonnements !': '{name} gifted {count} subs!',
+    '{name} envoie {amount} bits !': '{name} cheered {amount} bits!', 'Raid de {name} avec {count} viewers !': '{name} is raiding with {count} viewers!',
+    '{name} suit la chaîne !': '{name} just followed!', '{name} utilise « {reward} »': '{name} redeemed “{reward}”', '{name} fait un don de {amount} !': '{name} donated {amount}!',
+    'Merci pour les lives !': 'Thanks for the streams!', "Trop contente d'être là <3": 'So happy to be here <3', 'Cheer500 GG pour la win !': 'Cheer500 GG on the win!',
+    'Toujours fidèle au poste SeemsGood': 'Still here, loyal as ever SeemsGood',
+    // bingo
+    'Bingo du stream': 'Stream bingo', 'Il meurt au premier boss': 'Dies to the first boss', 'Rage-quit': 'Rage quit', "« Je l'avais dit »": '“I told you so”',
+    'Problème de micro': 'Mic problems', 'Le chat passe devant la cam': 'The cat walks past the cam', 'Bug du jeu': 'Game bug', "« Une dernière et j'arrête »": '“One more and I\'m done”',
+    'Raid surprise': 'Surprise raid', 'Il oublie de lancer la musique': 'Forgets to start the music', 'Gros mot': 'Swear word', 'Spoiler du tchat': 'Chat spoiler',
+    'Il chante': 'Starts singing', 'Victoire écrasante': 'Crushing win', 'Il se perd': 'Gets lost', 'Coupure internet': 'Internet drops', 'Il dit « gg »': 'Says “gg”',
+    'Abonnement offert': 'Gifted sub', 'Il boit son café': 'Sips their coffee', 'Musique trop forte': 'Music too loud', 'Il lit mal un pseudo': 'Misreads a username',
+    'Fou rire': 'Laughing fit', 'Il fait un saut raté': 'Misses a jump', "« C'est la faute du jeu »": '“It\'s the game\'s fault”', 'Le tchat a raison': 'Chat was right',
+    'Il remercie un raid': 'Thanks a raid', 'Case ': 'Square ', 'BINGO !': 'BINGO!',
+    // classement
+    'Top tchatteurs': 'Top chatters', 'Ce mois-ci': 'This month', "Aujourd'hui": 'Today', 'En attente des premiers messages…': 'Waiting for the first messages…',
+    '🥇 Premier arrivé : ': '🥇 First to arrive: ', 'msg': 'msg',
+    // derniers
+    'Dernier abonné': 'Latest sub', 'Dernier sub offert': 'Latest gifted sub', 'Dernier raid': 'Latest raid', 'Derniers bits': 'Latest bits',
+    'Top bits du jour': "Today's top cheerer", 'Top donneur du jour': "Today's top gifter", 'Top tchatteur du jour': "Today's top chatter",
+    'Dernier follow': 'Latest follow', 'Dernier don': 'Latest donation', ' mois': ' months', 'Personne pour l\'instant': 'Nobody yet',
+    // écrans
+    'Bienvenue': 'Welcome', 'Le live commence bientôt': 'Stream starting soon', "C'est parti !": "Here we go!", 'Pause': 'Break',
+    'Je reviens tout de suite': 'Be right back', 'Ça reprend !': "We're back!", 'À bientôt': 'See you soon', 'Fin du live': 'Stream ending',
+    "Merci d'avoir regardé": 'Thanks for watching', 'À bientôt !': 'See you soon!', 'Nouveaux abonnés': 'New subs', 'Durée': 'Duration', 'Raids': 'Raids', 'Bits': 'Bits',
+    // épinglé
+    'Épinglé': 'Pinned', 'Allez le suivre !': 'Go follow them!', 'Passez voir sa chaîne !': 'Go check out their channel!', 'Merci pour le raid avec ': 'Thanks for the raid with ',
+    ' Le Discord est dans la description, venez ! <3': ' The Discord link is in the description, come hang out! <3',
+    // giveaway
+    'Giveaway !': 'Giveaway!', 'Tirage au sort': 'Giveaway', 'Tape ': 'Type ', ' (abonnés)': ' (subscribers)', ' pour participer': ' to enter',
+    'Participations fermées · tirage imminent': 'Entries closed · drawing soon', 'Les gagnants': 'The winners', 'Le gagnant': 'The winner',
+    ' start Une carte cadeau de 20 €': ' start A $20 gift card',
+    // horloge
+    'En live depuis': 'Live for', 'Début dans': 'Starts in',
+    // jeux
+    'Duel': 'Duel', 'Course': 'Race', ' défie ': ' challenges ', ' pour accepter (60 s)': ' to accept (60 s)', " n'a pas répondu… 🐔": " didn't answer… 🐔",
+    'Qui veut courir ?': 'Who wants to race?', ' pour participer · ': ' to join · ', 'Pas assez de coureurs… la course est annulée.': 'Not enough racers… the race is cancelled.',
+    ' gagne la course !': ' wins the race!', '3… 2… 1… Partez !': '3… 2… 1… Go!',
+    // minuteur
+    'Terminé !': 'Done!', 'En pause': 'Paused', 'Raid ': 'Raid ',
+    // musique
+    'En écoute': 'Now playing', 'Nuit blanche sur la Côte': 'Sleepless on the Coast', 'Les Pixels Perdus': 'The Lost Pixels',
+    'Respawn (Version longue qui ne tient pas dans la case)': 'Respawn (Extended version that doesn\'t fit in the box)', 'Boss final': 'Final Boss',
+    // objectif
+    'Objectif abonnés': 'Sub goal',
+    // sondage
+    'Oui': 'Yes', 'Non': 'No', 'Terminé': 'Ended', 'Résultats · ': 'Results · ', 'Tape le numéro dans le tchat · ': 'Type the number in chat · ', 'Quel jeu après ce live ?': 'Which game after this stream?',
+    // sons
+    'Klaxon': 'Air horn', 'Roulement de tambour': 'Drum roll', 'Trombone triste': 'Sad trombone', 'Applaudissements': 'Applause', 'Pièce': 'Coin', 'Fanfare': 'Fanfare',
+    'Buzzer raté': 'Fail buzzer', 'Explosion': 'Explosion',
+    // commandes par défaut
+    'sondage': 'poll', 'participer': 'join', 'mort': 'death', 'objectif': 'goal', 'pluie': 'rain', 'accepte': 'accept', 'course': 'race', 'Morts': 'Deaths',
+    // démo du tchat (twitch.js)
+    'Quelqu\'un': 'Someone', 'Salut tout le monde HeyGuys': 'Hi everyone HeyGuys', 'mais non il a raté le saut LUL LUL': 'nooo he missed the jump LUL LUL',
+    'Trop beau le nouveau cadre <3': 'Love the new frame <3', 'tu joues à quoi après ?': 'what are you playing next?',
+    'Première fois que je passe ici, ça a l\'air cool': 'First time here, looks cool', "c'est quoi ta config ?": "what's your setup?", 'BibleThump il est mort': 'BibleThump he died',
+    'la musique est trop bien': 'the music is so good', 'bonne soirée à tous <3': 'have a good night everyone <3', 'jsuis sûr il va réussir cette fois Kappa': 'pretty sure he gets it this time Kappa',
+    ' s\'est abonné(e) au niveau 1.': ' subscribed at Tier 1.', 'Toujours là <3': 'Still here <3', ' s\'est abonné(e) au niveau 1. Ça fait 6 mois d\'affilée !': ' subscribed at Tier 1. They\'ve subscribed for 6 months in a row!',
+    ' offre 5 abonnements à la communauté !': ' is gifting 5 subs to the community!', '42 spectateurs de ': '42 raiders from ', ' arrivent en raid !': ' have joined!',
+    '!discord → rejoins le serveur ici': '!discord → join the server here',
+    'allez on y croit !!': 'let\'s gooo!!', ', tape ': ', type ', ' !': '!', ' restant': ' left', ' viewers !': ' viewers!', 'Test': 'Test'
+  };
+  O.tr = function(s){ return O.lang === 'en' && s != null && Object.prototype.hasOwnProperty.call(O.EN, s) ? O.EN[s] : s; };
+
   O.num = function(v, min, max, def){ v = parseFloat(v); if (isNaN(v)) v = def; return Math.min(max, Math.max(min, v)); };
   O.hex = function(v, def){ return /^[0-9a-f]{6}$/i.test(v || '') ? '#' + v : '#' + def; };
   O.el = function(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };

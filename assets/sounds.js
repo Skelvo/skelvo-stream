@@ -11,20 +11,20 @@
   function ac(){ ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
 
   S.list = [
-    { id: 'klaxon',   label: 'Klaxon',            cmd: 'klaxon' },
-    { id: 'tambour',  label: 'Roulement de tambour', cmd: 'tambour' },
-    { id: 'badum',    label: 'Ba-dum-tss',        cmd: 'badum' },
-    { id: 'triste',   label: 'Trombone triste',   cmd: 'triste' },
-    { id: 'bravo',    label: 'Applaudissements',  cmd: 'bravo' },
-    { id: 'boing',    label: 'Boing',             cmd: 'boing' },
-    { id: 'piece',    label: 'Pièce',             cmd: 'piece' },
-    { id: 'victoire', label: 'Fanfare',           cmd: 'victoire' },
-    { id: 'rate',     label: 'Buzzer raté',       cmd: 'rate' },
-    { id: 'laser',    label: 'Laser',             cmd: 'laser' },
-    { id: 'boom',     label: 'Explosion',         cmd: 'boom' },
-    { id: 'suspense', label: 'Suspense',          cmd: 'suspense' },
-    { id: 'ding',     label: 'Ding',              cmd: 'ding' },
-    { id: 'wow',      label: 'Wow',               cmd: 'wow' }
+    { id: 'klaxon',   label: 'Klaxon',            cmd: 'klaxon', en: 'horn' },
+    { id: 'tambour',  label: 'Roulement de tambour', cmd: 'tambour', en: 'drumroll' },
+    { id: 'badum',    label: 'Ba-dum-tss',        cmd: 'badum', en: 'badum' },
+    { id: 'triste',   label: 'Trombone triste',   cmd: 'triste', en: 'sad' },
+    { id: 'bravo',    label: 'Applaudissements',  cmd: 'bravo', en: 'applause' },
+    { id: 'boing',    label: 'Boing',             cmd: 'boing', en: 'boing' },
+    { id: 'piece',    label: 'Pièce',             cmd: 'piece', en: 'coin' },
+    { id: 'victoire', label: 'Fanfare',           cmd: 'victoire', en: 'fanfare' },
+    { id: 'rate',     label: 'Buzzer raté',       cmd: 'rate', en: 'fail' },
+    { id: 'laser',    label: 'Laser',             cmd: 'laser', en: 'laser' },
+    { id: 'boom',     label: 'Explosion',         cmd: 'boom', en: 'boom' },
+    { id: 'suspense', label: 'Suspense',          cmd: 'suspense', en: 'suspense' },
+    { id: 'ding',     label: 'Ding',              cmd: 'ding', en: 'ding' },
+    { id: 'wow',      label: 'Wow',               cmd: 'wow', en: 'wow' }
   ];
 
   function noiseBuffer(c, sec){

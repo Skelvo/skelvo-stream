@@ -44,20 +44,20 @@
   <div class="grid" id="grid"></div>
 </div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULT_CELLS = ['Il meurt au premier boss', 'Rage-quit', '« Je l\'avais dit »', 'Problème de micro', 'Le chat passe devant la cam', 'Bug du jeu', '« Une dernière et j\'arrête »', 'Raid surprise',
-    'Il oublie de lancer la musique', 'Gros mot', 'Spoiler du tchat', 'Il chante', 'Victoire écrasante', 'Il se perd', 'Coupure internet', 'Il dit « gg »', 'Abonnement offert', 'Il boit son café', 'Musique trop forte', 'Il lit mal un pseudo',
-    'Fou rire', 'Il fait un saut raté', '« C\'est la faute du jeu »', 'Le tchat a raison', 'Il remercie un raid'];
-  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', size: '4', cells: DEFAULT_CELLS.join('|'), title: 'Bingo du stream', cmd: 'bingo', who: 'mods', fs: '18', demo: '0' });
+  var DEFAULT_CELLS = [SKO.tr('Il meurt au premier boss'), SKO.tr('Rage-quit'), SKO.tr('« Je l\'avais dit »'), SKO.tr('Problème de micro'), SKO.tr('Le chat passe devant la cam'), SKO.tr('Bug du jeu'), SKO.tr('« Une dernière et j\'arrête »'), SKO.tr('Raid surprise'),
+    SKO.tr('Il oublie de lancer la musique'), SKO.tr('Gros mot'), SKO.tr('Spoiler du tchat'), SKO.tr('Il chante'), SKO.tr('Victoire écrasante'), SKO.tr('Il se perd'), SKO.tr('Coupure internet'), SKO.tr('Il dit « gg »'), SKO.tr('Abonnement offert'), SKO.tr('Il boit son café'), SKO.tr('Musique trop forte'), SKO.tr('Il lit mal un pseudo'),
+    SKO.tr('Fou rire'), SKO.tr('Il fait un saut raté'), SKO.tr('« C\'est la faute du jeu »'), SKO.tr('Le tchat a raison'), SKO.tr('Il remercie un raid')];
+  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', size: '4', cells: DEFAULT_CELLS.join('|'), title: SKO.tr('Bingo du stream'), cmd: 'bingo', who: 'mods', fs: '18', demo: '0' });
   var num = SKO.num, el = SKO.el;
   var gridEl = document.getElementById('grid'), wrap = document.getElementById('wrap');
   var P = {}, state = null, key = '', source = null, sourceKey = '', N = 4;
 
-  function cells(){ var c = String(P.cells || '').split(/\n|\|/).map(function(x){ return x.trim(); }).filter(Boolean); while (c.length < N * N) c.push('Case ' + (c.length + 1)); return c.slice(0, N * N); }
+  function cells(){ var c = String(P.cells || '').split(/\n|\|/).map(function(x){ return x.trim(); }).filter(Boolean); while (c.length < N * N) c.push(SKO.tr('Case ') + (c.length + 1)); return c.slice(0, N * N); }
   function lines(){
     var L = [], i, j;
     for (i = 0; i < N; i++){ var r = [], c = []; for (j = 0; j < N; j++){ r.push(i * N + j); c.push(j * N + i); } L.push(r, c); }
@@ -85,7 +85,7 @@
     if (complete().length > before) celebrate();
   }
   function celebrate(){
-    var b = el('div', 'banner'); b.appendChild(el('b', '', 'BINGO !')); wrap.appendChild(b); setTimeout(function(){ b.remove(); }, 2700);
+    var b = el('div', 'banner'); b.appendChild(el('b', '', SKO.tr('BINGO !'))); wrap.appendChild(b); setTimeout(function(){ b.remove(); }, 2700);
     var cs = getComputedStyle(document.documentElement), cols = [cs.getPropertyValue('--ac'), cs.getPropertyValue('--ac2'), '#f5c451', '#fff'];
     for (var i = 0; i < 80; i++){
       var c = el('i', 'confetti'); c.style.background = cols[i % cols.length];
@@ -98,7 +98,7 @@
     if (!m.cmd || m.cmd.name !== String(P.cmd || 'bingo').toLowerCase().replace(/^!/, '')) return;
     if (P.who === 'broadcaster' ? !m.isBroadcaster : !m.isMod) return;
     var a = (m.cmd.args[0] || '').toLowerCase();
-    if (a === 'reset' || a === 'vide'){ state = { on: {} }; SKO.store.set(key, state); render(); return; }
+    if (a === 'reset' || a === 'vide' || a === 'clear'){ state = { on: {} }; SKO.store.set(key, state); render(); return; }
     m.cmd.args.forEach(function(x){ var k = parseInt(x, 10); if (!isNaN(k)) toggle(k - 1); });
   }
 

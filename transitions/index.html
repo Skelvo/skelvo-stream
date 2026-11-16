@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <!--
   Transition « Stinger » pour OBS, générée dans le navigateur :
   une vidéo deux fois plus large que haute, l'animation à gauche et son
@@ -112,8 +112,9 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
-<script src="../assets/overlay.js?v=3"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
+<script src="../assets/overlay.js?v=4"></script>
 <script>
 (function(){
   'use strict';
@@ -198,8 +199,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 
   /* ---------- Aperçu : deux fausses scènes et la transition par-dessus ---------- */
   var pv = $('pv'), px = pv.getContext('2d');
-  function sceneA(x, W, H){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#1b2a4a'); g.addColorStop(1, '#2a1840'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText('Scène 1', W / 2, H / 2 + 10); }
-  function sceneB(x, W, H){ var g = x.createLinearGradient(0, H, W, 0); g.addColorStop(0, '#0f3b33'); g.addColorStop(1, '#3b0f2e'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText('Scène 2', W / 2, H / 2 + 10); }
+  function sceneA(x, W, H){ var g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#1b2a4a'); g.addColorStop(1, '#2a1840'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText(SK.tr('Scène 1'), W / 2, H / 2 + 10); }
+  function sceneB(x, W, H){ var g = x.createLinearGradient(0, H, W, 0); g.addColorStop(0, '#0f3b33'); g.addColorStop(1, '#3b0f2e'); x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 28px "Space Grotesk", sans-serif'; x.textAlign = 'center'; x.fillText(SK.tr('Scène 2'), W / 2, H / 2 + 10); }
   var t0 = performance.now();
   (function loop(now){
     var o = opts(), cycle = o.dur * 1000 + 900, k = ((now - t0) % (cycle * 2)), first = k < cycle, ph = (k % cycle) - 450, t = ph / (o.dur * 1000);

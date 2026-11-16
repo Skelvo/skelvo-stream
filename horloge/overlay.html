@@ -38,14 +38,14 @@
 <body>
 <div class="clock sk-surface" id="clock"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
     ch: '', show_time: '1', show_date: '0', show_up: '1', show_cd: '0', secs: '0', h12: '0',
-    start: '', at: '', lt: 'Heure', lu: 'En live depuis', lc: 'Début dans', ld: 'Aujourd\'hui', layout: 'row', labels: '1', dot: '1', align: 'center', fs: '40', demo: '0'
+    start: '', at: '', lt: 'Heure', lu: SKO.tr('En live depuis'), lc: SKO.tr('Début dans'), ld: SKO.tr('Aujourd\'hui'), layout: 'row', labels: '1', dot: '1', align: 'center', fs: '40', demo: '0'
   });
   var num = SKO.num, el = SKO.el;
   var box = document.getElementById('clock');
@@ -88,7 +88,7 @@
       if (P.h12 === '1'){ suf = h < 12 ? ' AM' : ' PM'; h = h % 12 || 12; }
       parts.time.textContent = (P.h12 === '1' ? h : pad(h)) + ':' + pad(now.getMinutes()) + (P.secs === '1' ? ':' + pad(now.getSeconds()) : '') + suf;
     }
-    if (parts.date) parts.date.textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (parts.date) parts.date.textContent = now.toLocaleDateString(SKO.locale, { weekday: 'long', day: 'numeric', month: 'long' });
     if (parts.up) parts.up.textContent = SKO.clock((Date.now() - startTs) / 1000, true);
     if (parts.cd){
       var t = 0;

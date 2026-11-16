@@ -32,9 +32,9 @@
 </head>
 <body></body>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
-<script src="../assets/sounds.js?v=1"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
+<script src="../assets/sounds.js?v=2"></script>
 <script>
 (function(){
   'use strict';
@@ -42,20 +42,20 @@
     ch: '', who: 'all', cool: '5', ucool: '30', vol: '70', minbits: '0', rewards: '1', pop: '1', hpos: 'left', fs: '22', demo: '0',
     tk: '', u1: '', u1c: '', u2: '', u2c: '', u3: '', u3c: '', u4: '', u4c: ''
   });
-  SKS.list.forEach(function(s){ DEFAULTS['s_' + s.id] = s.cmd; });
+  SKS.list.forEach(function(s){ DEFAULTS['s_' + s.id] = SKO.lang === 'en' ? s.en : s.cmd; });
   var num = SKO.num, el = SKO.el;
   var P = {}, source = null, sourceKey = '', lastAny = 0, lastBy = {};
 
   // commande (sans « ! ») -> son
   function table(){
     var t = {};
-    SKS.list.forEach(function(s){ var c = String(P['s_' + s.id] || '').toLowerCase().replace(/^!/, '').trim(); if (c) t[c] = { id: s.id, label: s.label }; });
+    SKS.list.forEach(function(s){ var c = String(P['s_' + s.id] || '').toLowerCase().replace(/^!/, '').trim(); if (c) t[c] = { id: s.id, label: SKO.tr(s.label) }; });
     [1, 2, 3, 4].forEach(function(i){ var c = String(P['u' + i + 'c'] || '').toLowerCase().replace(/^!/, '').trim(); if (c && /^https:\/\//.test(P['u' + i] || '')) t[c] = { url: P['u' + i], label: c }; });
     return t;
   }
   function popup(snd, name){
     if (P.pop !== '1') return;
-    var d = el('div', 'pop sk-surface'); d.appendChild(el('span', 'ico', '🔊')); d.appendChild(el('b', '', snd.label));
+    var d = el('div', 'pop sk-surface'); d.appendChild(el('span', 'ico', '🔊')); d.appendChild(el('b', '', SKO.tr(snd.label)));
     if (name) d.appendChild(el('span', 'by', name));
     document.body.appendChild(d);
     setTimeout(function(){ d.classList.add('out'); setTimeout(function(){ d.remove(); }, 420); }, 2600);

@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <style>
   .sw{ display: flex; flex-direction: column; gap: 3px; justify-content: center; padding: 4px; }
   .sw i{ display: block; height: 5px; border-radius: 3px; background: #a78bfa; }
@@ -114,7 +114,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
 <script>
 (function(){
   'use strict';
@@ -127,8 +128,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function showCmds(p){
     var n = '!' + (p.cmd || 'sondage').toLowerCase().replace(/^!/, '');
     cmds.textContent = '';
-    [[n + ' Quel jeu ? | Minecraft | Fortnite', 'lance un sondage avec ses choix'], [n + ' On continue ?', 'sans choix : Oui / Non'],
-     ['1, 2, 3…', 'les viewers votent en tapant le numéro'], [n + ' fin', 'termine et affiche le gagnant'], [n + ' stop', 'cache le sondage']].forEach(function(r){
+    [[n + (SK.lang === 'en' ? ' Which game? | Minecraft | Fortnite' : ' Quel jeu ? | Minecraft | Fortnite'), SK.tr('lance un sondage avec ses choix')], [n + (SK.lang === 'en' ? ' Keep going?' : ' On continue ?'), SK.tr('sans choix : Oui / Non')],
+     ['1, 2, 3…', SK.tr('les viewers votent en tapant le numéro')], [n + (SK.lang === 'en' ? ' end' : ' fin'), SK.tr('termine et affiche le gagnant')], [n + ' stop', SK.tr('cache le sondage')]].forEach(function(r){
       var li = document.createElement('li'), c = document.createElement('code');
       c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
     });

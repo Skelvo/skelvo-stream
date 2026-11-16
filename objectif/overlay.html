@@ -56,18 +56,18 @@
   <div class="track sk-surface" id="track"><div class="fill"></div><div class="pct" id="pct"></div></div>
 </div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', type: 'subs', target: '50', start: '0', label: 'Objectif abonnés', cmd: 'objectif', img: '',
+  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', type: 'subs', target: '50', start: '0', label: SKO.tr('Objectif abonnés'), cmd: SKO.tr('objectif'), img: '',
     style: 'bar', fs: '26', pct: '1', shine: '1', demo: '0' });
   var num = SKO.num;
   var goal = document.getElementById('goal'), titleEl = document.getElementById('title'), countEl = document.getElementById('count'), pctEl = document.getElementById('pct');
   var P = {}, value = 0, key = '', source = null, sourceKey = '', wasDone = false;
 
-  function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+  function fmt(n){ return Math.round(n).toLocaleString(SKO.locale); }
   function draw(anim){
     var target = num(P.target, 1, 10000000, 50);
     var p = Math.min(100, value / target * 100);
@@ -77,7 +77,7 @@
     titleEl.appendChild(document.createTextNode(P.label || ''));
     countEl.textContent = fmt(value) + ' ';
     countEl.appendChild(SKO.el('small', '', '/ ' + fmt(target)));
-    pctEl.textContent = P.pct === '1' ? Math.floor(p) + ' %' : '';
+    pctEl.textContent = P.pct === '1' ? Math.floor(p) + (SKO.lang === 'en' ? '%' : ' %') : '';
     var done = value >= target;
     document.body.classList.toggle('done', done);
     if (anim){ document.body.classList.remove('bump'); void document.body.offsetWidth; document.body.classList.add('bump'); }
@@ -104,7 +104,7 @@
     else if (P.type === 'bits' && e.type === 'bits') setValue(value + e.amount);
   }
   function onMessage(m){
-    if (!m.cmd || !m.isMod || m.cmd.name !== String(P.cmd || 'objectif').toLowerCase().replace(/^!/, '')) return;
+    if (!m.cmd || !m.isMod || m.cmd.name !== String(P.cmd || SKO.tr('objectif')).toLowerCase().replace(/^!/, '')) return;
     var a = m.cmd.rest.replace(/\s+/g, '');
     if (a === 'reset') return setValue(num(P.start, 0, 1e7, 0));
     var mm = /^([+=-])?(\d+(?:[.,]\d+)?)$/.exec(a);

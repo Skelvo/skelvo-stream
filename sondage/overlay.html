@@ -45,12 +45,12 @@
 <body>
 <div class="poll sk-surface hidden" id="poll"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
-  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', dur: '120', hide: '20', cmd: 'sondage', style: 'card', fs: '24', demo: '0' });
+  var DEFAULTS = Object.assign({}, SKO.THEME, { ch: '', dur: '120', hide: '20', cmd: SKO.tr('sondage'), style: 'card', fs: '24', demo: '0' });
   var num = SKO.num, el = SKO.el;
   var box = document.getElementById('poll');
   var P = {}, poll = null, key = '', source = null, sourceKey = '', hideTimer = null;
@@ -58,7 +58,7 @@
   function save(){ SKO.store.set(key, poll); }
 
   function start(question, options){
-    if (options.length < 2) options = ['Oui', 'Non'];
+    if (options.length < 2) options = [SKO.tr('Oui'), SKO.tr('Non')];
     var dur = num(P.dur, 0, 3600, 120);
     poll = { q: question, opts: options.slice(0, 9), votes: {}, end: dur ? Date.now() + dur * 1000 : 0, ended: false, endedAt: 0 };
     save(); render(true);
@@ -90,11 +90,11 @@
       });
     }
     box.classList.toggle('ended', poll.ended);
-    box.querySelector('.how').textContent = poll.ended ? 'Résultats · ' + total + ' vote' + (total > 1 ? 's' : '') : 'Tape le numéro dans le tchat · ' + total + ' vote' + (total > 1 ? 's' : '');
+    box.querySelector('.how').textContent = poll.ended ? SKO.tr('Résultats · ') + total + ' vote' + (total > 1 ? 's' : '') : SKO.tr('Tape le numéro dans le tchat · ') + total + ' vote' + (total > 1 ? 's' : '');
     box.querySelectorAll('.opt').forEach(function(d, i){
       var pc = total ? Math.round(c[i] / total * 100) : 0;
       d.querySelector('.bar').style.width = pc + '%';
-      d.querySelector('.pc').textContent = pc + ' %';
+      d.querySelector('.pc').textContent = pc + (SKO.lang === 'en' ? '%' : ' %');
       d.classList.toggle('win', poll.ended && total > 0 && c[i] === best);
     });
     tick();
@@ -108,12 +108,12 @@
     if (!poll) return;
     var left = box.querySelector('.left'); if (!left) return;
     if (!poll.ended && poll.end && Date.now() >= poll.end){ finish(); return; }
-    left.textContent = poll.ended ? 'Terminé' : poll.end ? SKO.clock((poll.end - Date.now()) / 1000) : '';
+    left.textContent = poll.ended ? SKO.tr('Terminé') : poll.end ? SKO.clock((poll.end - Date.now()) / 1000) : '';
   }
   setInterval(tick, 500);
 
   function onMessage(m){
-    var name = String(P.cmd || 'sondage').toLowerCase().replace(/^!/, '');
+    var name = String(P.cmd || SKO.tr('sondage')).toLowerCase().replace(/^!/, '');
     if (m.cmd && m.cmd.name === name){
       if (!m.isMod) return;
       var rest = m.cmd.rest, low = rest.toLowerCase();
@@ -147,11 +147,11 @@
       if (source) source.close();
       var h = { status: function(s, ch){ SKO.tellParent(s, { channel: ch }); }, message: onMessage };
       if (sk === 'demo'){
-        start('Quel jeu après ce live ?', ['Minecraft', 'Elden Ring', 'Fortnite']);
+        start(SKO.tr('Quel jeu après ce live ?'), ['Minecraft', 'Elden Ring', 'Fortnite']);
         var voters = 0;
         source = SKT.demo(h, { min: 250, spread: 400, extra: function(){
           voters++;
-          if (voters > 60){ voters = 0; start('Quel jeu après ce live ?', ['Minecraft', 'Elden Ring', 'Fortnite']); return null; }
+          if (voters > 60){ voters = 0; start(SKO.tr('Quel jeu après ce live ?'), ['Minecraft', 'Elden Ring', 'Fortnite']); return null; }
           var r = Math.random(), v = r < .5 ? '2' : r < .8 ? '1' : '3';
           return SKT.fakeMessage({ n: 'viewer' + voters, c: '', b: '' }, v);
         } });

@@ -52,13 +52,13 @@
 <body>
 <div class="counter sk-surface" id="counter"></div>
 
-<script src="../assets/overlay.js?v=3"></script>
-<script src="../assets/twitch.js?v=5"></script>
+<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
   'use strict';
   var DEFAULTS = Object.assign({}, SKO.THEME, {
-    ch: '', name: 'mort', label: 'Morts', icon: '💀', img: '', start: '0', who: 'mods',
+    ch: '', name: SKO.tr('mort'), label: SKO.tr('Morts'), icon: '💀', img: '', start: '0', who: 'mods',
     style: 'pill', vc: 'accent', fs: '64', align: 'center', demo: '0'
   });
   var num = SKO.num, el = SKO.el;
@@ -68,7 +68,7 @@
   var lastAll = {}; // anti-spam quand tout le monde peut modifier
 
   function storageKey(){ return 'sk-count:' + (P.demo === '1' ? 'demo' : SKT.cleanChannel(P.ch)) + ':' + cmdName(); }
-  function cmdName(){ return String(P.name || 'mort').toLowerCase().replace(/^!/, '').replace(/[^a-z0-9éèàùç_]/g, '') || 'mort'; }
+  function cmdName(){ return String(P.name || SKO.tr('mort')).toLowerCase().replace(/^!/, '').replace(/[^a-z0-9éèàùç_]/g, '') || SKO.tr('mort'); }
 
   function build(){
     box.textContent = '';

@@ -20,7 +20,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=14">
+<link rel="stylesheet" href="../assets/app.css?v=15">
 <style>
   .sw{ display: flex; align-items: center; padding: 0 5px; }
   .sw i{ display: block; height: 8px; width: 100%; border-radius: 9px; background: linear-gradient(90deg, #a78bfa 60%, #2a2735 60%); }
@@ -118,7 +118,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="../assets/packs.js?v=1"></script>
-<script src="../assets/app.js?v=24"></script>
+<script src="../assets/lang-en.js?v=1"></script>
+<script src="../assets/app.js?v=25"></script>
 <script>
 (function(){
   'use strict';
@@ -131,7 +132,7 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   function showCmds(p){
     var n = '!' + (p.cmd || 'objectif').toLowerCase().replace(/^!/, '');
     cmds.textContent = '';
-    [[n + ' +5', 'ajoute 5'], [n + ' -2', 'retire 2'], [n + ' = 20', 'règle la progression à 20'], [n + ' reset', 'revient à la valeur de départ']].forEach(function(r){
+    [[n + ' +5', SK.tr('ajoute 5')], [n + ' -2', SK.tr('retire 2')], [n + ' = 20', SK.tr('règle la progression à 20')], [n + ' reset', SK.tr('revient à la valeur de départ')]].forEach(function(r){
       var li = document.createElement('li'), c = document.createElement('code');
       c.textContent = r[0]; li.appendChild(c); li.appendChild(document.createTextNode(r[1])); cmds.appendChild(li);
     });
