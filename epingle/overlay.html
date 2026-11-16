@@ -7,7 +7,7 @@
 <title>Message épinglé et shoutout — Skelvo Stream</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <!--
   Commandes du streamer et des modos :
     !pin Le Discord est dans la description !   épingle un message à l'écran
@@ -31,7 +31,7 @@
   .main .emote{ height: 1.3em; vertical-align: middle; margin: -.15em .05em; }
   .sub{ font-size: .62em; color: var(--muted); font-weight: 600; margin-top: .15em; }
   .sk-accent .sub{ color: inherit; opacity: .85; }
-  .so .main{ text-transform: var(--up); letter-spacing: var(--ls); }
+  .so .main{ }
   .so .ico{ font-size: 1.1em; }
   .so{ animation: soIn .7s cubic-bezier(.2,1.3,.3,1); }
   @keyframes soIn{ from{ opacity: 0; transform: translateX(-1.5em); } }
@@ -43,7 +43,7 @@
 <div class="card sk-surface pin hidden gone" id="pin"><span class="ico">📌</span><div class="txt"><div class="lab" id="pinlab"></div><div class="main" id="pintxt"></div><div class="sub" id="pinby"></div></div></div>
 <div class="card sk-surface so hidden gone" id="so"><span class="ico">💜</span><div class="txt"><div class="lab" id="solab"></div><div class="main" id="sotxt"></div><div class="sub" id="sosub"></div></div></div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){

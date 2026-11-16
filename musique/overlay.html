@@ -13,7 +13,7 @@
   Apple Music…). On interroge l'API publique de Last.fm toutes les 12 secondes.
   Spotify n'ouvre plus son API aux petits outils gratuits depuis 2025.
 -->
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <style>
   :root{ --fs: 24px; }
   html, body{ margin: 0; height: 100%; overflow: hidden; }
@@ -35,6 +35,7 @@
   .artist{ font-size: .72em; color: var(--muted); font-weight: 500; }
   .sk-accent .artist{ color: inherit; opacity: .85; }
   .scroll span{ display: inline-block; padding-right: 2em; animation: marquee var(--mq, 10s) linear infinite; }
+  .scroll{ -webkit-mask-image: linear-gradient(90deg, transparent, #000 .6em, #000 calc(100% - 1.2em), transparent); mask-image: linear-gradient(90deg, transparent, #000 .6em, #000 calc(100% - 1.2em), transparent); }
   @keyframes marquee{ to{ transform: translateX(-50%); } }
 
   .l-vinyl .np{ border-radius: 999px; }
@@ -60,7 +61,7 @@
   </div>
 </div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script>
 (function(){
   'use strict';

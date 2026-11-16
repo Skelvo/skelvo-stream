@@ -51,11 +51,11 @@
     'Participations fermées · tirage imminent': 'Entries closed · drawing soon', 'Les gagnants': 'The winners', 'Le gagnant': 'The winner',
     ' start Une carte cadeau de 20 €': ' start A $20 gift card',
     // horloge
-    'En live depuis': 'Live for', 'Début dans': 'Starts in',
+    'En live depuis': 'Live for', 'Début dans': 'Starts in', 'Heure': 'Time',
     // jeux
     'Duel': 'Duel', 'Course': 'Race', ' défie ': ' challenges ', ' pour accepter (60 s)': ' to accept (60 s)', " n'a pas répondu… 🐔": " didn't answer… 🐔",
     'Qui veut courir ?': 'Who wants to race?', ' pour participer · ': ' to join · ', 'Pas assez de coureurs… la course est annulée.': 'Not enough racers… the race is cancelled.',
-    ' gagne la course !': ' wins the race!', '3… 2… 1… Partez !': '3… 2… 1… Go!',
+    ' gagne la course !': ' wins the race!', ' gagne !': ' wins!', '3… 2… 1… Partez !': '3… 2… 1… Go!',
     // minuteur
     'Terminé !': 'Done!', 'En pause': 'Paused', 'Raid ': 'Raid ',
     // musique
@@ -116,6 +116,9 @@
     jetbrains: ['JetBrains Mono', '400;500;600;700;800'], pixel: ['VT323', '400'], press: ['Press Start 2P', '400'],
     marker: ['Permanent Marker', '400'], caveat: ['Caveat', '400;500;600;700'], system: ['system-ui', '']
   };
+  // Polices « d'affichage » : belles en titre, pénibles à lire en petit.
+  // Avec elles, les textes courants (messages, petites lignes) passent en Inter.
+  O.DISPLAY_ONLY = { playfair: 1, cormorant: 1, dmserif: 1, bebas: 1, oswald: 1, anton: 1, unbounded: 1, syne: 1, press: 1, pixel: 1, marker: 1, caveat: 1, jetbrains: 1 };
   O.useFont = function(key, custom){
     if (custom && /^[\w \-]{2,40}$/.test(custom)){
       O.font(custom.trim().replace(/ /g, '+') + ':wght@400;700');
@@ -142,7 +145,9 @@
     var r = document.documentElement.style, D = O.THEME;
     var tx = O.hex(P.tx, D.tx), ac = O.hex(P.ac, D.ac), ac2 = O.hex(P.ac2, D.ac2), sf = O.hex(P.sf, D.sf), bc = O.hex(P.bc, D.bc);
     var so = O.num(P.so, 0, 100, 78) / 100, sh = O.num(P.sh, 0, 100, 35) / 100, gl = O.num(P.gl, 0, 100, 0) / 100;
-    r.setProperty('--font', O.useFont(P.font || D.font, P.cf));
+    var fkey = P.font || D.font;
+    r.setProperty('--font', O.useFont(fkey, P.cf));
+    r.setProperty('--font-body', !P.cf && O.DISPLAY_ONLY[fkey] ? O.useFont('inter') : O.useFont(fkey, P.cf));
     r.setProperty('--fw', String(O.num(P.fw, 100, 900, 700)));
     r.setProperty('--tx', tx);
     r.setProperty('--muted', O.mix(tx, sf, .38));

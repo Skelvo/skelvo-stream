@@ -7,7 +7,7 @@
 <title>Jeux du tchat — Skelvo Stream</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <!--
   Jeux du tchat, en direct sur le stream :
   - Duel : un viewer tape « !duel @pseudo », l'autre accepte avec « !accepte »
@@ -55,7 +55,7 @@
 <body>
 <div class="game sk-surface hidden" id="game"></div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
@@ -102,7 +102,7 @@
       if (hp[0] <= 0 || hp[1] <= 0){
         var w = hp[0] > 0 ? 0 : 1;
         f[1 - w].el.classList.add('ko'); f[w].el.classList.add('winner');
-        res.textContent = '🏆 ' + (w ? game.b : game.a) + ' gagne !';
+        res.textContent = '🏆 ' + (w ? game.b : game.a) + SKO.tr(' gagne !');
         confetti(); game.state = 'end'; later(hide, num(P.hide, 3, 60, 10) * 1000); return;
       }
       var target = 1 - turn, dmg = 12 + rnd(26);

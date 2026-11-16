@@ -19,7 +19,7 @@
   Tout le texte des messages passe par textContent / createTextNode : jamais
   d'innerHTML avec du contenu venant du tchat.
 -->
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <style>
   :root{ --fs: 20px; --gap: .35em; }
   html, body{ margin: 0; height: 100%; overflow: hidden; }
@@ -33,7 +33,7 @@
   .msg{ max-width: 100%; line-height: 1.38; overflow-wrap: anywhere; position: relative; font-weight: 500; }
   .meta{ display: inline-flex; align-items: center; gap: .3em; vertical-align: bottom; margin-right: .4em; white-space: nowrap; max-width: 100%; }
   .name{ overflow: hidden; text-overflow: ellipsis; }
-  .name{ font-weight: var(--fw); text-transform: var(--up); letter-spacing: var(--ls); }
+  .name{ font-weight: var(--fw); }
   .text .emote{ height: 1.5em; width: auto; vertical-align: middle; margin: -.25em .04em; display: inline-block; }
   .msg.emote-only .text .emote{ height: 2.4em; margin: 0 .04em; }
   .msg.action .text{ font-style: italic; color: var(--name-color); }
@@ -83,7 +83,7 @@
 <body>
 <div id="chat" aria-live="polite"></div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){

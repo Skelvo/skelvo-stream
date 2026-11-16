@@ -5,7 +5,7 @@
    ancien, toutes les couleurs mélangées sont calculées en JavaScript.
    ========================================================================== */
 :root{
-  --font: 'Inter', system-ui, sans-serif; --fw: 700;
+  --font: 'Inter', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif; --fw: 700;
   --tx: #fff; --muted: rgba(255,255,255,.7); --ac: #a78bfa; --ac2: #67e8f9; --ac-tx: #111;
   --sf: rgba(11,11,16,.78); --sf-solid: #0b0b10; --sf-tint: rgba(20,18,30,.78);
   --rad: .44em; --bw: 1px; --bc: rgba(255,255,255,.12);
@@ -13,7 +13,18 @@
   --up: none; --ls: 0;
 }
 html, body{ background: transparent; }
-body{ font-family: var(--font); color: var(--tx); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body{ font-family: var(--font-body); color: var(--tx); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-variant-numeric: lining-nums; }
+
+/* Typographie : la police du thème (« d'affichage ») pour les titres, les pseudos
+   et les gros chiffres ; une police très lisible (--font-body) pour le reste.
+   Pas de faux gras (certaines polices n'existent qu'en une graisse) et des
+   chiffres alignés (pas de chiffres « elzéviriens » qui descendent sous la ligne). */
+.sk-display, .title, .q, .big, .vs, .winner, .value, .time, .val, .count, .stat .v, h1, .name, .pop b, .banner b, .avatar, .opt .pc, .so .main, .rank, .cell .num, .float, .add{
+  font-family: var(--font); font-synthesis: none;
+}
+/* titres sur plusieurs lignes : coupures équilibrées (pas un mot seul sur la dernière ligne) */
+.title, .q, .big, h1, .main{ text-wrap: balance; }
+html body .value, html body .time, html body .val, html body .count, html body .stat .v, html body .opt .pc, html body .meta b{ font-variant-numeric: lining-nums tabular-nums; }
 
 /* Surface : le "fond" des cartes, bulles, pastilles… */
 .sk-surface{

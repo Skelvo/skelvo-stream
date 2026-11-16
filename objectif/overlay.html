@@ -12,7 +12,7 @@
   Commandes (streamer et modos) : !objectif +5 | -2 | = 20 | reset
   Progression mémorisée dans OBS (localStorage).
 -->
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <style>
   :root{ --fs: 26px; --p: 0%; --track-h: 1.1em; }
   html, body{ margin: 0; height: 100%; overflow: hidden; }
@@ -33,6 +33,8 @@
   .pct{ position: absolute; inset: 0; display: grid; place-items: center; font-size: .6em; font-weight: 800; text-shadow: 0 0 .3em rgba(0,0,0,.6); }
   .no-shadow-text .head{ text-shadow: none; }
   .head{ text-shadow: 0 .05em .2em rgba(0,0,0,.6); }
+  .l-bar .head, .l-thin .head{ color: #fff; text-shadow: 0 .05em .25em rgba(0,0,0,.75), 0 0 .1em rgba(0,0,0,.6); }
+  .l-bar .count small, .l-thin .count small{ color: rgba(255,255,255,.75); }
   .sk-clair-head .head{ text-shadow: none; }
 
   .l-thin{ --track-h: .38em; } .l-thin .pct{ display: none; }
@@ -56,7 +58,7 @@
   <div class="track sk-surface" id="track"><div class="fill"></div><div class="pct" id="pct"></div></div>
 </div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){

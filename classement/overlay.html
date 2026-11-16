@@ -7,7 +7,7 @@
 <title>Top tchatteurs — Skelvo Stream</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="../assets/overlay.css?v=3">
+<link rel="stylesheet" href="../assets/overlay.css?v=4">
 <!--
   Classement des viewers qui ont le plus écrit dans le tchat, du jour ou du mois.
   Les messages sont comptés par n'importe quel overlay Skelvo connecté à la
@@ -40,7 +40,7 @@
 <body>
 <div class="board sk-surface" id="board"></div>
 
-<script src="../assets/overlay.js?v=4"></script>
+<script src="../assets/overlay.js?v=5"></script>
 <script src="../assets/twitch.js?v=6"></script>
 <script>
 (function(){
@@ -50,7 +50,7 @@
   });
   var num = SKO.num, el = SKO.el;
   var board = document.getElementById('board');
-  var P = {}, source = null, sourceKey = '', timer = null;
+  var P = {}, source = null, sourceKey = '', timer = null, lastSig = '';
   var DEMO = { msgs: { lunaa_: { n: 'Lunaa_', c: 148 }, kev: { n: 'KevGaming', c: 121 }, mamie: { n: 'Mamie_Gameuse', c: 96 }, cho: { n: 'Choupette', c: 64 }, pix: { n: 'PixelPaulo', c: 41 }, ton: { n: 'Tonton_Raclette', c: 22 } }, first: 'Mamie_Gameuse' };
 
   function render(){
@@ -58,6 +58,9 @@
     var data = sk === 'demo' ? DEMO : (P.period === 'month' ? SKT.stats.month(sk) : SKT.stats.day(sk));
     var hidden = {}; String(P.hide || '').toLowerCase().split(/[\s,;]+/).forEach(function(x){ if (x) hidden[x.replace(/^@/, '')] = 1; });
     var top = SKT.stats.top(data && data.msgs, 50).filter(function(t){ return !hidden[t.login]; }).slice(0, num(P.n, 1, 10, 5));
+    // on ne redessine (et ne réanime) que si quelque chose a changé
+    var sig = JSON.stringify([P.title, P.period, P.counts, P.first, top.map(function(t){ return [t.name, t.count]; }), data && data.first, document.documentElement.style.cssText]);
+    if (sig === lastSig) return; lastSig = sig;
     board.textContent = '';
     var head = el('div', 'head'); head.appendChild(el('span', 'title', P.title || ''));
     head.appendChild(el('span', 'period', P.period === 'month' ? SKO.tr('Ce mois-ci') : SKO.tr('Aujourd\'hui'))); board.appendChild(head);
