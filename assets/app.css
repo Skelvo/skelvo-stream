@@ -367,3 +367,12 @@ html, body{ overflow-x: clip; overscroll-behavior-x: none; max-width: 100%; }
 .se-field input.bad{ border-color: #ffb02e; }
 .lang-btn{ font: inherit; font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; cursor: pointer; margin-left: 4px; }
 .lang-btn:hover{ color: var(--text); border-color: var(--muted); }
+/* très petits téléphones (iPhone SE…) : la barre du haut doit tenir sur 320 px */
+@media (max-width: 380px){
+  .topbar .wrap{ gap: 8px; }
+  .brand{ font-size: .95rem; gap: 8px; }
+  .brand-mark{ width: 26px; height: 26px; }
+  .topnav{ gap: 0; }
+  .topnav a{ padding: 8px 6px; font-size: .84rem; }
+  .lang-btn{ padding: 4px 6px; margin-left: 2px; }
+}

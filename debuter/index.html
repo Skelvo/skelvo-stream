@@ -20,13 +20,15 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/app.css?v=15">
+<link rel="stylesheet" href="../assets/app.css?v=16">
 <style>
   .guide{ display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; padding-bottom: 70px; }
   .toc{ position: sticky; top: 84px; display: grid; gap: 4px; }
   .guide td:last-child{ white-space: nowrap; }
+  @media (max-width: 380px){ .table{ display: block; overflow-x: auto; } }
+  @media (max-width: 500px){ .table{ font-size: .8rem; } .table th, .table td{ padding-left: 6px; padding-right: 6px; } }
   /* téléphone : sommaire en haut, en bloc normal (plus collé par-dessus le texte) */
-  @media (max-width: 900px){ .guide{ grid-template-columns: 1fr; } .toc{ position: static; grid-template-columns: 1fr 1fr; gap: 2px 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg-2); } }
+  @media (max-width: 900px){ .guide{ grid-template-columns: minmax(0, 1fr); } .guide > *{ min-width: 0; } .toc a{ font-size: .85rem; padding: 6px 8px; } .toc{ position: static; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg-2); } }
   .toc a{ text-decoration: none; color: var(--muted); font-size: .9rem; padding: 7px 10px; border-radius: 9px; display: flex; gap: 8px; }
   .toc a:hover{ background: var(--panel); color: var(--text); }
   .toc a b{ color: var(--accent-2); font-family: 'Space Grotesk', sans-serif; }
@@ -166,6 +168,6 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 
 <script src="../assets/packs.js?v=1"></script>
 <script src="../assets/lang-en.js?v=2"></script>
-<script src="../assets/app.js?v=26"></script>
+<script src="../assets/app.js?v=27"></script>
 </body>
 </html>
