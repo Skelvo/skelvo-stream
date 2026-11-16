@@ -61,6 +61,22 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
   .hero-demo .chat{ position: absolute; left: 32px; top: 28px; bottom: 28px; width: 500px; }
 
   .tools{ padding: 30px 0 70px; }
+  /* « Débuter le stream » : le bloc le plus mis en avant de l'accueil */
+  .btn-start{ background: linear-gradient(135deg, #ff5fa2, #9b5cff 55%, #4be1c3); box-shadow: 0 10px 30px -10px rgba(155,92,255,.8); }
+  .btn-start:hover{ filter: brightness(1.08); }
+  .btn.big{ font-size: 1.08rem; padding: 15px 24px; }
+  .start-hero{ padding: 0 0 22px; }
+  .start-card{ position: relative; display: grid; grid-template-columns: 1.15fr .85fr; gap: 30px; align-items: center; padding: 34px; border-radius: 24px;
+    background: radial-gradient(70% 120% at 0% 0%, rgba(255,95,162,.20), transparent 60%), radial-gradient(70% 120% at 100% 100%, rgba(75,225,195,.18), transparent 60%), var(--panel); }
+  .start-card::before{ content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 2px; pointer-events: none;
+    background: linear-gradient(135deg, #ff5fa2, #9b5cff, #4be1c3); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .start-card h2{ font-size: clamp(1.8rem, 4vw, 2.7rem); margin: 10px 0 10px; line-height: 1.05; }
+  .start-card p{ color: #d9d3f0; margin: 0 0 22px; max-width: 56ch; }
+  .start-steps{ list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .start-steps a{ display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; text-decoration: none; color: var(--text); background: rgba(255,255,255,.04); border: 1px solid var(--line); font-weight: 600; transition: background .2s, transform .2s; }
+  .start-steps a:hover{ background: rgba(255,255,255,.08); transform: translateX(3px); }
+  .start-steps b{ flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: linear-gradient(135deg, #9b5cff, #4be1c3); color: #fff; font-size: .9rem; }
+  @media (max-width: 800px){ .start-card{ grid-template-columns: 1fr; padding: 22px; gap: 20px; } .start-card .btn.big{ width: 100%; text-align: center; box-sizing: border-box; } }
   .kit-hero{ padding: 10px 0 20px; }
   .kit-card{ display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: center; text-decoration: none; padding: 28px; border-radius: 22px; border: 1px solid rgba(155,92,255,.35);
     background: radial-gradient(80% 120% at 0% 0%, rgba(155,92,255,.22), transparent 60%), radial-gradient(60% 100% at 100% 100%, rgba(75,225,195,.14), transparent 60%), var(--panel); transition: transform .2s, border-color .2s; }
@@ -117,8 +133,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
         <h1><span data-i18n="home.h1a">Tout pour ton stream,</span> <em data-i18n="home.h1b">gratuitement.</em></h1>
         <p class="lead" data-i18n="home.lead">Contour caméra, tchat, alertes, tirage au sort, jeux du tchat, subathon, sous-titres… Près de 30 outils assortis, ou un kit complet prêt à importer dans OBS.</p>
         <div class="cta">
-          <a class="btn" href="kit/" data-i18n="home.cta1">Créer mon kit complet</a>
-          <a class="btn ghost" href="#outils" data-i18n="home.cta2">Voir tous les outils</a>
+          <a class="btn btn-start" href="debuter/">🚀 Débuter le stream</a>
+          <a class="btn ghost" href="kit/" data-i18n="home.cta1">Créer mon kit complet</a>
         </div>
         <ul class="perks">
           <li data-i18n="perk.free">100 % gratuit</li>
@@ -136,6 +152,28 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
             <iframe src="cadre/overlay.html?style=gradient&w=8&r=24&glow=16&speed=4&label=Skelvo&ls=22&lpos=bc" tabindex="-1" title=""></iframe>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="start-hero">
+    <div class="wrap">
+      <div class="start-card">
+        <div class="start-txt">
+          <span class="kicker">Nouveau sur Twitch ? Commence ici</span>
+          <h2>Ton premier live en 30 minutes</h2>
+          <p>Le guide pas à pas pour passer de zéro à ton premier live : installer OBS, le régler, relier Twitch, ajouter ton jeu, ta caméra et ton micro, habiller ton stream, avoir un son propre. Sans rien payer.</p>
+          <a class="btn btn-start big" href="debuter/">Suivre le guide pas à pas →</a>
+        </div>
+        <ol class="start-steps">
+          <li><a href="debuter/#obs"><b>1</b> Installer OBS</a></li>
+          <li><a href="debuter/#reglages"><b>2</b> Les bons réglages</a></li>
+          <li><a href="debuter/#twitch"><b>3</b> Relier Twitch</a></li>
+          <li><a href="debuter/#sources"><b>4</b> Jeu, caméra, micro</a></li>
+          <li><a href="debuter/#kit"><b>5</b> Ton habillage</a></li>
+          <li><a href="debuter/#son"><b>6</b> Un son propre</a></li>
+          <li><a href="debuter/#live"><b>7</b> Lancer le live</a></li>
+        </ol>
       </div>
     </div>
   </section>
@@ -348,8 +386,8 @@ try{var k='sk-scroll:'+location.pathname,n=performance.getEntriesByType&&perform
 </footer>
 
 <script src="assets/packs.js?v=1"></script>
-<script src="assets/lang-en.js?v=1"></script>
-<script src="assets/app.js?v=25"></script>
+<script src="assets/lang-en.js?v=2"></script>
+<script src="assets/app.js?v=26"></script>
 <script>
   // Miniatures des packs dans le bloc Kit
   (function(){ var box = document.getElementById('kit-packs'); if (!box || !window.SK_PACKS) return;

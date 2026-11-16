@@ -1067,7 +1067,17 @@ window.SK_EN = { t: {
 "Vitesse": "Speed",
 "Volet": "Wipe",
 "Large": "Wide",
-"Pause": "Break"
+"Pause": "Break",
+"🚀 Débuter le stream": "🚀 Start streaming",
+"Nouveau sur Twitch ? Commence ici": "New to Twitch? Start here",
+"Ton premier live en 30 minutes": "Your first stream in 30 minutes",
+"Le guide pas à pas pour passer de zéro à ton premier live : installer OBS, le régler, relier Twitch, ajouter ton jeu, ta caméra et ton micro, habiller ton stream, avoir un son propre. Sans rien payer.": "The step-by-step guide from zero to your first stream: install OBS, set it up, connect Twitch, add your game, camera and mic, style your stream and get clean audio. Without paying a thing.",
+"Suivre le guide pas à pas →": "Follow the step-by-step guide →",
+"Jeu, caméra, micro": "Game, camera, mic",
+"Installer OBS": "Install OBS",
+"Relier Twitch": "Connect Twitch",
+"Lancer le live": "Go live",
+"Ton habillage": "Your overlays"
 },
 v: {
 "{name} se réabonne · {months} mois !": "{name} resubscribed · {months} months!",
